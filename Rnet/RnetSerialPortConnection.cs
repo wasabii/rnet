@@ -5,7 +5,7 @@ namespace Rnet
 {
 
     /// <summary>
-    /// Provides access to RNET through a serial port.
+    /// Provides access to RNet through a serial port.
     /// </summary>
     public sealed class RnetSerialPortConnection : RnetConnection
     {
@@ -21,7 +21,7 @@ namespace Rnet
             this.port = port;
         }
 
-        protected override Stream Stream
+        internal override Stream Stream
         {
             get { return port.BaseStream; }
         }

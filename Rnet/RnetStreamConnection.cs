@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rnet
 {
 
+    /// <summary>
+    /// Provides access to RNet through a simple stream. Mostly useful for testing purposes.
+    /// </summary>
     public sealed class RnetStreamConnection : RnetConnection
     {
 
@@ -26,7 +25,7 @@ namespace Rnet
             this.stream = stream;
         }
 
-        protected override Stream Stream
+        internal override Stream Stream
         {
             get { return stream; }
         }

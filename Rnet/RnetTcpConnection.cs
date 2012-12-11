@@ -47,7 +47,7 @@ namespace Rnet
             ep = new IPEndPoint(ip, port);
         }
 
-        protected override Stream Stream
+        internal override Stream Stream
         {
             get { return tcp.GetStream(); }
         }

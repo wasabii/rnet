@@ -35,9 +35,16 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetControllerTargets.cs" />
+    <Compile Include="RnetZoneTargets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetDeviceId.cs" />
-    <Compile Include="RnetSpecialChars.cs" />
+    <Compile Include="RnetMessage.cs" />
+    <Compile Include="RnetMessageType.cs" />
+    <Compile Include="RnetMessageWriter.cs" />
+    <Compile Include="RnetPath.cs" />
+    <Compile Include="RnetKeypadTargets.cs" />
+    <Compile Include="RnetSpecialMessageChars.cs" />
     <Compile Include="RnetStreamConnection.cs" />
     <Compile Include="RnetConnection.cs" />
     <Compile Include="RnetSerialPortConnection.cs" />
