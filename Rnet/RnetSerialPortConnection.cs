@@ -16,9 +16,9 @@ namespace Rnet
         /// Initializes a new connection to an RNET device by serial port.
         /// </summary>
         /// <param name="port"></param>
-        public RnetSerialPortConnection(SerialPort port)
+        public RnetSerialPortConnection(string port)
         {
-            this.port = port;
+            this.port = new SerialPort(port, 19200, Parity.None, 8, StopBits.One);
         }
 
         internal override Stream Stream
