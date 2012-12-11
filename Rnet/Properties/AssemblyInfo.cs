@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Rnet.Upnp")]
+[assembly: AssemblyTitle("Rnet")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Rnet.Upnp")]
-[assembly: AssemblyCopyright("Copyright © Jerome Haltom 2012")]
+[assembly: AssemblyProduct("Rnet")]
+[assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("624bd790-5615-4d7f-bad7-9dabb8e6cb82")]
+[assembly: Guid("df757990-c3a7-4c70-aa75-faa8dea41f56")]
 
 // Version information for an assembly consists of the following four values:
 //
