@@ -1,3 +1,5 @@
 *.suo
+Rnet/bin
+Rnet/obj
 Rnet.Upnp/bin
 Rnet.Upnp/obj
