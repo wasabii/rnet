@@ -10,7 +10,7 @@
         /// <summary>
         /// <see cref="RnetDeviceId"/> which targets the controller.
         /// </summary>
-        public static readonly RnetDeviceId ControllerTarget = new RnetDeviceId(0, 0, (byte)RnetKeypadTargets.Controller);
+        public static readonly RnetDeviceId RootControllerTarget = new RnetDeviceId(0, 0, (byte)RnetKeypadTargets.Controller);
 
         /// <summary>
         /// <see cref="RnetDeviceId"/> recommended by Russound for external control systems.

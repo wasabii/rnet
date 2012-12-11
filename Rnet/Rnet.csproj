@@ -35,7 +35,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetEventMessage.cs" />
+    <Compile Include="RnetEvents.cs" />
     <Compile Include="RnetControllerTargets.cs" />
+    <Compile Include="RnetHandshakeMessage.cs" />
+    <Compile Include="RnetHandshakeType.cs" />
     <Compile Include="RnetZoneTargets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetDeviceId.cs" />

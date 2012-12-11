@@ -4,7 +4,7 @@
     /// <summary>
     /// Defines a RNet message.
     /// </summary>
-    struct RnetMessage
+    abstract class RnetMessage
     {
 
         /// <summary>
@@ -13,8 +13,7 @@
         /// <param name="targetDeviceId"></param>
         /// <param name="sourceDeviceId"></param>
         /// <param name="messageType"></param>
-        RnetMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType messageType)
-            :this()
+        protected RnetMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType messageType)
         {
             TargetDeviceId = targetDeviceId;
             SourceDeviceId = sourceDeviceId;
@@ -35,6 +34,27 @@
         /// Gets or sets the message type.
         /// </summary>
         RnetMessageType MessageType { get; set; }
+
+        /// <summary>
+        /// Writes the message using the given writer.
+        /// </summary>
+        /// <param name="writer"></param>
+        internal void Write(RnetMessageWriter writer)
+        {
+            writer.WriteStart();
+            writer.WriteDeviceId(TargetDeviceId);
+            writer.WriteDeviceId(SourceDeviceId);
+            writer.WriteMessageType(MessageType);
+            WriteBody(writer);
+            writer.WriteChecksum();
+            writer.WriteEnd();
+        }
+
+        /// <summary>
+        /// Writes the body of the message.
+        /// </summary>
+        /// <param name="writer"></param>
+        protected abstract void WriteBody(RnetMessageWriter writer);
 
     }
 
