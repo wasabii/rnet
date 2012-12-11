@@ -4,7 +4,7 @@
     /// <summary>
     /// Defines the type of message being sent.
     /// </summary>
-    enum RnetMessageType : byte
+    public enum RnetMessageType : byte
     {
 
         SetData = 0x00,

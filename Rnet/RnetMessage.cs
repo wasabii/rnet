@@ -4,7 +4,7 @@
     /// <summary>
     /// Defines a RNet message.
     /// </summary>
-    abstract class RnetMessage
+    public abstract class RnetMessage
     {
 
         /// <summary>
@@ -54,7 +54,7 @@
         /// Writes the body of the message.
         /// </summary>
         /// <param name="writer"></param>
-        protected abstract void WriteBody(RnetMessageWriter writer);
+        internal protected abstract void WriteBody(RnetMessageWriter writer);
 
     }
 

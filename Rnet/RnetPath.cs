@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+
 namespace Rnet
 {
 
@@ -6,13 +7,13 @@ namespace Rnet
     /// Represents an RNet path.
     /// </summary>
     [DebuggerDisplay("{DebugView}")]
-    class RnetPath
+    public class RnetPath
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        internal RnetPath(byte directory)
+        public RnetPath(byte directory)
         {
             Level = 1;
             Directory = directory;
@@ -22,7 +23,7 @@ namespace Rnet
         /// Initializes a new instance with a previous item.
         /// </summary>
         /// <param name="previous"></param>
-        RnetPath(RnetPath previous, byte directory)
+        public RnetPath(RnetPath previous, byte directory)
         {
             Level = (byte)(previous.Level + 1);
             Directory = directory;

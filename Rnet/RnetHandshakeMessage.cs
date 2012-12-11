@@ -24,7 +24,7 @@
         /// </summary>
         RnetHandshakeType HandshakeType { get; set; }
 
-        protected override void WriteBody(RnetMessageWriter writer)
+        internal protected override void WriteBody(RnetMessageWriter writer)
         {
             writer.WriteByte((byte)HandshakeType);
         }

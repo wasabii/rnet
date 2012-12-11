@@ -21,7 +21,7 @@ namespace Rnet.Tests
                 RnetDeviceId.ExternalSource,
                 new RnetPath(2).Next(0),
                 null,
-                (ushort)RnetEvents.VolumeUp,
+                RnetEvents.VolumeUp,
                 0,
                 0,
                 1);

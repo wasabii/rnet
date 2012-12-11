@@ -4,7 +4,7 @@
     /// <summary>
     /// Keypad events.
     /// </summary>
-    enum RnetEvents : ushort
+    public enum RnetEvents : ushort
     {
 
         Setup = 0x64,

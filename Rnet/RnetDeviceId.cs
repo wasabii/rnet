@@ -4,7 +4,7 @@
     /// <summary>
     /// RNet "Device ID" structure.
     /// </summary>
-    internal struct RnetDeviceId
+    public struct RnetDeviceId
     {
 
         /// <summary>
@@ -23,7 +23,7 @@
         /// <param name="controllerId"></param>
         /// <param name="zoneId"></param>
         /// <param name="keypadId"></param>
-        internal RnetDeviceId(byte controllerId, byte zoneId, byte keypadId)
+        public RnetDeviceId(byte controllerId, byte zoneId, byte keypadId)
             : this()
         {
             ControllerId = controllerId;
@@ -34,17 +34,17 @@
         /// <summary>
         /// ID of the controller.
         /// </summary>
-        public byte ControllerId { get; set; }
+        public byte ControllerId { get; private set; }
 
         /// <summary>
         /// ID of the zone.
         /// </summary>
-        public byte ZoneId { get; set; }
+        public byte ZoneId { get; private set; }
 
         /// <summary>
         /// ID of the keypad.
         /// </summary>
-        public byte KeypadId { get; set; }
+        public byte KeypadId { get; private set; }
 
     }
 

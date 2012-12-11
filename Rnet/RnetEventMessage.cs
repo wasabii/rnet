@@ -4,7 +4,7 @@
     /// <summary>
     /// Defines an RNet event message.
     /// </summary>
-    class RnetEventMessage : RnetMessage
+    public class RnetEventMessage : RnetMessage
     {
 
         /// <summary>
@@ -14,13 +14,13 @@
         /// <param name="sourceDeviceId"></param>
         /// <param name="targetPath"></param>
         /// <param name="sourcePath"></param>
-        internal RnetEventMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetPath targetPath,
-            RnetPath sourcePath, ushort id, ushort timestamp, ushort data, byte priority)
+        public RnetEventMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetPath targetPath,
+            RnetPath sourcePath, RnetEvents evt, ushort timestamp, ushort data, byte priority)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.Event)
         {
             TargetPath = targetPath;
             SourcePath = sourcePath;
-            Id = id;
+            Event = evt;
             Timestamp = timestamp;
             Data = data;
             Priority = priority;
@@ -39,7 +39,7 @@
         /// <summary>
         /// Gets the event ID.
         /// </summary>
-        ushort Id { get; set; }
+        RnetEvents Event { get; set; }
 
         /// <summary>
         /// Gets the event timestamp.
@@ -56,11 +56,11 @@
         /// </summary>
         byte Priority { get; set; }
 
-        protected override void WriteBody(RnetMessageWriter writer)
+        internal protected override void WriteBody(RnetMessageWriter writer)
         {
             writer.WritePath(TargetPath);
             writer.WritePath(SourcePath);
-            writer.WriteUInt16(Id);
+            writer.WriteUInt16((ushort)Event);
             writer.WriteUInt16(Timestamp);
             writer.WriteUInt16(Data);
             writer.WriteByte(Priority);

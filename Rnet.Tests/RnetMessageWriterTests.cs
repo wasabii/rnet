@@ -179,65 +179,6 @@ namespace Rnet.Tests
             Assert.IsTrue(actual.SequenceEqual(expected)); 
         }
 
-        //[TestMethod]
-        //public void TestRnet()
-        //{
-        //    using (var rnet = new RnetTcpConnection("tokyo.larvalstage.net", 9999))
-        //    {
-        //        rnet.Open();
-
-        //        // message without start/end/checksum
-        //        for (int i = 0; i <= 50; i++)
-        //        {
-        //            rnet.WriteMessage(
-        //                0x00,
-        //                0x00,
-        //                0x7F,
-        //                0x00,
-        //                0x00,
-        //                0x70,
-        //                0x05,
-        //                0x02,
-        //                0x02,
-        //                0x00,
-        //                0x00,
-        //                0x80,
-        //                0x00,
-        //                0x00,
-        //                0x00,
-        //                0x00,
-        //                0x00,
-        //                0x01);
-        //            Thread.Sleep(100);
-        //        }
-
-        //        // message without start/end/checksum
-        //        for (int i = 0; i <= 50; i++)
-        //        {
-        //            rnet.WriteMessage(
-        //                0x00,
-        //                0x00,
-        //                0x7F,
-        //                0x00,
-        //                0x00,
-        //                0x70,
-        //                0x05,
-        //                0x02,
-        //                0x02,
-        //                0x00,
-        //                0x00,
-        //                0x7F,
-        //                0x00,
-        //                0x00,
-        //                0x00,
-        //                0x00,
-        //                0x00,
-        //                0x01);
-        //            Thread.Sleep(100);
-        //        }
-        //    }
-        //}
-
     }
 
 }

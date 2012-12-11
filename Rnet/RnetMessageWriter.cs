@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Rnet
 {
@@ -6,21 +7,11 @@ namespace Rnet
     /// <summary>
     /// Provides methods by which to write an RNet message. Create a new instance for each message to be written.
     /// </summary>
-    class RnetMessageWriter
+    public class RnetMessageWriter : IDisposable
     {
 
         int len;
         int sum;
-
-        /// <summary>
-        /// Initializes a new instance.
-        /// </summary>
-        /// <param name="rnet"></param>
-        internal RnetMessageWriter(RnetConnection rnet)
-            : this(rnet.Stream)
-        {
-
-        }
 
         /// <summary>
         /// Initializes a new instance.
@@ -180,6 +171,14 @@ namespace Rnet
             WriteBody(message);
             WriteChecksum();
             WriteEnd();
+        }
+
+        /// <summary>
+        /// Disposes of the instance.
+        /// </summary>
+        public void Dispose()
+        {
+
         }
 
     }
