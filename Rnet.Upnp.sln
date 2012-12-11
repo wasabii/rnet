@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Upnp", "Rnet.Upnp\Rnet.Upnp.csproj", "{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DAFE4372-8CA1-4B1B-BC2E-6FC964F8E82C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Ssdp", "mono-upnp\src\Mono.Ssdp\Mono.Ssdp\Mono.Ssdp.csproj", "{AD422A19-BA07-4039-B843-84E386804DD1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Upnp", "mono-upnp\src\Mono.Upnp\Mono.Upnp\Mono.Upnp.csproj", "{5E5A8C5E-334D-4ED2-B40F-34712C7E085C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet", "Rnet\Rnet.csproj", "{9E1BB758-B788-4C23-959B-201E27B221FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Tests", "RNet.Tests\Rnet.Tests.csproj", "{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Upnp", "Rnet.Upnp\Rnet.Upnp.csproj", "{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AD422A19-BA07-4039-B843-84E386804DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AD422A19-BA07-4039-B843-84E386804DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD422A19-BA07-4039-B843-84E386804DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,6 +25,18 @@ Global
 		{5E5A8C5E-334D-4ED2-B40F-34712C7E085C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E5A8C5E-334D-4ED2-B40F-34712C7E085C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E5A8C5E-334D-4ED2-B40F-34712C7E085C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E1BB758-B788-4C23-959B-201E27B221FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E1BB758-B788-4C23-959B-201E27B221FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E1BB758-B788-4C23-959B-201E27B221FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E1BB758-B788-4C23-959B-201E27B221FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
