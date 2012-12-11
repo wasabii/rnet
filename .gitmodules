@@ -1,0 +1,3 @@
+[submodule "mono-upnp"]
+	path = mono-upnp
+	url = git@github.com:wasabii/mono-upnp.git
