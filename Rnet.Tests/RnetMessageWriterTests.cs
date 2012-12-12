@@ -11,61 +11,6 @@ namespace Rnet.Tests
     {
 
         [TestMethod]
-        public void TestBasicMessage()
-        {
-            var stm = new MemoryStream();
-            var wrt = new RnetMessageWriter(stm);
-
-            // message without start/end/checksum
-            wrt.WriteMessage(
-                0x00,
-                0x00,
-                0x7F,
-                0x00,
-                0x00,
-                0x70,
-                0x05,
-                0x02,
-                0x02,
-                0x00,
-                0x00,
-                0x7F,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01);
-
-            // expected volumn up message
-            var expected = new byte[] {
-                0xF0,
-                0x00,
-                0x00,
-                0x7F,
-                0x00,
-                0x00,
-                0x70,
-                0x05,
-                0x02,
-                0x02,
-                0x00,
-                0x00,
-                0x7F,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x7B,
-                0xF7,
-            };
-
-            Assert.IsTrue(stm.ToArray().SequenceEqual(expected));
-        }
-
-        [TestMethod]
         public void TestDeviceId()
         {
             var stm = new MemoryStream();
@@ -89,7 +34,7 @@ namespace Rnet.Tests
             var stm = new MemoryStream();
             var wrt = new RnetMessageWriter(stm);
 
-            wrt.WritePath(null);
+            new RnetPath().Write(wrt);
 
             Assert.IsTrue(stm.ToArray().SequenceEqual(new byte[] { 0x00 }));
         }
@@ -100,7 +45,7 @@ namespace Rnet.Tests
             var stm = new MemoryStream();
             var wrt = new RnetMessageWriter(stm);
 
-            wrt.WritePath(new RnetPath(1).Next(2).Next(3));
+            new RnetPath(1, 2, 3).Write(wrt);
 
             var expected = new byte[]
             {
@@ -136,18 +81,14 @@ namespace Rnet.Tests
             var stm = new MemoryStream();
             var wrt = new RnetMessageWriter(stm);
 
-            wrt.WriteStart();
-            wrt.WriteDeviceId(RnetDeviceId.RootControllerTarget);
-            wrt.WriteDeviceId(RnetDeviceId.ExternalSource);
-            wrt.WriteMessageType(RnetMessageType.Event);
-            wrt.WritePath(new RnetPath(2).Next(0));
-            wrt.WritePath(null);
+            wrt.BeginMessage(RnetDeviceId.RootControllerTarget, RnetDeviceId.ExternalSource, RnetMessageType.Event);
+            new RnetPath(2,0).Write(wrt);
+            new RnetPath().Write(wrt);
             wrt.WriteUInt16((ushort)RnetEvents.VolumeUp); // VOLUME UP
             wrt.WriteUInt16(0);
             wrt.WriteUInt16(0);
             wrt.WriteByte(1);
-            wrt.WriteChecksum();
-            wrt.WriteEnd();
+            wrt.EndMessage();
 
             // expected volumn up message
             var expected = new byte[] {

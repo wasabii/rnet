@@ -1,4 +1,6 @@
-﻿namespace Rnet
+﻿using System;
+
+namespace Rnet
 {
 
     /// <summary>
@@ -18,8 +20,8 @@
             RnetPath sourcePath, RnetEvents evt, ushort timestamp, ushort data, byte priority)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.Event)
         {
-            TargetPath = targetPath;
-            SourcePath = sourcePath;
+            TargetPath = targetPath ?? new RnetPath();
+            SourcePath = sourcePath ?? new RnetPath();
             Event = evt;
             Timestamp = timestamp;
             Data = data;
@@ -58,8 +60,8 @@
 
         internal protected override void WriteBody(RnetMessageWriter writer)
         {
-            writer.WritePath(TargetPath);
-            writer.WritePath(SourcePath);
+            TargetPath.Write(writer);
+            SourcePath.Write(writer);
             writer.WriteUInt16((ushort)Event);
             writer.WriteUInt16(Timestamp);
             writer.WriteUInt16(Data);

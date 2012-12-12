@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rnet
 {
@@ -7,52 +9,47 @@ namespace Rnet
     /// Represents an RNet path.
     /// </summary>
     [DebuggerDisplay("{DebugView}")]
-    public class RnetPath
+    public class RnetPath : IEnumerable<byte>
     {
+
+        byte[] items;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetPath(byte directory)
+        public RnetPath(params byte[] items)
         {
-            Level = 1;
-            Directory = directory;
+            this.items = items;
         }
 
         /// <summary>
-        /// Initializes a new instance with a previous item.
+        /// Gets the items contained in the path.
         /// </summary>
-        /// <param name="previous"></param>
-        public RnetPath(RnetPath previous, byte directory)
+        public byte this[int index]
         {
-            Level = (byte)(previous.Level + 1);
-            Directory = directory;
-            Previous = previous;
+            get { return items[index]; }
+            set { items[index] = value; }
         }
 
         /// <summary>
-        /// Gets the level of the item.
+        /// Writes the path to the writer.
         /// </summary>
-        internal byte Level { get; private set; }
-
-        /// <summary>
-        /// Gets the previous item, if this item is not the root.
-        /// </summary>
-        internal RnetPath Previous { get; private set; }
-
-        /// <summary>
-        /// Gets the directory of this item.
-        /// </summary>
-        internal byte Directory { get; private set; }
-
-        /// <summary>
-        /// Creates a new child path item.
-        /// </summary>
-        /// <param name="directory"></param>
-        /// <returns></returns>
-        internal RnetPath Next(byte directory)
+        /// <param name="writer"></param>
+        internal void Write(RnetMessageWriter writer)
         {
-            return new RnetPath(this, directory);
+            writer.WriteByte((byte)items.Length);
+            foreach (var item in items)
+                writer.WriteByte(item);
+        }
+
+        public IEnumerator<byte> GetEnumerator()
+        {
+            return ((IEnumerable<byte>)items).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         /// <summary>
@@ -60,13 +57,7 @@ namespace Rnet
         /// </summary>
         string DebugView
         {
-            get
-            {
-                if (Previous == null)
-                    return Directory.ToString();
-                else
-                    return Previous.DebugView + "." + Directory.ToString();
-            }
+            get { return string.Join(".", items); }
         }
 
     }

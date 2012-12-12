@@ -5,13 +5,13 @@ namespace Rnet
 {
 
     /// <summary>
-    /// Provides methods by which to write an RNet message. Create a new instance for each message to be written.
+    /// Provides methods by which to write RNet messages to a <see cref="Stream"/>.
     /// </summary>
-    public class RnetMessageWriter : IDisposable
+    public class RnetMessageWriter
     {
 
-        int len;
-        int sum;
+        int len = -1;
+        int sum = -1;
 
         /// <summary>
         /// Initializes a new instance.
@@ -26,6 +26,38 @@ namespace Rnet
         /// Gets a reference to the target <see cref="Stream"/>
         /// </summary>
         public Stream Stream { get; private set; }
+
+        /// <summary>
+        /// Begins a new message.
+        /// </summary>
+        internal void BeginMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType type)
+        {
+            if (len != -1 || sum != -1)
+                throw new InvalidOperationException("A message is already in progress.");
+
+            len = 0;
+            sum = 0;
+
+            WriteStart();
+            WriteDeviceId(targetDeviceId);
+            WriteDeviceId(sourceDeviceId);
+            WriteMessageType(type);
+        }
+
+        /// <summary>
+        /// Ends the message in progress.
+        /// </summary>
+        internal void EndMessage()
+        {
+            if (len == -1 || sum == -1)
+                throw new InvalidOperationException("A message has not been started.");
+
+            WriteChecksum();
+            WriteEnd();
+
+            len = -1;
+            sum = -1;
+        }
 
         /// <summary>
         /// Writes a single byte to the RNet stream.
@@ -119,35 +151,6 @@ namespace Rnet
         {
             WriteByte((byte)messageType);
         }
-
-        /// <summary>
-        /// Writes a path to the RNet device.
-        /// </summary>
-        /// <param name="path"></param>
-        internal void WritePath(RnetPath path)
-        {
-            if (path == null)
-            {
-                WriteByte(0x00);
-            }
-            else
-            {
-                // unpack path in top-first order
-                var paths = new RnetPath[path.Level];
-                for (int i = path.Level - 1; i >= 0; i--)
-                {
-                    paths[i] = path;
-                    path = path.Previous;
-                }
-
-                // number of items in path
-                WriteByte(paths[paths.Length - 1].Level);
-
-                // write each item's directory
-                foreach (var item in paths)
-                    WriteByte(item.Directory);
-            }
-        }
         
         /// <summary>
         /// Writes <see cref="UInt16"/> value to the RNet device. RNet requires the low and high bytes to be swapped.
@@ -159,26 +162,6 @@ namespace Rnet
             var hi = (byte)((value & 0xFF00) >> 8);
             WriteByte(lo);
             WriteByte(hi);
-        }
-
-        /// <summary>
-        /// Writes data to the connection.
-        /// </summary>
-        /// <param name="message"></param>
-        internal void WriteMessage(params byte[] message)
-        {
-            WriteStart();
-            WriteBody(message);
-            WriteChecksum();
-            WriteEnd();
-        }
-
-        /// <summary>
-        /// Disposes of the instance.
-        /// </summary>
-        public void Dispose()
-        {
-
         }
 
     }

@@ -41,13 +41,9 @@
         /// <param name="writer"></param>
         internal void Write(RnetMessageWriter writer)
         {
-            writer.WriteStart();
-            writer.WriteDeviceId(TargetDeviceId);
-            writer.WriteDeviceId(SourceDeviceId);
-            writer.WriteMessageType(MessageType);
+            writer.BeginMessage(TargetDeviceId, SourceDeviceId, MessageType);
             WriteBody(writer);
-            writer.WriteChecksum();
-            writer.WriteEnd();
+            writer.EndMessage();
         }
 
         /// <summary>

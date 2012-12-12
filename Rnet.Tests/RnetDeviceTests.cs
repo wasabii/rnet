@@ -16,39 +16,36 @@ namespace Rnet.Tests
             {
                 rnet.Open();
 
-                for (int t = 0; t < 10; t++)
+                for (int i = 0; i <= 50; i++)
                 {
-                    for (int i = 0; i <= 50; i++)
-                    {
-                        rnet.Send(
-                            new RnetEventMessage(
-                                RnetDeviceId.RootControllerTarget,
-                                RnetDeviceId.ExternalSource,
-                                new RnetPath(2).Next(0),
-                                null,
-                                RnetEvents.VolumeDown,
-                                0,
-                                0,
-                                1));
-                        Thread.Sleep(50);
-                    }
+                    rnet.Send(
+                        new RnetEventMessage(
+                            RnetDeviceId.RootControllerTarget,
+                            RnetDeviceId.ExternalSource,
+                            new RnetPath(2, 0),
+                            null,
+                            RnetEvents.VolumeDown,
+                            0,
+                            0,
+                            1));
+                    Thread.Sleep(50);
+                }
 
-                    Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
-                    for (int i = 0; i <= 50; i++)
-                    {
-                        rnet.Send(
-                            new RnetEventMessage(
-                                RnetDeviceId.RootControllerTarget,
-                                RnetDeviceId.ExternalSource,
-                                new RnetPath(2).Next(0),
-                                null,
-                                RnetEvents.VolumeUp,
-                                0,
-                                0,
-                                1));
-                        Thread.Sleep(50);
-                    }
+                for (int i = 0; i <= 50; i++)
+                {
+                    rnet.Send(
+                        new RnetEventMessage(
+                            RnetDeviceId.RootControllerTarget,
+                            RnetDeviceId.ExternalSource,
+                            new RnetPath(2, 0),
+                            null,
+                            RnetEvents.VolumeUp,
+                            0,
+                            0,
+                            1));
+                    Thread.Sleep(50);
                 }
             }
 
