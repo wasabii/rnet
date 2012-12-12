@@ -50,7 +50,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="RnetDeviceTests.cs" />
     <Compile Include="RnetEventMessageTests.cs" />
     <Compile Include="RnetMessageWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -30,7 +30,7 @@ namespace Rnet
         /// <summary>
         /// Begins a new message.
         /// </summary>
-        internal void BeginMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType type)
+        internal void BeginMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType messageType)
         {
             if (len != -1 || sum != -1)
                 throw new InvalidOperationException("A message is already in progress.");
@@ -39,9 +39,9 @@ namespace Rnet
             sum = 0;
 
             WriteStart();
-            WriteDeviceId(targetDeviceId);
-            WriteDeviceId(sourceDeviceId);
-            WriteMessageType(type);
+            targetDeviceId.Write(this);
+            sourceDeviceId.Write(this);
+            WriteByte((byte)messageType);
         }
 
         /// <summary>
@@ -130,26 +130,6 @@ namespace Rnet
         {
             for (int i = 0; i < buffer.Length; i++)
                 WriteMessageByte(buffer[i]);
-        }
-
-        /// <summary>
-        /// Writes a Device ID to the RNet device.
-        /// </summary>
-        /// <param name="deviceId"></param>
-        internal void WriteDeviceId(RnetDeviceId deviceId)
-        {
-            WriteByte(deviceId.ControllerId);
-            WriteByte(deviceId.ZoneId);
-            WriteByte(deviceId.KeypadId);
-        }
-
-        /// <summary>
-        /// Writes a Message Type to the RNet device.
-        /// </summary>
-        /// <param name="messageType"></param>
-        internal void WriteMessageType(RnetMessageType messageType)
-        {
-            WriteByte((byte)messageType);
         }
         
         /// <summary>

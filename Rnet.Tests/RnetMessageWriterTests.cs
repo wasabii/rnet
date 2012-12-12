@@ -16,7 +16,7 @@ namespace Rnet.Tests
             var stm = new MemoryStream();
             var wrt = new RnetMessageWriter(stm);
 
-            wrt.WriteDeviceId(new RnetDeviceId(0x00, 0x00, 0x7f));
+            new RnetDeviceId(0x00, 0x00, 0x7f).Write(wrt);
 
             var expected = new byte[]
             {

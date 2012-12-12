@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rnet
 {
@@ -6,8 +8,17 @@ namespace Rnet
     /// <summary>
     /// Defines an RNet event message.
     /// </summary>
+    [DebuggerDisplay("{DebugView}")]
     public class RnetEventMessage : RnetMessage
     {
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        public RnetEventMessage()
+        {
+
+        }
 
         /// <summary>
         /// Initializes a new instance.
@@ -31,32 +42,32 @@ namespace Rnet
         /// <summary>
         /// Gets the target path of the event.
         /// </summary>
-        RnetPath TargetPath { get; set; }
+        public RnetPath TargetPath { get; set; }
 
         /// <summary>
         /// Gets the source path of the event.
         /// </summary>
-        RnetPath SourcePath { get; set; }
+        public RnetPath SourcePath { get; set; }
 
         /// <summary>
         /// Gets the event ID.
         /// </summary>
-        RnetEvents Event { get; set; }
+        public RnetEvents Event { get; set; }
 
         /// <summary>
         /// Gets the event timestamp.
         /// </summary>
-        ushort Timestamp { get; set; }
+        public ushort Timestamp { get; set; }
 
         /// <summary>
         /// Gets the event data.
         /// </summary>
-        ushort Data { get; set; }
+        public ushort Data { get; set; }
 
         /// <summary>
         /// Gets the event priority.
         /// </summary>
-        byte Priority { get; set; }
+        public byte Priority { get; set; }
 
         internal protected override void WriteBody(RnetMessageWriter writer)
         {
@@ -66,6 +77,49 @@ namespace Rnet
             writer.WriteUInt16(Timestamp);
             writer.WriteUInt16(Data);
             writer.WriteByte(Priority);
+        }
+
+        /// <summary>
+        /// Reads an event message from the reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="targetDeviceId"></param>
+        /// <param name="sourceDeviceId"></param>
+        /// <returns></returns>
+        internal static RnetEventMessage Read(RnetMessageReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
+        {
+            return new RnetEventMessage(
+                targetDeviceId, sourceDeviceId,
+                RnetPath.Read(reader),
+                RnetPath.Read(reader),
+                (RnetEvents)reader.ReadUInt16(),
+                reader.ReadUInt16(),
+                reader.ReadUInt16(),
+                reader.ReadByte());
+        }
+
+        /// <summary>
+        /// Gets a developer debug string representation of the message.
+        /// </summary>
+        public override string DebugView
+        {
+            get { return GetDebugView(); }
+        }
+
+        /// <summary>
+        /// Implements the getter for DebugView.
+        /// </summary>
+        /// <returns></returns>
+        string GetDebugView()
+        {
+            return string.Format("{{base = {0}, TargetPath = {1}, SourcePath = {2}, Event = {3}, Timestamp = {4}, Data = {5}, Priority = {6}}}",
+                base.DebugView,
+                TargetPath.DebugView,
+                SourcePath.DebugView, 
+                Event, 
+                Timestamp, 
+                Data, 
+                Priority);
         }
 
     }

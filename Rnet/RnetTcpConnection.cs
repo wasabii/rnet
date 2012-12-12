@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Rnet
 {
@@ -12,6 +13,9 @@ namespace Rnet
 
         IPEndPoint ep;
         TcpClient tcp;
+        Thread receiverThread;
+        CancellationTokenSource cts;
+        CancellationToken ct;
 
         /// <summary>
         /// Initializes a new connection to an RNET device at the given endpoint.
@@ -59,8 +63,39 @@ namespace Rnet
 
         public override void Open()
         {
+            // initialize new TCP client and connect
             tcp = new TcpClient();
             tcp.Connect(ep);
+
+            // to signal receiver thread to shutdown
+            cts = new CancellationTokenSource();
+            ct = cts.Token;
+
+            // start receiving messages
+            receiverThread = new Thread(ReceiverThreadMain);
+            receiverThread.Start();
+        }
+
+        /// <summary>
+        /// Entry point for the receiver thread.
+        /// </summary>
+        void ReceiverThreadMain()
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    var message = Reader.TryReadMessage();
+                    if (message != null)
+                        OnMessageReceived(new RnetMessageReceivedEventArgs(message));
+                }
+                catch (Exception)
+                {
+                    // cancel if connection was dropped
+                    if (!tcp.Connected)
+                        cts.Cancel();
+                }
+            }
         }
 
         public override void Close()
@@ -70,11 +105,23 @@ namespace Rnet
 
         public override void Dispose()
         {
+            if (cts != null)
+            {
+                // signal the thread to stop, and wait for it
+                cts.Cancel();
+                receiverThread.Abort();
+                receiverThread.Join();
+                cts = null;
+                receiverThread = null;
+            }
+
             if (tcp != null)
             {
                 tcp.Close();
                 tcp = null;
             }
+
+            base.Dispose();
         }
     }
 

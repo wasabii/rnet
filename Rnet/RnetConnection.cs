@@ -40,12 +40,19 @@ namespace Rnet
         /// <summary>
         /// Closes the current connection.
         /// </summary>
-        public abstract void Close();
+        public virtual void Close()
+        {
+            Dispose();
+        }
 
         /// <summary>
         /// Disposes of the current connection.
         /// </summary>
-        public abstract void Dispose();
+        public virtual void Dispose()
+        {
+            writer = null;
+            reader = null;
+        }
 
         /// <summary>
         /// Checks whether the connection has been opened.
@@ -80,6 +87,21 @@ namespace Rnet
         {
             CheckOpen();
             message.Write(Writer);
+        }
+
+        /// <summary>
+        /// Invoked when a message is received.
+        /// </summary>
+        public event EventHandler<RnetMessageReceivedEventArgs> MessageReceived;
+
+        /// <summary>
+        /// Invoked when a message is received.
+        /// </summary>
+        /// <param name="args"></param>
+        protected void OnMessageReceived(RnetMessageReceivedEventArgs args)
+        {
+            if (MessageReceived != null)
+                MessageReceived(this, args);
         }
 
     }

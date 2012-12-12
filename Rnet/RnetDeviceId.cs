@@ -1,4 +1,5 @@
-﻿namespace Rnet
+﻿using System.Collections.Generic;
+namespace Rnet
 {
 
     /// <summary>
@@ -45,6 +46,35 @@
         /// ID of the keypad.
         /// </summary>
         public byte KeypadId { get; private set; }
+
+        /// <summary>
+        /// Writes the device ID to the writer.
+        /// </summary>
+        /// <param name="writer"></param>
+        public void Write(RnetMessageWriter writer)
+        {
+            writer.WriteByte(ControllerId);
+            writer.WriteByte(ZoneId);
+            writer.WriteByte(KeypadId);
+        }
+
+        /// <summary>
+        /// Reads a device ID from the reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static RnetDeviceId Read(RnetMessageReader reader)
+        {
+            return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+        }
+
+        /// <summary>
+        /// Gets a string suitable for debugging this instance.
+        /// </summary>
+        public string DebugView
+        {
+            get { return string.Format("{{ControllerId = {0}, ZoneId = {1}, KeypadId = {2}}}", ControllerId, ZoneId, KeypadId); }
+        }
 
     }
 

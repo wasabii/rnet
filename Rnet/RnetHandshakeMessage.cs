@@ -29,6 +29,20 @@
             writer.WriteByte((byte)HandshakeType);
         }
 
+        /// <summary>
+        /// Reads an event message from the reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="targetDeviceId"></param>
+        /// <param name="sourceDeviceId"></param>
+        /// <returns></returns>
+        internal static RnetHandshakeMessage Read(RnetMessageReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
+        {
+            return new RnetHandshakeMessage(
+                targetDeviceId, sourceDeviceId,
+                (RnetHandshakeType)reader.ReadByte());
+        }
+
     }
 
 }

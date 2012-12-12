@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Tests", "RNet.Tests\Rn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Upnp", "Rnet.Upnp\Rnet.Upnp.csproj", "{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Monitor", "Rnet.Monitor\Rnet.Monitor.csproj", "{5E61857C-721C-4D67-A21D-821B8E1BAB82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E61857C-721C-4D67-A21D-821B8E1BAB82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E61857C-721C-4D67-A21D-821B8E1BAB82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E61857C-721C-4D67-A21D-821B8E1BAB82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E61857C-721C-4D67-A21D-821B8E1BAB82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

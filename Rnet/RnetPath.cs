@@ -42,6 +42,21 @@ namespace Rnet
                 writer.WriteByte(item);
         }
 
+        /// <summary>
+        /// Reads a path from the reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        internal static RnetPath Read(RnetMessageReader reader)
+        {
+            var len = reader.ReadByte();
+            var buf = new byte[len];
+            for (int i = 0; i < len; i++)
+                buf[i] = reader.ReadByte();
+
+            return new RnetPath(buf);
+        }
+
         public IEnumerator<byte> GetEnumerator()
         {
             return ((IEnumerable<byte>)items).GetEnumerator();
@@ -55,7 +70,7 @@ namespace Rnet
         /// <summary>
         /// Generates a debug string for display.
         /// </summary>
-        string DebugView
+        public string DebugView
         {
             get { return string.Join(".", items); }
         }
