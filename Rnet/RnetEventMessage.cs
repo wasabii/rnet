@@ -69,7 +69,7 @@ namespace Rnet
         /// </summary>
         public byte Priority { get; set; }
 
-        internal protected override void WriteBody(RnetMessageWriter writer)
+        internal protected override void WriteBody(RnetWriter writer)
         {
             TargetPath.Write(writer);
             SourcePath.Write(writer);
@@ -86,7 +86,7 @@ namespace Rnet
         /// <param name="targetDeviceId"></param>
         /// <param name="sourceDeviceId"></param>
         /// <returns></returns>
-        internal static RnetEventMessage Read(RnetMessageReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
+        internal static RnetEventMessage Read(RnetReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
             return new RnetEventMessage(
                 targetDeviceId, sourceDeviceId,

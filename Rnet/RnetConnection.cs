@@ -10,8 +10,8 @@ namespace Rnet
     public abstract class RnetConnection : IDisposable
     {
 
-        RnetMessageWriter writer;
-        RnetMessageReader reader;
+        RnetWriter writer;
+        RnetReader reader;
 
         /// <summary>
         /// Initializes a new connection that communicates with the given <see cref="Stream"/>.
@@ -66,17 +66,17 @@ namespace Rnet
         /// <summary>
         /// Gets the message writer for this connection.
         /// </summary>
-        public RnetMessageWriter Writer
+        public RnetWriter Writer
         {
-            get { return writer ?? (writer = new RnetMessageWriter(Stream)); }
+            get { return writer ?? (writer = new RnetWriter(Stream)); }
         }
 
         /// <summary>
         /// Gets the message reader for this connection.
         /// </summary>
-        public RnetMessageReader Reader
+        public RnetReader Reader
         {
-            get { return reader ?? (reader = new RnetMessageReader(Stream)); }
+            get { return reader ?? (reader = new RnetReader(Stream)); }
         }
 
         /// <summary>

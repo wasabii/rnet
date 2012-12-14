@@ -51,7 +51,7 @@ namespace Rnet
         /// Writes the device ID to the writer.
         /// </summary>
         /// <param name="writer"></param>
-        public void Write(RnetMessageWriter writer)
+        public void Write(RnetWriter writer)
         {
             writer.WriteByte(ControllerId);
             writer.WriteByte(ZoneId);
@@ -63,7 +63,7 @@ namespace Rnet
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public static RnetDeviceId Read(RnetMessageReader reader)
+        public static RnetDeviceId Read(RnetReader reader)
         {
             return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
         }

@@ -35,7 +35,7 @@ namespace Rnet
         /// Writes the path to the writer.
         /// </summary>
         /// <param name="writer"></param>
-        internal void Write(RnetMessageWriter writer)
+        internal void Write(RnetWriter writer)
         {
             writer.WriteByte((byte)items.Length);
             foreach (var item in items)
@@ -47,7 +47,7 @@ namespace Rnet
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        internal static RnetPath Read(RnetMessageReader reader)
+        internal static RnetPath Read(RnetReader reader)
         {
             var len = reader.ReadByte();
             var buf = new byte[len];

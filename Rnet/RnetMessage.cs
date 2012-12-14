@@ -48,7 +48,7 @@
         /// Writes the message using the given writer.
         /// </summary>
         /// <param name="writer"></param>
-        internal void Write(RnetMessageWriter writer)
+        internal void Write(RnetWriter writer)
         {
             writer.BeginMessage(TargetDeviceId, SourceDeviceId, MessageType);
             WriteBody(writer);
@@ -59,7 +59,7 @@
         /// Writes the body of the message.
         /// </summary>
         /// <param name="writer"></param>
-        internal protected abstract void WriteBody(RnetMessageWriter writer);
+        internal protected abstract void WriteBody(RnetWriter writer);
 
         /// <summary>
         /// Gets a string suitable for debugging the contents of this message.

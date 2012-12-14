@@ -9,7 +9,7 @@ namespace Rnet
     /// <summary>
     /// Provides methods by which to read messages from an RNet <see cref="Stream"/>.
     /// </summary>
-    public class RnetMessageReader
+    public class RnetReader
     {
 
         byte[] body;
@@ -19,7 +19,7 @@ namespace Rnet
         /// Initializes a new instance.
         /// </summary>
         /// <param name="stream"></param>
-        public RnetMessageReader(Stream stream)
+        public RnetReader(Stream stream)
         {
             Stream = stream;
         }

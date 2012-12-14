@@ -4,15 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3BC5A3F3-279B-49F8-AB95-5D388F1A5E80}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{80BAF77E-F7C9-4B5C-91D2-6012AB622995}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rnet.Upnp</RootNamespace>
-    <AssemblyName>Rnet.Upnp</AssemblyName>
+    <RootNamespace>Rnet.Upnp.Server</RootNamespace>
+    <AssemblyName>Rnet.Upnp.Server</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +23,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,23 +35,22 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bus.cs" />
-    <Compile Include="BusServer.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Schemas.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\mono-upnp\src\Mono.Ssdp\Mono.Ssdp\Mono.Ssdp.csproj">
-      <Project>{ad422a19-ba07-4039-b843-84e386804dd1}</Project>
-      <Name>Mono.Ssdp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\mono-upnp\src\Mono.Upnp\Mono.Upnp\Mono.Upnp.csproj">
-      <Project>{5e5a8c5e-334d-4ed2-b40f-34712c7e085c}</Project>
-      <Name>Mono.Upnp</Name>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rnet.Upnp\Rnet.Upnp.csproj">
+      <Project>{3bc5a3f3-279b-49f8-ab95-5d388f1a5e80}</Project>
+      <Name>Rnet.Upnp</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>

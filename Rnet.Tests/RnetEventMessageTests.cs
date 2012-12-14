@@ -14,7 +14,7 @@ namespace Rnet.Tests
         public void TestEventMessage()
         {
             var stm = new MemoryStream();
-            var wrt = new RnetMessageWriter(stm);
+            var wrt = new RnetWriter(stm);
 
             var msg = new RnetEventMessage(
                 RnetDeviceId.RootControllerTarget,
