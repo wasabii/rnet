@@ -110,9 +110,9 @@ namespace Rnet
                 case RnetMessageType.Event:
                     return RnetEventMessage.Read(this, targetDeviceId, sourceDeviceId);
                 case RnetMessageType.RequestData:
-                    throw new RnetException();
+                    return RnetRequestDataMessage.Read(this, targetDeviceId, sourceDeviceId);
                 case RnetMessageType.SetData:
-                    throw new RnetException();
+                    return RnetSetDataMessage.Read(this, targetDeviceId, sourceDeviceId);
                 case RnetMessageType.Handshake:
                     return RnetHandshakeMessage.Read(this, targetDeviceId, sourceDeviceId);
             }

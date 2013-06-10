@@ -35,23 +35,25 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetRequestDataMessage.cs" />
+    <Compile Include="RnetSetDataMessage.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="RnetEventMessage.cs" />
     <Compile Include="RnetEvents.cs" />
-    <Compile Include="RnetControllerTargets.cs" />
+    <Compile Include="RnetControllerId.cs" />
     <Compile Include="RnetException.cs" />
     <Compile Include="RnetHandshakeMessage.cs" />
     <Compile Include="RnetHandshakeType.cs" />
     <Compile Include="RnetReader.cs" />
     <Compile Include="RnetMessageReceivedEventArgs.cs" />
-    <Compile Include="RnetZoneTargets.cs" />
+    <Compile Include="RnetZoneId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetDeviceId.cs" />
     <Compile Include="RnetMessage.cs" />
     <Compile Include="RnetMessageType.cs" />
     <Compile Include="RnetWriter.cs" />
     <Compile Include="RnetPath.cs" />
-    <Compile Include="RnetKeypadTargets.cs" />
+    <Compile Include="RnetKeypadId.cs" />
     <Compile Include="RnetSpecialMessageChars.cs" />
     <Compile Include="RnetStreamConnection.cs" />
     <Compile Include="RnetConnection.cs" />
