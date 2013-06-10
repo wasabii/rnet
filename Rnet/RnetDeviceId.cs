@@ -1,5 +1,5 @@
-﻿
-using System.IO;
+﻿using System.IO;
+
 namespace Rnet
 {
 
@@ -17,7 +17,7 @@ namespace Rnet
         /// <summary>
         /// <see cref="RnetDeviceId"/> recommended by Russound for external control systems.
         /// </summary>
-        public static readonly RnetDeviceId ExternalSource = new RnetDeviceId(0, 0, 0x70);
+        public static readonly RnetDeviceId External = new RnetDeviceId(0, 0, RnetKeypadId.External);
 
         /// <summary>
         /// Initializes a new instance.
@@ -67,6 +67,22 @@ namespace Rnet
         public static RnetDeviceId Read(RnetMessageBodyReader reader)
         {
             return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is RnetDeviceId &&
+                ((RnetDeviceId)obj).ControllerId == ControllerId &&
+                ((RnetDeviceId)obj).ZoneId == ZoneId &&
+                ((RnetDeviceId)obj).KeypadId == KeypadId;
+        }
+
+        public override int GetHashCode()
+        {
+            return
+                ControllerId.GetHashCode() ^
+                ZoneId.GetHashCode() ^
+                KeypadId.GetHashCode();
         }
 
         /// <summary>

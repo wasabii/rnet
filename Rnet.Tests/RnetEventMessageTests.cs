@@ -18,7 +18,7 @@ namespace Rnet.Tests
 
             var msg = new RnetEventMessage(
                 RnetDeviceId.RootController,
-                RnetDeviceId.ExternalSource,
+                RnetDeviceId.External,
                 new RnetPath(2, 0),
                 null,
                 RnetEvents.VolumeUp,

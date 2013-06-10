@@ -11,6 +11,7 @@
         public static readonly RnetKeypadId Reserved = 0x7e;
         public static readonly RnetKeypadId AllZone = 0x7d;
         public static readonly RnetKeypadId RequestId = 0x7c;
+        public static readonly RnetKeypadId External = 0x70;
 
         /// <summary>
         /// Implicitly converts a <see cref="RnetKeypadId"/> to a <see cref="Byte"/>.

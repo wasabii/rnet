@@ -81,7 +81,7 @@ namespace Rnet.Tests
             var stm = new MemoryStream();
             var wrt = new RnetStreamWriter(stm);
 
-            wrt.BeginMessage(RnetDeviceId.RootController, RnetDeviceId.ExternalSource, RnetMessageType.Event);
+            wrt.BeginMessage(RnetDeviceId.RootController, RnetDeviceId.External, RnetMessageType.Event);
             RnetDeviceId.RootController.Write(wrt);
             new RnetPath(2,0).Write(wrt);
             new RnetPath().Write(wrt);

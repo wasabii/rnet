@@ -160,10 +160,24 @@ namespace Rnet
         /// <returns></returns>
         public virtual RnetMessage Receive()
         {
-            if (State != RnetConnectionState.Open)
-                throw new RnetConnectionException("Connection is not open.");
+            try
+            {
+                if (State != RnetConnectionState.Open)
+                    throw new RnetConnectionException("Connection is not open.");
 
-            return reader.Read();
+                return reader.Read();
+            }
+            catch (AggregateException e)
+            {
+                e = e.Flatten();
+                if (e.InnerExceptions.Count == 1)
+                    ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                else
+                    ExceptionDispatchInfo.Capture(e).Throw();
+
+                // unreachable
+                return null;
+            }
         }
 
         /// <summary>
@@ -182,10 +196,24 @@ namespace Rnet
         /// <returns></returns>
         public virtual Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (State != RnetConnectionState.Open)
-                throw new RnetConnectionException("Connection is not open.");
+            try
+            {
+                if (State != RnetConnectionState.Open)
+                    throw new RnetConnectionException("Connection is not open.");
 
-            return reader.ReadAsync(cancellationToken);
+                return reader.ReadAsync(cancellationToken);
+            }
+            catch (AggregateException e)
+            {
+                e = e.Flatten();
+                if (e.InnerExceptions.Count == 1)
+                    ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                else
+                    ExceptionDispatchInfo.Capture(e).Throw();
+
+                // unreachable
+                return null;
+            }
         }
 
         /// <summary>
