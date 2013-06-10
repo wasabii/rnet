@@ -5,4 +5,8 @@ Rnet.Upnp/bin
 Rnet.Upnp/obj
 Rnet.Tests/bin
 Rnet.Tests/obj
+Rnet.Monitor/bin
+Rnet.Monitor/obj
+Rnet.Upnp.Server/bin
+Rnet.Upnp.Server/obj
 TestResults
