@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace Rnet
 {
@@ -105,27 +104,14 @@ namespace Rnet
                 data);
         }
 
-        /// <summary>
-        /// Gets a developer debug string representation of the message.
-        /// </summary>
-        public override string DebugView
+        protected override void WriteBodyDebugView(TextWriter writer)
         {
-            get { return GetDebugView(); }
-        }
-
-        /// <summary>
-        /// Implements the getter for DebugView.
-        /// </summary>
-        /// <returns></returns>
-        string GetDebugView()
-        {
-            return string.Format("{{ base = {0}, TargetPath = {1}, SourcePath = {2}, PacketNumber = {3}, PacketCount = {4}, Data.Length = {5} }}",
-                base.DebugView,
-                TargetPath.DebugView,
-                SourcePath.DebugView,
-                PacketNumber,
-                PacketCount,
-                Data.Length);
+            writer.WriteLine("/* set data */");
+            writer.WriteLine("TargetPath = \"{0}\",", TargetPath);
+            writer.WriteLine("SourcePath = \"{0}\",", SourcePath);
+            writer.WriteLine("PacketNumber = {0},", PacketNumber);
+            writer.WriteLine("PacketCount = {0},", PacketCount);
+            writer.WriteLine("Data = {0},", Data);
         }
 
     }

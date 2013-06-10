@@ -17,7 +17,7 @@ namespace Rnet.Tests
             var wrt = new RnetStreamWriter(stm);
 
             var msg = new RnetEventMessage(
-                RnetDeviceId.RootControllerTarget,
+                RnetDeviceId.RootController,
                 RnetDeviceId.ExternalSource,
                 new RnetPath(2, 0),
                 null,

@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿
+using System.IO;
 namespace Rnet
 {
 
     /// <summary>
-    /// RNet "Device ID" structure.
+    /// RNET DeviceID structure.
     /// </summary>
     public struct RnetDeviceId
     {
@@ -11,7 +12,7 @@ namespace Rnet
         /// <summary>
         /// <see cref="RnetDeviceId"/> which targets the controller.
         /// </summary>
-        public static readonly RnetDeviceId RootControllerTarget = new RnetDeviceId(0, 0, RnetKeypadId.Controller);
+        public static readonly RnetDeviceId RootController = new RnetDeviceId(0, 0, RnetKeypadId.Controller);
 
         /// <summary>
         /// <see cref="RnetDeviceId"/> recommended by Russound for external control systems.
@@ -69,11 +70,37 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Writes a debug view of the current instance to the given writer.
+        /// </summary>
+        /// <param name="writer"></param>
+        public void WriteDebugView(TextWriter writer)
+        {
+            writer.WriteLine("{");
+            using (var wrt = RnetUtils.CreateIndentedTextWriter(writer))
+            {
+                wrt.WriteLine("ControllerId = {0},", ControllerId);
+                wrt.WriteLine("ZoneId = {0},", ZoneId);
+                wrt.WriteLine("KeypadId = {0},", KeypadId);
+            }
+            writer.WriteLine("}");
+        }
+
+        /// <summary>
         /// Gets a string suitable for debugging this instance.
         /// </summary>
         public string DebugView
         {
-            get { return string.Format("{{ControllerId = {0}, ZoneId = {1}, KeypadId = {2}}}", ControllerId, ZoneId, KeypadId); }
+            get
+            {
+                var b = new StringWriter();
+                WriteDebugView(b);
+                return b.ToString();
+            }
+        }
+
+        public override string ToString()
+        {
+            return DebugView;
         }
 
     }

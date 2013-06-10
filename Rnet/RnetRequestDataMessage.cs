@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace Rnet
 {
@@ -72,24 +71,11 @@ namespace Rnet
                 sourcePath);
         }
 
-        /// <summary>
-        /// Gets a developer debug string representation of the message.
-        /// </summary>
-        public override string DebugView
+        protected override void WriteBodyDebugView(TextWriter writer)
         {
-            get { return GetDebugView(); }
-        }
-
-        /// <summary>
-        /// Implements the getter for DebugView.
-        /// </summary>
-        /// <returns></returns>
-        string GetDebugView()
-        {
-            return string.Format("{{ base = {0}, TargetPath = {1}, SourcePath = {2} }}",
-                base.DebugView,
-                TargetPath.DebugView,
-                SourcePath.DebugView);
+            writer.WriteLine("/* request data */");
+            writer.WriteLine("TargetPath = \"{0}\",", TargetPath);
+            writer.WriteLine("SourcePath = \"{0}\",", SourcePath);
         }
 
     }

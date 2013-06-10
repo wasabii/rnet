@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace Rnet
 {
@@ -67,12 +68,14 @@ namespace Rnet
             return GetEnumerator();
         }
 
-        /// <summary>
-        /// Generates a debug string for display.
-        /// </summary>
         public string DebugView
         {
-            get { return string.Join(".", items); }
+            get { return string.Join(".", this); }
+        }
+
+        public override string ToString()
+        {
+            return DebugView;
         }
 
     }

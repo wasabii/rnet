@@ -47,8 +47,27 @@
         /// </summary>
         public byte Value { get; set; }
 
+        public override bool Equals(object obj)
+        {
+            return obj is RnetKeypadId ? ((RnetKeypadId)obj).Value == Value : false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
         public override string ToString()
         {
+            if (this == Controller)
+                return string.Format("{0} /* AllDevices */", Value);
+            if (this == Reserved)
+                return string.Format("{0} /* Reserved */", Value);
+            if (this == AllZone)
+                return string.Format("{0} /* AllZone */", Value);
+            if (this == RequestId)
+                return string.Format("{0} /* RequestId */", Value);
+
             return Value.ToString();
         }
 

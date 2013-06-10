@@ -1,4 +1,5 @@
-﻿namespace Rnet
+﻿using System.IO;
+namespace Rnet
 {
 
     /// <summary>

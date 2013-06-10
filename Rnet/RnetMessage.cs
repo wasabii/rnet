@@ -1,4 +1,6 @@
-﻿namespace Rnet
+﻿using System.CodeDom.Compiler;
+using System.IO;
+namespace Rnet
 {
 
     /// <summary>
@@ -62,11 +64,46 @@
         internal protected abstract void WriteBody(RnetStreamWriter writer);
 
         /// <summary>
+        /// Writes out a debug view of the current instance.
+        /// </summary>
+        /// <param name="writer"></param>
+        public void WriteDebugView(TextWriter writer)
+        {
+            writer.WriteLine("{");
+            using (var wrt = RnetUtils.CreateIndentedTextWriter(writer))
+            {
+                wrt.WriteLine("TargetDeviceId = ");
+                TargetDeviceId.WriteDebugView(wrt);
+                wrt.WriteLine("SourceDeviceId = ");
+                SourceDeviceId.WriteDebugView(wrt);
+                wrt.WriteLine();
+
+                WriteBodyDebugView(wrt);
+            }
+            writer.WriteLine("}");
+        }
+
+        protected virtual void WriteBodyDebugView(TextWriter writer)
+        {
+
+        }
+
+        /// <summary>
         /// Gets a string suitable for debugging the contents of this message.
         /// </summary>
-        public virtual string DebugView
+        public string DebugView
         {
-            get { return string.Format("{{TargetDeviceId = {0}, SourceDeviceId = {1}, MessageType = {2}}}", TargetDeviceId.DebugView, SourceDeviceId.DebugView, MessageType); }
+            get
+            {
+                var b = new StringWriter();
+                WriteDebugView(b);
+                return b.ToString();
+            }
+        }
+
+        public override string ToString()
+        {
+            return DebugView;
         }
 
     }

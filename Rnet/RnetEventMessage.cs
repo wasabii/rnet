@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace Rnet
 {
@@ -98,28 +97,15 @@ namespace Rnet
                 reader.ReadByte());
         }
 
-        /// <summary>
-        /// Gets a developer debug string representation of the message.
-        /// </summary>
-        public override string DebugView
+        protected override void WriteBodyDebugView(TextWriter writer)
         {
-            get { return GetDebugView(); }
-        }
-
-        /// <summary>
-        /// Implements the getter for DebugView.
-        /// </summary>
-        /// <returns></returns>
-        string GetDebugView()
-        {
-            return string.Format("{{base = {0}, TargetPath = {1}, SourcePath = {2}, Event = {3}, Timestamp = {4}, Data = {5}, Priority = {6}}}",
-                base.DebugView,
-                TargetPath.DebugView,
-                SourcePath.DebugView, 
-                Event, 
-                Timestamp, 
-                Data, 
-                Priority);
+            writer.WriteLine("/* event */");
+            writer.WriteLine("TargetPath = \"{0}\",", TargetPath);
+            writer.WriteLine("SourcePath = \"{0}\",", SourcePath);
+            writer.WriteLine("Event = {0},", Event);
+            writer.WriteLine("Timestamp = {0},", Timestamp);
+            writer.WriteLine("Data = {0},", Data);
+            writer.WriteLine("Priority = {0},", Priority);
         }
 
     }

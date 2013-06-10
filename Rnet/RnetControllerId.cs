@@ -44,8 +44,21 @@
         /// </summary>
         public byte Value { get; set; }
 
+        public override bool Equals(object obj)
+        {
+            return obj is RnetControllerId ? ((RnetControllerId)obj).Value == Value : false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
         public override string ToString()
         {
+            if (this == AllDevices)
+                return string.Format("{0} /* AllDevices */", Value);
+
             return Value.ToString();
         }
 

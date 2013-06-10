@@ -81,8 +81,8 @@ namespace Rnet.Tests
             var stm = new MemoryStream();
             var wrt = new RnetStreamWriter(stm);
 
-            wrt.BeginMessage(RnetDeviceId.RootControllerTarget, RnetDeviceId.ExternalSource, RnetMessageType.Event);
-            RnetDeviceId.RootControllerTarget.Write(wrt);
+            wrt.BeginMessage(RnetDeviceId.RootController, RnetDeviceId.ExternalSource, RnetMessageType.Event);
+            RnetDeviceId.RootController.Write(wrt);
             new RnetPath(2,0).Write(wrt);
             new RnetPath().Write(wrt);
             wrt.WriteUInt16((ushort)RnetEvents.VolumeUp); // VOLUME UP
