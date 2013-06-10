@@ -13,19 +13,14 @@ namespace Rnet
     {
 
         /// <summary>
-        /// Provides new <see cref="RnetConnection"/> instances.
+        /// Currently active connection.
         /// </summary>
-        Func<RnetConnection> connectionFunc;
+        RnetConnection connection;
 
         /// <summary>
         /// Moment of last attempted connection.
         /// </summary>
         DateTime lastConnectionAttempt = DateTime.MinValue;
-
-        /// <summary>
-        /// Currently active connection.
-        /// </summary>
-        RnetConnection connection;
 
         /// <summary>
         /// Last reported connection state.
@@ -70,10 +65,13 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="connectionFunc"></param>
-        public RnetClient(Func<RnetConnection> connectionFunc)
+        /// <param name="connection"></param>
+        public RnetClient(RnetConnection connection)
         {
-            this.connectionFunc = connectionFunc;
+            if (connection == null)
+                throw new ArgumentNullException("connection");
+
+            this.connection = connection;
         }
 
         /// <summary>
@@ -132,49 +130,37 @@ namespace Rnet
         /// </summary>
         public RnetConnectionState ConnectionState
         {
-            get
-            {
-                // cache connection in case it vanishes
-                var cnn = connection;
-
-                // determine state
-                return cnn != null ? cnn.State : RnetConnectionState.Closed;
-            }
+            get { return connection.State; }
         }
 
         /// <summary>
         /// Ensures an active connection is available
         /// </summary>
-        RnetConnection EnsureConnection(CancellationToken ct)
+        void EnsureConnection(CancellationToken ct)
         {
-            lock (connectionFunc)
+            lock (connection)
             {
                 // dispose of existing connection if it has been shut down
-                if (connection != null &&
-                    connection.State != RnetConnectionState.Open)
+                if (connection.State != RnetConnectionState.Open)
                 {
-                    connection = null;
                     TryRaiseConnectionStateChanged();
-                }
 
-                // no existing connection
-                if (connection == null)
-                {
                     // wait for connection back off
                     while (TimeSpan.FromSeconds(30) > (DateTime.UtcNow - lastConnectionAttempt))
-                        Task.Delay(TimeSpan.FromSeconds(5), ct).Wait();
+                        Monitor.Wait(connection, 5000);
                     lastConnectionAttempt = DateTime.UtcNow;
 
-                    // establist new connection
-                    connection = connectionFunc();
+                    // double check
+                    if (connection.State == RnetConnectionState.Open)
+                        return;
+
+                    // attempt to open connection
                     connection.Open();
                     TryRaiseConnectionStateChanged();
 
                     // reset to lowest value so we'll reconnect immediately next time around
                     lastConnectionAttempt = DateTime.MinValue;
                 }
-
-                return connection;
             }
         }
 
@@ -188,24 +174,22 @@ namespace Rnet
 
             while (!ct.IsCancellationRequested)
             {
-                RnetConnection cnn = null;
                 RnetMessage message = null;
 
                 try
                 {
-                    cnn = EnsureConnection(ct);
-                    if (cnn != null)
-                        if (sendQueue.TryTake(out message, 1000))
-                            cnn.Send(message);
+                    EnsureConnection(ct);
+
+                    if (sendQueue.TryTake(out message, 1000))
+                        connection.Send(message);
                 }
                 catch (Exception e)
                 {
                     try
                     {
                         // attempt to close the existing connection
-                        if (cnn != null)
-                            lock (cnn)
-                                cnn.Close();
+                        lock (connection)
+                            connection.Close();
                     }
                     catch (Exception e2)
                     {
@@ -235,13 +219,11 @@ namespace Rnet
 
                 try
                 {
-                    cnn = EnsureConnection(ct);
-                    if (cnn != null)
-                    {
-                        var message = cnn.Receive();
-                        if (message != null)
-                            receiveQueue.Add(message);
-                    }
+                    EnsureConnection(ct);
+
+                    var message = connection.Receive();
+                    if (message != null)
+                        receiveQueue.Add(message);
                 }
                 catch (RnetConnectionException e)
                 {
@@ -253,9 +235,8 @@ namespace Rnet
                     try
                     {
                         // attempt to close the existing connection
-                        if (cnn != null)
-                            lock (cnn)
-                                cnn.Close();
+                        lock (connection)
+                            cnn.Close();
                     }
                     catch (Exception e2)
                     {

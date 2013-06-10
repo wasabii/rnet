@@ -10,7 +10,7 @@ namespace Rnet.Monitor
 
         public static void Main(string[] args)
         {
-            c = new RnetClient(() => new RnetTcpConnection("tokyo.larvalstage.net", 9999));
+            c = new RnetClient(new RnetTcpConnection("tokyo.larvalstage.net", 9999));
             c.StateChanged += c_StateChanged;
             c.ConnectionStateChanged += c_ConnectionStateChanged;
             c.MessageReceived += c_MessageReceived;
