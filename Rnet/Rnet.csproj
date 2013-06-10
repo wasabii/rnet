@@ -35,7 +35,9 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetConnectionException.cs" />
     <Compile Include="RnetConnectionState.cs" />
+    <Compile Include="RnetConnectionStateEventArgs.cs" />
     <Compile Include="RnetMessageBodyReader.cs" />
     <Compile Include="RnetProtocolException.cs" />
     <Compile Include="RnetRequestDataMessage.cs" />
@@ -58,9 +60,7 @@
     <Compile Include="RnetPath.cs" />
     <Compile Include="RnetKeypadId.cs" />
     <Compile Include="RnetSpecialMessageChars.cs" />
-    <Compile Include="RnetStreamConnection.cs" />
     <Compile Include="RnetConnection.cs" />
-    <Compile Include="RnetSerialPortConnection.cs" />
     <Compile Include="RnetTcpConnection.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -15,74 +18,100 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="stream"></param>
-        public RnetReader(Stream stream)
+        /// <param name="source"></param>
+        public RnetReader(Stream source)
         {
-            Stream = stream;
+            Source = source;
         }
 
         /// <summary>
-        /// Gets a reference to the source <see cref="Stream"/>
+        /// Gets a reference to the source <see cref="Source"/>
         /// </summary>
-        public Stream Stream { get; private set; }
+        public Stream Source { get; private set; }
 
         /// <summary>
-        /// Attempts to read a message from the RNet connection, or returns <c>null</c> if unable to.
+        /// Reads a single byte from the source stream.
         /// </summary>
         /// <returns></returns>
-        internal RnetMessage TryReadMessage()
+        async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
         {
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                // begin new buffer and such
-                byte[] buffer = null;
-                int length = 0;
-
-                int b;
-
-                // advance until message start character
-                while ((b = Stream.ReadByte()) != -1)
-                    if ((byte)b == (byte)RnetSpecialMessageChars.MessageStart)
-                    {
-                        // begin new message
-                        buffer = new byte[1024];
-                        buffer[length++] = (byte)b;
-                        break;
-                    }
-
-                // advance until message end character
-                while ((b = Stream.ReadByte()) != -1)
-                {
-                    // add byte to buffer
-                    buffer[length++] = (byte)b;
-
-                    if ((byte)b == (byte)RnetSpecialMessageChars.MessageEnd)
-                    {
-                        // calculate checksum
-                        int len = length - 2;
-                        int sum = buffer.Take(len).Sum(i => i);
-                        int chk = (byte)((sum + len) & 0x7f);
-
-                        // check that checksum is valid, else discard message
-                        if (chk != buffer[length - 2])
-                            break;
-
-                        // extract message body
-                        var body = new byte[length - 3];
-                        Array.Copy(buffer, 1, body, 0, length - 3);
-
-                        // body isn't long enough to contain an actual message
-                        if (body.Length < 7)
-                            break;
-
-                        // attempt to decode, parse and return the message body
-                        return ParseMessage(new RnetMessageBodyReader(new MemoryStream(body)));
-                    }
-                }
+                var b = await Task.Run(() => Source.ReadByte(), cancellationToken);
+                if (b != -1)
+                    return (byte)b;
             }
-            catch (InvalidOperationException)
+
+            throw new RnetException("Could not read from underlying stream.");
+        }
+
+        /// <summary>
+        /// Reads the next message.
+        /// </summary>
+        /// <returns></returns>
+        public virtual RnetMessage Read()
+        {
+            return ReadAsync(CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Reads the next message.
+        /// </summary>
+        /// <returns></returns>
+        public virtual Task<RnetMessage> ReadAsync()
+        {
+            return ReadAsync(CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Reads the next message.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual async Task<RnetMessage> ReadAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // wait for message start
+            while (await ReadByteAsync(cancellationToken) != (byte)RnetSpecialMessageChars.MessageStart)
+                continue;
+
+            // begin new message
+            var buffer = new byte[1024];
+            var length = 0;
+            buffer[length++] = (byte)RnetSpecialMessageChars.MessageStart;
+
+            // advance until message end character
+            while (true)
             {
-                // ignore timeouts
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // obtain next byte
+                var b = await ReadByteAsync(cancellationToken);
+                buffer[length++] = (byte)b;
+
+                if ((byte)b == (byte)RnetSpecialMessageChars.MessageEnd)
+                {
+                    // calculate checksum
+                    int len = length - 2;
+                    int sum = buffer.Take(len).Sum(i => i);
+                    int chk = (byte)((sum + len) & 0x7f);
+
+                    // check that checksum is valid, else discard message
+                    if (chk != buffer[length - 2])
+                        break;
+
+                    // extract message body
+                    var body = new byte[length - 3];
+                    Array.Copy(buffer, 1, body, 0, length - 3);
+
+                    // body isn't long enough to contain an actual message
+                    if (body.Length < 7)
+                        break;
+
+                    // attempt to decode, parse and return the message body
+                    return ParseMessage(new RnetMessageBodyReader(new MemoryStream(body)));
+                }
             }
 
             // no message read

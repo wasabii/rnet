@@ -11,7 +11,6 @@ namespace Rnet.Monitor
             using (var rnet = new RnetTcpConnection("tokyo.larvalstage.net", 9999))
             {
                 rnet.Open();
-                rnet.MessageReceived += rnet_MessageReceived;
 
                 var m1 = new RnetEventMessage(
                      new RnetDeviceId(0x00, 0x00, RnetKeypadId.Controller),
@@ -31,14 +30,9 @@ namespace Rnet.Monitor
                     new RnetPath());
                 rnet.Send(m2);
 
-                Console.ReadLine();
+                while (true)
+                    Console.WriteLine(rnet.Receive().DebugView);
             }
-        }
-
-        static void rnet_MessageReceived(object sender, RnetMessageReceivedEventArgs args)
-        {
-            Console.WriteLine("RECEIVED: {0}", args.Message.DebugView);
-            Console.WriteLine();
         }
 
     }

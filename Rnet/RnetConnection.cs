@@ -1,5 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.ExceptionServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -23,26 +26,186 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Stream providing access to RNet.
+        /// Implementations should return the <see cref="RnetReader"/> for the current connection.
         /// </summary>
-        internal abstract Stream Stream { get; }
+        /// <returns></returns>
+        protected abstract RnetReader GetReader();
+
+        /// <summary>
+        /// Implementations should return the <see cref="RnetWriter"/> for the current connection.
+        /// </summary>
+        /// <returns></returns>
+        protected abstract RnetWriter GetWriter();
+
+        /// <summary>
+        /// Initializes the connection.
+        /// </summary>
+        void Init()
+        {
+            reader = GetReader();
+            if (reader == null)
+                throw new RnetException("Unable to obtain RnetReader.");
+
+            writer = GetWriter();
+            if (writer == null)
+                throw new RnetException("Unable to obtain RnetWriter.");
+        }
 
         /// <summary>
         /// Opens the connection to RNet.
         /// </summary>
-        public abstract void Open();
+        public void Open()
+        {
+            try
+            {
+                Connect();
+                Init();
+            }
+            catch (RnetException e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+            catch (Exception e)
+            {
+                throw new RnetConnectionException("Could not open connection.", e);
+            }
 
-        /// <summary>
-        /// Gets whether or not the RNet connection is open.
-        /// </summary>
-        public abstract bool IsOpen { get; }
+            OnStateChanged(new RnetConnectionStateEventArgs(State));
+        }
 
         /// <summary>
         /// Closes the current connection.
         /// </summary>
-        public virtual void Close()
+        public void Close()
         {
-            Dispose();
+            try
+            {
+                Disconnect();
+            }
+            catch (RnetException e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+            catch (Exception e)
+            {
+                throw new RnetConnectionException("Could not close connection.", e);
+            }
+
+            OnStateChanged(new RnetConnectionStateEventArgs(State));
+        }
+
+        /// <summary>
+        /// Implementations should establish a connection.
+        /// </summary>
+        protected abstract void Connect();
+
+        /// <summary>
+        /// Implementations should establish a connection.
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Task ConnectAsync();
+
+        /// <summary>
+        /// Implementations should disconnect.
+        /// </summary>
+        protected abstract void Disconnect();
+
+        /// <summary>
+        /// Implementations should disconnect.
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Task DisconnectAsync();
+
+        /// <summary>
+        /// Sends the message to the connection.
+        /// </summary>
+        /// <param name="message"></param>
+        public virtual void Send(RnetMessage message)
+        {
+            if (State != RnetConnectionState.Open)
+                throw new RnetConnectionException("Connection is not open.");
+
+            message.Write(writer);
+        }
+
+        /// <summary>
+        /// Sends the message to the connection.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public virtual Task SendAsync(RnetMessage message)
+        {
+            return SendAsync(message, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Sends the message to the connection.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task SendAsync(RnetMessage message, CancellationToken cancellationToken)
+        {
+            if (State != RnetConnectionState.Open)
+                throw new RnetConnectionException("Connection is not open.");
+
+            message.Write(writer);
+
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// Reads the next message from the connection.
+        /// </summary>
+        /// <returns></returns>
+        public virtual RnetMessage Receive()
+        {
+            if (State != RnetConnectionState.Open)
+                throw new RnetConnectionException("Connection is not open.");
+
+            return reader.Read();
+        }
+
+        /// <summary>
+        /// Reads the next message from the connection.
+        /// </summary>
+        /// <returns></returns>
+        public virtual Task<RnetMessage> ReceiveAsync()
+        {
+            return ReceiveAsync(CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Reads the next message from the connection.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
+        {
+            if (State != RnetConnectionState.Open)
+                throw new RnetConnectionException("Connection is not open.");
+
+            return reader.ReadAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the current connection state.
+        /// </summary>
+        public abstract RnetConnectionState State { get; }
+
+        /// <summary>
+        /// Raised when the connection state changes.
+        /// </summary>
+        public event EventHandler<RnetConnectionStateEventArgs> StateChanged;
+
+        /// <summary>
+        /// Raises the StateChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnStateChanged(RnetConnectionStateEventArgs args)
+        {
+            if (StateChanged != null)
+                StateChanged(this, args);
         }
 
         /// <summary>
@@ -50,58 +213,7 @@ namespace Rnet
         /// </summary>
         public virtual void Dispose()
         {
-            writer = null;
-            reader = null;
-        }
-
-        /// <summary>
-        /// Checks whether the connection has been opened.
-        /// </summary>
-        void CheckOpen()
-        {
-            if (!IsOpen)
-                throw new InvalidOperationException("RnetConnection is not open.");
-        }
-
-        /// <summary>
-        /// Gets the message writer for this connection.
-        /// </summary>
-        public RnetWriter Writer
-        {
-            get { return writer ?? (writer = new RnetWriter(Stream)); }
-        }
-
-        /// <summary>
-        /// Gets the message reader for this connection.
-        /// </summary>
-        public RnetReader Reader
-        {
-            get { return reader ?? (reader = new RnetReader(Stream)); }
-        }
-
-        /// <summary>
-        /// Sends the specified message to the connected RNet device.
-        /// </summary>
-        /// <param name="message"></param>
-        public void Send(RnetMessage message)
-        {
-            CheckOpen();
-            message.Write(Writer);
-        }
-
-        /// <summary>
-        /// Invoked when a message is received.
-        /// </summary>
-        public event EventHandler<RnetMessageReceivedEventArgs> MessageReceived;
-
-        /// <summary>
-        /// Invoked when a message is received.
-        /// </summary>
-        /// <param name="args"></param>
-        protected void OnMessageReceived(RnetMessageReceivedEventArgs args)
-        {
-            if (MessageReceived != null)
-                MessageReceived(this, args);
+            Close();
         }
 
     }
