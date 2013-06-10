@@ -10,14 +10,29 @@ namespace Rnet
     {
 
         /// <summary>
-        /// <see cref="RnetDeviceId"/> which targets the controller.
+        /// <see cref="RnetDeviceId"/> which targets the root controller.
         /// </summary>
         public static readonly RnetDeviceId RootController = new RnetDeviceId(0, 0, RnetKeypadId.Controller);
+
+        /// <summary>
+        /// <see cref="RnetDeviceId"/> which targets all devices.
+        /// </summary>
+        public static readonly RnetDeviceId AllDevices = new RnetDeviceId(RnetControllerId.AllDevices, 0, 0);
 
         /// <summary>
         /// <see cref="RnetDeviceId"/> recommended by Russound for external control systems.
         /// </summary>
         public static readonly RnetDeviceId External = new RnetDeviceId(0, 0, RnetKeypadId.External);
+
+        /// <summary>
+        /// Reads a device ID from the reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static RnetDeviceId Read(RnetMessageBodyReader reader)
+        {
+            return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+        }
 
         /// <summary>
         /// Initializes a new instance.
@@ -60,15 +75,10 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Reads a device ID from the reader.
+        /// Indicates whether this instance and the specified object are equal.
         /// </summary>
-        /// <param name="reader"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
-        public static RnetDeviceId Read(RnetMessageBodyReader reader)
-        {
-            return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
-        }
-
         public override bool Equals(object obj)
         {
             return obj is RnetDeviceId &&
@@ -77,6 +87,10 @@ namespace Rnet
                 ((RnetDeviceId)obj).KeypadId == KeypadId;
         }
 
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return

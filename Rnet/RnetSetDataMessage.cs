@@ -30,7 +30,7 @@ namespace Rnet
         /// <param name="packetCount"></param>
         /// <param name="data"></param>
         public RnetSetDataMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetPath targetPath,
-            RnetPath sourcePath, ushort packetNumber, ushort packetCount, byte[] data)
+            RnetPath sourcePath, ushort packetNumber, ushort packetCount, RnetData data)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.SetData)
         {
             TargetPath = targetPath ?? new RnetPath();
@@ -63,7 +63,7 @@ namespace Rnet
         /// <summary>
         /// Gets the event data.
         /// </summary>
-        public byte[] Data { get; set; }
+        public RnetData Data { get; set; }
 
         internal protected override void WriteBody(RnetStreamWriter writer)
         {
@@ -89,11 +89,7 @@ namespace Rnet
             var sourcePath = RnetPath.Read(reader);
             var packetNumber = reader.ReadUInt16();
             var packetCount = reader.ReadUInt16();
-            var dataLength = reader.ReadUInt16();
-
-            var data = new byte[dataLength];
-            for (int i = 0; i < dataLength; i++)
-                data[i] = reader.ReadByte();
+            var data = RnetData.Read(reader);
 
             return new RnetSetDataMessage(
                 targetDeviceId, sourceDeviceId,

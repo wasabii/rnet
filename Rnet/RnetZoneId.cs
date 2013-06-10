@@ -54,11 +54,20 @@
         /// </summary>
         public byte Value { get; set; }
 
+        /// <summary>
+        /// Indicates whether this instance and the specified object are equal.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             return obj is RnetZoneId ? ((RnetZoneId)obj).Value == Value : false;
         }
 
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return Value.GetHashCode();

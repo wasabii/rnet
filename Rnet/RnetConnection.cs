@@ -147,7 +147,7 @@ namespace Rnet
         public virtual Task SendAsync(RnetMessage message, CancellationToken cancellationToken)
         {
             if (State != RnetConnectionState.Open)
-                throw new RnetConnectionException("Connection is not open.");
+                throw new RnetConnectionException("RNET connection is not open.");
 
             message.Write(writer);
 
@@ -163,7 +163,7 @@ namespace Rnet
             try
             {
                 if (State != RnetConnectionState.Open)
-                    throw new RnetConnectionException("Connection is not open.");
+                    throw new RnetConnectionException("RNET connection is not open.");
 
                 return reader.Read();
             }

@@ -38,6 +38,9 @@
     <Compile Include="RnetConnectionException.cs" />
     <Compile Include="RnetConnectionState.cs" />
     <Compile Include="RnetConnectionStateEventArgs.cs" />
+    <Compile Include="RnetData.cs" />
+    <Compile Include="RnetRequestMessageType.cs" />
+    <Compile Include="RnetTextAlignment.cs" />
     <Compile Include="RnetUtils.cs" />
     <Compile Include="RnetMessageBodyReader.cs" />
     <Compile Include="RnetProtocolException.cs" />

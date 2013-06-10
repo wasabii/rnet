@@ -30,11 +30,12 @@ namespace Rnet
         /// <param name="packetCount"></param>
         /// <param name="data"></param>
         public RnetRequestDataMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetPath targetPath,
-            RnetPath sourcePath)
+            RnetPath sourcePath, RnetRequestMessageType type)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.RequestData)
         {
             TargetPath = targetPath ?? new RnetPath();
             SourcePath = sourcePath ?? new RnetPath();
+            Type = type;
         }
 
         /// <summary>
@@ -47,10 +48,16 @@ namespace Rnet
         /// </summary>
         public RnetPath SourcePath { get; set; }
 
+        /// <summary>
+        /// Type of request.
+        /// </summary>
+        public RnetRequestMessageType Type { get; set; }
+
         internal protected override void WriteBody(RnetStreamWriter writer)
         {
             TargetPath.Write(writer);
             SourcePath.Write(writer);
+            writer.WriteByte((byte)Type);
         }
 
         /// <summary>
@@ -64,11 +71,13 @@ namespace Rnet
         {
             var targetPath = RnetPath.Read(reader);
             var sourcePath = RnetPath.Read(reader);
+            var type = (RnetRequestMessageType)reader.ReadByte();
 
             return new RnetRequestDataMessage(
                 targetDeviceId, sourceDeviceId,
                 targetPath,
-                sourcePath);
+                sourcePath,
+                type);
         }
 
         protected override void WriteBodyDebugView(TextWriter writer)
@@ -76,6 +85,7 @@ namespace Rnet
             writer.WriteLine("/* request data */");
             writer.WriteLine("TargetPath = \"{0}\",", TargetPath);
             writer.WriteLine("SourcePath = \"{0}\",", SourcePath);
+            writer.WriteLine("Type = {0},", Type);
         }
 
     }

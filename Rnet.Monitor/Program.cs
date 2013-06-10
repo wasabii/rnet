@@ -33,8 +33,9 @@ namespace Rnet.Monitor
                 var m2 = new RnetRequestDataMessage(
                     RnetDeviceId.RootController,
                     RnetDeviceId.External,
-                    new RnetPath(0x02, 0x00, 0x00, 0x06),
-                    new RnetPath());
+                    new RnetPath(0x02, 0x00, 0x00, 0x07),
+                    new RnetPath(),
+                    RnetRequestMessageType.Data);
                 rnet.Send(m2);
 
                 Console.ReadLine();

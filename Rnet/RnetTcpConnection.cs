@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -127,6 +128,10 @@ namespace Rnet
                 catch (SocketException e)
                 {
                     exception = e;
+                }
+                catch (RnetException e)
+                {
+                    ExceptionDispatchInfo.Capture(e).Throw();
                 }
 
                 // timeout exception received, ignore it and continue
