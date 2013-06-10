@@ -12,14 +12,14 @@ namespace Rnet
     /// <summary>
     /// Provides methods by which to read messages from an RNet <see cref="Stream"/>.
     /// </summary>
-    public class RnetReader
+    public class RnetStreamReader
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="source"></param>
-        public RnetReader(Stream source)
+        public RnetStreamReader(Stream source)
         {
             Source = source;
         }
@@ -30,16 +30,40 @@ namespace Rnet
         public Stream Source { get; private set; }
 
         /// <summary>
+        /// Reads a single byte, or returns the exception that occurred while attempting to.
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <returns></returns>
+        int ReadByte(out Exception exception)
+        {
+            try
+            {
+                exception = null;
+                return Source.ReadByte();
+            }
+            catch (Exception e)
+            {
+                exception = e;
+                return -1;
+            }
+        }
+
+        /// <summary>
         /// Reads a single byte from the source stream.
         /// </summary>
         /// <returns></returns>
         async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
         {
+            Exception e = null;
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                var b = await Task.Run(() => Source.ReadByte(), cancellationToken);
-                if (b != -1)
-                    return (byte)b;
+                var b = await Task.Run(() => (byte)ReadByte(out e), cancellationToken);
+                if (e != null)
+                    throw e;
+
+                // return byte
+                return b;
             }
 
             throw new RnetException("Could not read from underlying stream.");

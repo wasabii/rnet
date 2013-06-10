@@ -35,7 +35,7 @@ namespace Rnet
         /// Writes the path to the writer.
         /// </summary>
         /// <param name="writer"></param>
-        internal void Write(RnetWriter writer)
+        internal void Write(RnetStreamWriter writer)
         {
             writer.WriteByte((byte)items.Length);
             foreach (var item in items)

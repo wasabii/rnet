@@ -24,7 +24,7 @@
         /// </summary>
         RnetHandshakeType HandshakeType { get; set; }
 
-        internal protected override void WriteBody(RnetWriter writer)
+        internal protected override void WriteBody(RnetStreamWriter writer)
         {
             writer.WriteByte((byte)HandshakeType);
         }
@@ -38,9 +38,11 @@
         /// <returns></returns>
         internal static RnetHandshakeMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
+            var handshakeType = (RnetHandshakeType)reader.ReadByte();
+            
             return new RnetHandshakeMessage(
                 targetDeviceId, sourceDeviceId,
-                (RnetHandshakeType)reader.ReadByte());
+                handshakeType);
         }
 
     }

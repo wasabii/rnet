@@ -14,8 +14,8 @@ namespace Rnet
 
         IPEndPoint ep;
         TcpClient tcp;
-        RnetReader reader;
-        RnetWriter writer;
+        RnetStreamReader reader;
+        RnetStreamWriter writer;
 
         /// <summary>
         /// Initializes a new connection to an RNET device at the given endpoint.
@@ -64,8 +64,8 @@ namespace Rnet
             await tcp.ConnectAsync(ep.Address, ep.Port);
 
             // initialize reader and writer
-            reader = new RnetReader(tcp.GetStream());
-            writer = new RnetWriter(tcp.GetStream());
+            reader = new RnetStreamReader(tcp.GetStream());
+            writer = new RnetStreamWriter(tcp.GetStream());
         }
 
         protected override void Disconnect()
@@ -84,12 +84,12 @@ namespace Rnet
             return Task.FromResult(0);
         }
 
-        protected override RnetReader GetReader()
+        protected override RnetStreamReader GetReader()
         {
             return reader;
         }
 
-        protected override RnetWriter GetWriter()
+        protected override RnetStreamWriter GetWriter()
         {
             return writer;
         }

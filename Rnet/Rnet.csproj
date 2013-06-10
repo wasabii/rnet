@@ -49,14 +49,14 @@
     <Compile Include="RnetException.cs" />
     <Compile Include="RnetHandshakeMessage.cs" />
     <Compile Include="RnetHandshakeType.cs" />
-    <Compile Include="RnetReader.cs" />
+    <Compile Include="RnetStreamReader.cs" />
     <Compile Include="RnetMessageReceivedEventArgs.cs" />
     <Compile Include="RnetZoneId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetDeviceId.cs" />
     <Compile Include="RnetMessage.cs" />
     <Compile Include="RnetMessageType.cs" />
-    <Compile Include="RnetWriter.cs" />
+    <Compile Include="RnetStreamWriter.cs" />
     <Compile Include="RnetPath.cs" />
     <Compile Include="RnetKeypadId.cs" />
     <Compile Include="RnetSpecialMessageChars.cs" />

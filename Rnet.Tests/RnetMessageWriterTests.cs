@@ -14,7 +14,7 @@ namespace Rnet.Tests
         public void TestDeviceId()
         {
             var stm = new MemoryStream();
-            var wrt = new RnetWriter(stm);
+            var wrt = new RnetStreamWriter(stm);
 
             new RnetDeviceId(0x00, 0x00, 0x7f).Write(wrt);
 
@@ -32,7 +32,7 @@ namespace Rnet.Tests
         public void TestEmptyPath()
         {
             var stm = new MemoryStream();
-            var wrt = new RnetWriter(stm);
+            var wrt = new RnetStreamWriter(stm);
 
             new RnetPath().Write(wrt);
 
@@ -43,7 +43,7 @@ namespace Rnet.Tests
         public void TestPath()
         {
             var stm = new MemoryStream();
-            var wrt = new RnetWriter(stm);
+            var wrt = new RnetStreamWriter(stm);
 
             new RnetPath(1, 2, 3).Write(wrt);
 
@@ -62,7 +62,7 @@ namespace Rnet.Tests
         public void TestUInt16()
         {
             var stm = new MemoryStream();
-            var wrt = new RnetWriter(stm);
+            var wrt = new RnetStreamWriter(stm);
 
             wrt.WriteUInt16(1);
 
@@ -79,7 +79,7 @@ namespace Rnet.Tests
         public void TestFullMessage()
         {
             var stm = new MemoryStream();
-            var wrt = new RnetWriter(stm);
+            var wrt = new RnetStreamWriter(stm);
 
             wrt.BeginMessage(RnetDeviceId.RootControllerTarget, RnetDeviceId.ExternalSource, RnetMessageType.Event);
             RnetDeviceId.RootControllerTarget.Write(wrt);

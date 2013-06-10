@@ -10,7 +10,7 @@
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetMessage()
+        protected RnetMessage()
         {
 
         }
@@ -32,23 +32,23 @@
         /// <summary>
         /// Gets or sets the target Device ID.
         /// </summary>
-        public RnetDeviceId TargetDeviceId { get; set; }
+        public RnetDeviceId TargetDeviceId { get; private set; }
 
         /// <summary>
         /// Gets or sets the source Device ID.
         /// </summary>
-        public RnetDeviceId SourceDeviceId { get; set; }
+        public RnetDeviceId SourceDeviceId { get; private set; }
 
         /// <summary>
         /// Gets or sets the message type.
         /// </summary>
-        public RnetMessageType MessageType { get; set; }
+        public RnetMessageType MessageType { get; private set; }
 
         /// <summary>
         /// Writes the message using the given writer.
         /// </summary>
         /// <param name="writer"></param>
-        internal void Write(RnetWriter writer)
+        internal void Write(RnetStreamWriter writer)
         {
             writer.BeginMessage(TargetDeviceId, SourceDeviceId, MessageType);
             WriteBody(writer);
@@ -59,7 +59,7 @@
         /// Writes the body of the message.
         /// </summary>
         /// <param name="writer"></param>
-        internal protected abstract void WriteBody(RnetWriter writer);
+        internal protected abstract void WriteBody(RnetStreamWriter writer);
 
         /// <summary>
         /// Gets a string suitable for debugging the contents of this message.

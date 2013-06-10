@@ -7,7 +7,7 @@ namespace Rnet
     /// <summary>
     /// Provides methods by which to write RNet messages to a <see cref="Stream"/>.
     /// </summary>
-    public class RnetWriter
+    public class RnetStreamWriter
     {
 
         int len = -1;
@@ -17,7 +17,7 @@ namespace Rnet
         /// Initializes a new instance.
         /// </summary>
         /// <param name="rnet"></param>
-        internal RnetWriter(Stream stream)
+        internal RnetStreamWriter(Stream stream)
         {
             Stream = stream;
         }

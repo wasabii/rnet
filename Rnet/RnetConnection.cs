@@ -13,8 +13,8 @@ namespace Rnet
     public abstract class RnetConnection : IDisposable
     {
 
-        RnetWriter writer;
-        RnetReader reader;
+        RnetStreamWriter writer;
+        RnetStreamReader reader;
 
         /// <summary>
         /// Initializes a new connection that communicates with the given <see cref="Stream"/>.
@@ -26,16 +26,16 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Implementations should return the <see cref="RnetReader"/> for the current connection.
+        /// Implementations should return the <see cref="RnetStreamReader"/> for the current connection.
         /// </summary>
         /// <returns></returns>
-        protected abstract RnetReader GetReader();
+        protected abstract RnetStreamReader GetReader();
 
         /// <summary>
-        /// Implementations should return the <see cref="RnetWriter"/> for the current connection.
+        /// Implementations should return the <see cref="RnetStreamWriter"/> for the current connection.
         /// </summary>
         /// <returns></returns>
-        protected abstract RnetWriter GetWriter();
+        protected abstract RnetStreamWriter GetWriter();
 
         /// <summary>
         /// Initializes the connection.

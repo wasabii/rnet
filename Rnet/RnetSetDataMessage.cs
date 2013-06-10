@@ -66,7 +66,7 @@ namespace Rnet
         /// </summary>
         public byte[] Data { get; set; }
 
-        internal protected override void WriteBody(RnetWriter writer)
+        internal protected override void WriteBody(RnetStreamWriter writer)
         {
             TargetPath.Write(writer);
             SourcePath.Write(writer);

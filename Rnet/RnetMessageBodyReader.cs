@@ -56,7 +56,7 @@ namespace Rnet
         /// Reads a single byte from the RNet message body.
         /// </summary>
         /// <returns></returns>
-        internal byte ReadByte()
+        public byte ReadByte()
         {
             var b = ReadRaw();
             if (b == (byte)RnetSpecialMessageChars.Invert)
@@ -70,7 +70,7 @@ namespace Rnet
         /// Reads a <see cref="UInt16"/> value from the RNet message body.
         /// </summary>
         /// <returns></returns>
-        internal ushort ReadUInt16()
+        public ushort ReadUInt16()
         {
             var lo = (int)ReadByte();
             var hi = (int)ReadByte();
