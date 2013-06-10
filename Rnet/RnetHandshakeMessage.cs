@@ -36,7 +36,7 @@
         /// <param name="targetDeviceId"></param>
         /// <param name="sourceDeviceId"></param>
         /// <returns></returns>
-        internal static RnetHandshakeMessage Read(RnetReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
+        internal static RnetHandshakeMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
             return new RnetHandshakeMessage(
                 targetDeviceId, sourceDeviceId,

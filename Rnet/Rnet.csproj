@@ -35,6 +35,9 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetConnectionState.cs" />
+    <Compile Include="RnetMessageBodyReader.cs" />
+    <Compile Include="RnetProtocolException.cs" />
     <Compile Include="RnetRequestDataMessage.cs" />
     <Compile Include="RnetSetDataMessage.cs" />
     <Compile Include="EnumerableExtensions.cs" />

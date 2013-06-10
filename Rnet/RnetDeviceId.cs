@@ -63,7 +63,7 @@ namespace Rnet
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public static RnetDeviceId Read(RnetReader reader)
+        public static RnetDeviceId Read(RnetMessageBodyReader reader)
         {
             return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
         }

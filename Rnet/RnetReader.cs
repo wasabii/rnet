@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 
 namespace Rnet
 {
@@ -11,9 +11,6 @@ namespace Rnet
     /// </summary>
     public class RnetReader
     {
-
-        byte[] body;
-        int pos;
 
         /// <summary>
         /// Initializes a new instance.
@@ -71,16 +68,15 @@ namespace Rnet
                             break;
 
                         // extract message body
-                        body = new byte[length - 3];
+                        var body = new byte[length - 3];
                         Array.Copy(buffer, 1, body, 0, length - 3);
-                        pos = 0;
 
                         // body isn't long enough to contain an actual message
                         if (body.Length < 7)
                             break;
 
                         // attempt to decode, parse and return the message body
-                        return ParseMessage();
+                        return ParseMessage(new RnetMessageBodyReader(new MemoryStream(body)));
                     }
                 }
             }
@@ -98,72 +94,40 @@ namespace Rnet
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        RnetMessage ParseMessage()
-        {
-            // parse device ids
-            var targetDeviceId = RnetDeviceId.Read(this);
-            var sourceDeviceId = RnetDeviceId.Read(this);
-            var messageType = (RnetMessageType)ReadByte();
-
-            switch (messageType)
-            {
-                case RnetMessageType.Event:
-                    return RnetEventMessage.Read(this, targetDeviceId, sourceDeviceId);
-                case RnetMessageType.RequestData:
-                    return RnetRequestDataMessage.Read(this, targetDeviceId, sourceDeviceId);
-                case RnetMessageType.SetData:
-                    return RnetSetDataMessage.Read(this, targetDeviceId, sourceDeviceId);
-                case RnetMessageType.Handshake:
-                    return RnetHandshakeMessage.Read(this, targetDeviceId, sourceDeviceId);
-            }
-
-            // unsupported message type
-            throw new RnetException();
-        }
-
-        /// <summary>
-        /// Reads a single byte from the current message body without first decoding it.
-        /// </summary>
-        /// <returns></returns>
-        internal byte ReadRaw()
+        RnetMessage ParseMessage(RnetMessageBodyReader reader)
         {
             try
             {
-                return body[pos++];
-            }
-            catch (NullReferenceException)
-            {
-                throw new RnetException();
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                throw new RnetException();
-            }
-        }
+                // parse device ids
+                var targetDeviceId = RnetDeviceId.Read(reader);
+                var sourceDeviceId = RnetDeviceId.Read(reader);
+                var messageType = (RnetMessageType)reader.ReadByte();
 
-        /// <summary>
-        /// Reads a single byte from the RNet message body.
-        /// </summary>
-        /// <returns></returns>
-        internal byte ReadByte()
-        {
-            var b = ReadRaw();
-            if (b == (byte)RnetSpecialMessageChars.Invert)
-                // invert instruction encountered, flip next byte
-                return (byte)(ReadRaw() ^ 0xff);
-            else
-                return b;
-        }
+                switch (messageType)
+                {
+                    case RnetMessageType.Event:
+                        return RnetEventMessage.Read(reader, targetDeviceId, sourceDeviceId);
+                    case RnetMessageType.RequestData:
+                        return RnetRequestDataMessage.Read(reader, targetDeviceId, sourceDeviceId);
+                    case RnetMessageType.SetData:
+                        return RnetSetDataMessage.Read(reader, targetDeviceId, sourceDeviceId);
+                    case RnetMessageType.Handshake:
+                        return RnetHandshakeMessage.Read(reader, targetDeviceId, sourceDeviceId);
+                    default:
+                        throw new RnetProtocolException("Unknown RNET message type.");
+                }
+            }
+            catch (RnetException e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+            catch (Exception e)
+            {
+                throw new RnetProtocolException("Exception parsing RNET message.", e);
+            }
 
-        /// <summary>
-        /// Reads a <see cref="UInt16"/> value from the RNet message body.
-        /// </summary>
-        /// <returns></returns>
-        internal ushort ReadUInt16()
-        {
-            var lo = (int)ReadByte();
-            var hi = (int)ReadByte();
-            return (ushort)((hi << 8) | lo);
+            // unreachable
+            return null;
         }
 
     }

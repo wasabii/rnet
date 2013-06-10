@@ -47,7 +47,7 @@ namespace Rnet
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        internal static RnetPath Read(RnetReader reader)
+        internal static RnetPath Read(RnetMessageBodyReader reader)
         {
             var len = reader.ReadByte();
             var buf = new byte[len];

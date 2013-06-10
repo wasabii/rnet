@@ -3,16 +3,13 @@
 namespace Rnet
 {
 
-    /// <summary>
-    /// Represents errors that occur during RNet operations.
-    /// </summary>
-    public class RnetException : Exception
+    public class RnetProtocolException : RnetException
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetException()
+        public RnetProtocolException()
             : base()
         {
 
@@ -21,7 +18,7 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetException(string message)
+        public RnetProtocolException(string message)
             : base(message)
         {
 
@@ -30,7 +27,7 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetException(string message, Exception innerException)
+        public RnetProtocolException(string message, Exception innerException)
             : base(message, innerException)
         {
 

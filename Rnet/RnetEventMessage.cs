@@ -86,7 +86,7 @@ namespace Rnet
         /// <param name="targetDeviceId"></param>
         /// <param name="sourceDeviceId"></param>
         /// <returns></returns>
-        internal static RnetEventMessage Read(RnetReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
+        internal static RnetEventMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
             return new RnetEventMessage(
                 targetDeviceId, sourceDeviceId,

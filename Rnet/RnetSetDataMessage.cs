@@ -84,7 +84,7 @@ namespace Rnet
         /// <param name="targetDeviceId"></param>
         /// <param name="sourceDeviceId"></param>
         /// <returns></returns>
-        internal static RnetSetDataMessage Read(RnetReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
+        internal static RnetSetDataMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
             var targetPath = RnetPath.Read(reader);
             var sourcePath = RnetPath.Read(reader);
