@@ -39,7 +39,12 @@ namespace Rnet
             try
             {
                 exception = null;
-                return Source.ReadByte();
+
+                var b = Source.ReadByte();
+                if (b == -1)
+                    throw new EndOfStreamException();
+
+                return b;
             }
             catch (Exception e)
             {

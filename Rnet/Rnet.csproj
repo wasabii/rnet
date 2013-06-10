@@ -35,10 +35,15 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetClient.cs" />
+    <Compile Include="RnetClientErrorEventArgs.cs" />
+    <Compile Include="RnetClientState.cs" />
+    <Compile Include="RnetClientStateEventArgs.cs" />
     <Compile Include="RnetConnectionException.cs" />
     <Compile Include="RnetConnectionState.cs" />
     <Compile Include="RnetConnectionStateEventArgs.cs" />
     <Compile Include="RnetData.cs" />
+    <Compile Include="RnetMessageEventArgs.cs" />
     <Compile Include="RnetRequestMessageType.cs" />
     <Compile Include="RnetTextAlignment.cs" />
     <Compile Include="RnetUtils.cs" />
@@ -54,7 +59,6 @@
     <Compile Include="RnetHandshakeMessage.cs" />
     <Compile Include="RnetHandshakeType.cs" />
     <Compile Include="RnetStreamReader.cs" />
-    <Compile Include="RnetMessageReceivedEventArgs.cs" />
     <Compile Include="RnetZoneId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetDeviceId.cs" />

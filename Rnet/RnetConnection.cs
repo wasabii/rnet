@@ -58,8 +58,19 @@ namespace Rnet
         {
             try
             {
-                Connect();
-                Init();
+                try
+                {
+                    Connect();
+                    Init();
+                }
+                catch (AggregateException e)
+                {
+                    e = e.Flatten();
+                    if (e.InnerExceptions.Count == 1)
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                    else
+                        ExceptionDispatchInfo.Capture(e).Throw();
+                }
             }
             catch (RnetException e)
             {
@@ -80,7 +91,18 @@ namespace Rnet
         {
             try
             {
-                Disconnect();
+                try
+                {
+                    Disconnect();
+                }
+                catch (AggregateException e)
+                {
+                    e = e.Flatten();
+                    if (e.InnerExceptions.Count == 1)
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                    else
+                        ExceptionDispatchInfo.Capture(e).Throw();
+                }
             }
             catch (RnetException e)
             {

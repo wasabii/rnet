@@ -102,24 +102,18 @@ namespace Rnet
 
         public override RnetMessage Receive()
         {
-            return ReceiveAsync().Result;
-        }
-
-        public override Task<RnetMessage> ReceiveAsync()
-        {
-            return ReceiveAsync(CancellationToken.None);
-        }
-
-        public async override Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
-        {
             // ignore timeout exceptions
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
-                SocketException exception = null;
+                Exception exception = null;
 
                 try
                 {
-                    return await base.ReceiveAsync(cancellationToken);
+                    return base.Receive();
+                }
+                catch (EndOfStreamException e)
+                {
+                    exception = e;
                 }
                 catch (IOException e)
                 {
@@ -136,8 +130,58 @@ namespace Rnet
 
                 // timeout exception received, ignore it and continue
                 if (exception != null)
-                    if (exception.SocketErrorCode == SocketError.TimedOut)
+                {
+                    if (exception is SocketException && ((SocketException)exception).SocketErrorCode == SocketError.TimedOut)
                         continue;
+                    if (exception is EndOfStreamException)
+                        continue;
+                }
+
+                throw new RnetConnectionException("Unable to receive message.", exception);
+            }
+        }
+
+        public override Task<RnetMessage> ReceiveAsync()
+        {
+            return ReceiveAsync(CancellationToken.None);
+        }
+
+        public async override Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
+        {
+            // ignore timeout exceptions
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                Exception exception = null;
+
+                try
+                {
+                    return await base.ReceiveAsync(cancellationToken);
+                }
+                catch (EndOfStreamException e)
+                {
+                    exception = e;
+                }
+                catch (IOException e)
+                {
+                    exception = e.InnerException as SocketException;
+                }
+                catch (SocketException e)
+                {
+                    exception = e;
+                }
+                catch (RnetException e)
+                {
+                    ExceptionDispatchInfo.Capture(e).Throw();
+                }
+
+                // timeout exception received, ignore it and continue
+                if (exception != null)
+                {
+                    if (exception is SocketException && ((SocketException)exception).SocketErrorCode == SocketError.TimedOut)
+                        continue;
+                    if (exception is EndOfStreamException)
+                        continue;
+                }
 
                 throw new RnetConnectionException("Unable to receive message.", exception);
             }
