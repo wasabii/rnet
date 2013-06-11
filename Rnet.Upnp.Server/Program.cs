@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Rnet.Upnp.Server
 {
@@ -8,9 +9,12 @@ namespace Rnet.Upnp.Server
 
         public static void Main(string[] args)
         {
-            var bus = new Bus();
-            var srv = new BusServer("uuid:" + Guid.NewGuid(), "RNet Bus", "Russound", "CAM6.6", bus);
-            srv.Start();
+            Task.Run(() =>
+            {
+                var bus = new Bus();
+                var srv = new BusServer("uuid:" + Guid.NewGuid(), "RNet Bus", "Russound", "CAM6.6", bus);
+                srv.Start();
+            }).Wait();
 
             Console.ReadLine();
         }

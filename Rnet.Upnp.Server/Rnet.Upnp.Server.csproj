@@ -48,6 +48,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\mono-upnp\src\Mono.Upnp\Mono.Upnp\Mono.Upnp.csproj">
+      <Project>{5e5a8c5e-334d-4ed2-b40f-34712c7e085c}</Project>
+      <Name>Mono.Upnp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet.Upnp\Rnet.Upnp.csproj">
       <Project>{3bc5a3f3-279b-49f8-ab95-5d388f1a5e80}</Project>
       <Name>Rnet.Upnp</Name>
