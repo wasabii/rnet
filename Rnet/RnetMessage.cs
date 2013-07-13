@@ -1,6 +1,6 @@
 ﻿using System.CodeDom.Compiler;
 using System.IO;
-namespace Rnet
+namespace Rnet.Protocol
 {
 
     /// <summary>

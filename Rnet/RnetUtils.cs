@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace Rnet
+namespace Rnet.Protocol
 {
 
     public static class RnetUtils

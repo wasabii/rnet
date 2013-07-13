@@ -1,4 +1,4 @@
-﻿namespace Rnet
+﻿namespace Rnet.Protocol
 {
 
     public enum RnetRequestMessageType : byte

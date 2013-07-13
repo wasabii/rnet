@@ -56,9 +56,9 @@
       <Project>{3bc5a3f3-279b-49f8-ab95-5d388f1a5e80}</Project>
       <Name>Rnet.Upnp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rnet\Rnet.csproj">
+    <ProjectReference Include="..\Rnet\Rnet.Protocol.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
-      <Name>Rnet</Name>
+      <Name>Rnet.Protocol</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
