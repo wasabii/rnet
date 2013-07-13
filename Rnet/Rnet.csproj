@@ -35,6 +35,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ModelObject.cs" />
+    <Compile Include="RnetBus.cs" />
     <Compile Include="RnetClient.cs" />
     <Compile Include="RnetClientErrorEventArgs.cs" />
     <Compile Include="RnetClientState.cs" />
@@ -42,7 +44,11 @@
     <Compile Include="RnetConnectionException.cs" />
     <Compile Include="RnetConnectionState.cs" />
     <Compile Include="RnetConnectionStateEventArgs.cs" />
+    <Compile Include="RnetController.cs" />
     <Compile Include="RnetData.cs" />
+    <Compile Include="RnetDataItem.cs" />
+    <Compile Include="RnetDataItemCollection.cs" />
+    <Compile Include="RnetDevice.cs" />
     <Compile Include="RnetMessageEventArgs.cs" />
     <Compile Include="RnetRequestMessageType.cs" />
     <Compile Include="RnetTextAlignment.cs" />

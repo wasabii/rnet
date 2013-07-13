@@ -3,15 +3,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 
-using Rnet.Protocol;
-
-namespace Rnet.Model
+namespace Rnet
 {
 
     /// <summary>
     /// Initializes a connection to the Rnet bus and assembles a model of the available devices.
     /// </summary>
-    public sealed class Bus : Device, IDisposable
+    public sealed class RnetBus : RnetDevice, IDisposable
     {
 
         object sync = new object();
@@ -22,7 +20,7 @@ namespace Rnet.Model
         /// Initializes a new instance.
         /// </summary>
         /// <param name="client"></param>
-        public Bus(RnetClient client, RnetDeviceId id)
+        public RnetBus(RnetClient client, RnetDeviceId id)
         {
             if (client == null)
                 throw new ArgumentNullException("client");
@@ -36,7 +34,7 @@ namespace Rnet.Model
             Client.MessageReceived += Client_MessageReceived;
 
             // initialize set of known devices, including ourselves
-            Devices = new ObservableCollection<Device>();
+            Devices = new ObservableCollection<RnetDevice>();
             Devices.Add(this);
 
             // periodically requests a refresh of all data
@@ -47,7 +45,7 @@ namespace Rnet.Model
         /// Initializes a new instance.
         /// </summary>
         /// <param name="client"></param>
-        public Bus(RnetClient client)
+        public RnetBus(RnetClient client)
             : this(client, RnetDeviceId.External)
         {
 
@@ -66,7 +64,7 @@ namespace Rnet.Model
         /// <summary>
         /// RNET devices detected on the bus.
         /// </summary>
-        public ObservableCollection<Device> Devices { get; private set; }
+        public ObservableCollection<RnetDevice> Devices { get; private set; }
 
         /// <summary>
         /// Starts the RNET bus.
@@ -132,7 +130,7 @@ namespace Rnet.Model
                 // source is a controller
                 if (msg.SourceDeviceId.ZoneId == RnetZoneId.Zone1 &&
                     msg.SourceDeviceId.KeypadId == RnetKeypadId.Controller)
-                    device = new Controller(msg.SourceDeviceId.ControllerId);
+                    device = new RnetController(msg.SourceDeviceId.ControllerId);
 
                 // add to set of known devices
                 if (device != null)

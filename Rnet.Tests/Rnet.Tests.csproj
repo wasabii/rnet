@@ -6,8 +6,8 @@
     <ProjectGuid>{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rnet.Protocol.Tests</RootNamespace>
-    <AssemblyName>Rnet.Protocol.Tests</AssemblyName>
+    <RootNamespace>Rnet.Tests</RootNamespace>
+    <AssemblyName>Rnet.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -55,7 +55,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rnet.Protocol\Rnet.csproj">
+    <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
       <Name>Rnet</Name>
     </ProjectReference>

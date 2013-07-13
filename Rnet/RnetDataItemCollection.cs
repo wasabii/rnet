@@ -3,27 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-using Rnet.Protocol;
-
-namespace Rnet.Model
+namespace Rnet
 {
 
     /// <summary>
     /// Stores a set of <see cref="Item"/>s.
     /// </summary>
-    public class DataItemCollection : IEnumerable<DataItem>
+    public class RnetDataItemCollection : IEnumerable<RnetDataItem>
     {
 
-        Dictionary<RnetPath, DataItem> items = new Dictionary<RnetPath, DataItem>();
+        Dictionary<RnetPath, RnetDataItem> items = new Dictionary<RnetPath, RnetDataItem>();
 
         /// <summary>
         /// Gets the data item at the specified path.
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        DataItem GetData(RnetPath path)
+        RnetDataItem GetData(RnetPath path)
         {
-            DataItem item;
+            RnetDataItem item;
             return items.TryGetValue(path, out item) ? item : null;
         }
 
@@ -32,7 +30,7 @@ namespace Rnet.Model
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public DataItem this[RnetPath path]
+        public RnetDataItem this[RnetPath path]
         {
             get
             { return GetData(path); }
@@ -46,7 +44,7 @@ namespace Rnet.Model
         {
             var item = GetData(path);
             if (item == null)
-                item = items[path] = new DataItem(path);
+                item = items[path] = new RnetDataItem(path);
 
             item.WriteBegin();
         }
@@ -88,7 +86,7 @@ namespace Rnet.Model
                 items.Remove(path);
         }
 
-        public IEnumerator<DataItem> GetEnumerator()
+        public IEnumerator<RnetDataItem> GetEnumerator()
         {
             return items.Values.GetEnumerator();
         }

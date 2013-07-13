@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Rnet.Model
+namespace Rnet
 {
 
     /// <summary>

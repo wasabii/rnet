@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using Rnet.Protocol;
 
-namespace Rnet.Model
+namespace Rnet
 {
 
-    public class DataItem
+    public class RnetDataItem
     {
 
         DateTime timestamp;
@@ -16,7 +15,7 @@ namespace Rnet.Model
         /// Initializes a new instance.
         /// </summary>
         /// <param name="path"></param>
-        internal DataItem(RnetPath path)
+        internal RnetDataItem(RnetPath path)
         {
             Path = path;
         }

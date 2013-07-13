@@ -39,16 +39,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bus.cs" />
-    <Compile Include="Controller.cs" />
-    <Compile Include="DataItem.cs" />
-    <Compile Include="Device.cs" />
-    <Compile Include="ModelObject.cs" />
-    <Compile Include="DataItemCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rnet.Protocol\Rnet.csproj">
+    <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
       <Name>Rnet</Name>
     </ProjectReference>

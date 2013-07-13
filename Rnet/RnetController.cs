@@ -1,19 +1,17 @@
-﻿using Rnet.Protocol;
-
-namespace Rnet.Model
+﻿namespace Rnet
 {
 
     /// <summary>
     /// Describes a known controller on the RNET bus.
     /// </summary>
-    public sealed class Controller : Device
+    public sealed class RnetController : RnetDevice
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="controllerId"></param>
-        public Controller(RnetControllerId controllerId)
+        public RnetController(RnetControllerId controllerId)
         {
             ControllerId = controllerId;
         }

@@ -1,20 +1,18 @@
-﻿using Rnet.Protocol;
-
-namespace Rnet.Model
+﻿namespace Rnet
 {
 
     /// <summary>
     /// Base class of RNET devices.
     /// </summary>
-    public abstract class Device
+    public abstract class RnetDevice
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        protected Device()
+        protected RnetDevice()
         {
-            Items = new DataItemCollection();
+            Items = new RnetDataItemCollection();
         }
 
         /// <summary>
@@ -25,7 +23,7 @@ namespace Rnet.Model
         /// <summary>
         /// Gets the set of items stored in this device.
         /// </summary>
-        public DataItemCollection Items { get; private set; }
+        public RnetDataItemCollection Items { get; private set; }
 
     }
 
