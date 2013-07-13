@@ -1,11 +1,12 @@
 ﻿using System.IO;
+
 namespace Rnet.Protocol
 {
 
     /// <summary>
     /// Defines an RNet handshake message.
     /// </summary>
-    class RnetHandshakeMessage : RnetMessage
+    public class RnetHandshakeMessage : RnetMessage
     {
 
         /// <summary>
@@ -14,7 +15,7 @@ namespace Rnet.Protocol
         /// <param name="targetDeviceId"></param>
         /// <param name="sourceDeviceId"></param>
         /// <param name="handshakeType"></param>
-        RnetHandshakeMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetHandshakeType handshakeType)
+        public RnetHandshakeMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetHandshakeType handshakeType)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.Handshake)
         {
             HandshakeType = handshakeType;

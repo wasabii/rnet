@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace Rnet.Protocol
 {
@@ -30,6 +29,14 @@ namespace Rnet.Protocol
         {
             get { return items[index]; }
             set { items[index] = value; }
+        }
+
+        /// <summary>
+        /// Gets the number of items in the path.
+        /// </summary>
+        public int Length
+        {
+            get { return items.Length; }
         }
 
         /// <summary>

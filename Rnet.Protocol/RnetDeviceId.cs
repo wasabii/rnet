@@ -25,6 +25,28 @@ namespace Rnet.Protocol
         public static readonly RnetDeviceId External = new RnetDeviceId(0, 0, RnetKeypadId.External);
 
         /// <summary>
+        /// Returns <c>true</c> if the two device IDs are equal.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static bool operator ==(RnetDeviceId x, RnetDeviceId y)
+        {
+            return object.Equals(x, y);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the two device IDs are not equal.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static bool operator !=(RnetDeviceId x, RnetDeviceId y)
+        {
+            return !object.Equals(x, y);
+        }
+
+        /// <summary>
         /// Reads a device ID from the reader.
         /// </summary>
         /// <param name="reader"></param>

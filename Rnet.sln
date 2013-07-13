@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Protocol", "Rnet.Proto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Protocol.Tests", "Rnet.Protocol.Tests\Rnet.Protocol.Tests.csproj", "{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Model", "Rnet.Model\Rnet.Model.csproj", "{A8DD0C30-FACF-4E89-9620-BDB21D3AB3D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8DD0C30-FACF-4E89-9620-BDB21D3AB3D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8DD0C30-FACF-4E89-9620-BDB21D3AB3D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8DD0C30-FACF-4E89-9620-BDB21D3AB3D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8DD0C30-FACF-4E89-9620-BDB21D3AB3D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

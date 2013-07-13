@@ -70,13 +70,15 @@
         public override string ToString()
         {
             if (this == Controller)
-                return string.Format("{0} /* AllDevices */", Value);
+                return string.Format("{0} /* Controller */", Value);
             if (this == Reserved)
                 return string.Format("{0} /* Reserved */", Value);
             if (this == AllZone)
                 return string.Format("{0} /* AllZone */", Value);
             if (this == RequestId)
                 return string.Format("{0} /* RequestId */", Value);
+            if (this == External)
+                return string.Format("{0} /* External */", Value);
 
             return Value.ToString();
         }

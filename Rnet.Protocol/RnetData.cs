@@ -145,6 +145,15 @@ namespace Rnet.Protocol
             return DebugView;
         }
 
+        /// <summary>
+        /// Gets the data as a byte array.
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ToArray()
+        {
+            return data;
+        }
+
     }
 
 }

@@ -1,7 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using System.IO;
+﻿using System.IO;
 using System.Linq;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Rnet.Protocol.Tests
 {
@@ -72,7 +72,7 @@ namespace Rnet.Protocol.Tests
                 0x00,
             };
 
-            Assert.IsTrue(stm.ToArray().SequenceEqual(expected)); 
+            Assert.IsTrue(stm.ToArray().SequenceEqual(expected));
         }
 
         [TestMethod]
@@ -83,7 +83,7 @@ namespace Rnet.Protocol.Tests
 
             wrt.BeginMessage(RnetDeviceId.RootController, RnetDeviceId.External, RnetMessageType.Event);
             RnetDeviceId.RootController.Write(wrt);
-            new RnetPath(2,0).Write(wrt);
+            new RnetPath(2, 0).Write(wrt);
             new RnetPath().Write(wrt);
             wrt.WriteUInt16((ushort)RnetEvents.VolumeUp); // VOLUME UP
             wrt.WriteUInt16(0);
@@ -118,7 +118,7 @@ namespace Rnet.Protocol.Tests
 
             var actual = stm.ToArray();
 
-            Assert.IsTrue(actual.SequenceEqual(expected)); 
+            Assert.IsTrue(actual.SequenceEqual(expected));
         }
 
     }

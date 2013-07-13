@@ -180,7 +180,11 @@ namespace Rnet.Protocol
                     EnsureConnection(ct);
 
                     if (sendQueue.TryTake(out message, 1000))
+                    {
                         connection.Send(message);
+                        OnMessageSent(new RnetMessageEventArgs(message));
+                        Thread.Sleep(100);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -283,6 +287,30 @@ namespace Rnet.Protocol
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Sends the message.
+        /// </summary>
+        /// <param name="message"></param>
+        public void SendMessage(RnetMessage message)
+        {
+            sendQueue.Add(message);
+        }
+
+        /// <summary>
+        /// Raised when a message is sent.
+        /// </summary>
+        public event EventHandler<RnetMessageEventArgs> MessageSent;
+
+        /// <summary>
+        /// Raises the MessageSent event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnMessageSent(RnetMessageEventArgs args)
+        {
+            if (MessageSent != null)
+                MessageSent(this, args);
         }
 
         /// <summary>
