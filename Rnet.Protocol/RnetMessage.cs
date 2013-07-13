@@ -1,7 +1,7 @@
 ﻿using System.CodeDom.Compiler;
 using System.IO;
 
-namespace Rnet.Protocol
+namespace Rnet
 {
 
     /// <summary>

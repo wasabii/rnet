@@ -7,8 +7,8 @@
     <ProjectGuid>{9E1BB758-B788-4C23-959B-201E27B221FC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rnet.Protocol</RootNamespace>
-    <AssemblyName>Rnet.Protocol</AssemblyName>
+    <RootNamespace>Rnet</RootNamespace>
+    <AssemblyName>Rnet</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

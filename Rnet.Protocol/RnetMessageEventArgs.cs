@@ -1,4 +1,4 @@
-﻿namespace Rnet.Protocol
+﻿namespace Rnet
 {
 
     public class RnetMessageEventArgs

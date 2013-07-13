@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rnet.Protocol
+namespace Rnet
 {
 
     public class RnetClientErrorEventArgs : EventArgs

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Rnet.Protocol
+namespace Rnet
 {
 
     /// <summary>

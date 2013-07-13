@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Rnet.Protocol
+namespace Rnet
 {
 
     public struct RnetData : IEnumerable<byte>

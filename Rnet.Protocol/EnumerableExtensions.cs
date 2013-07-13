@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-namespace Rnet.Protocol
+namespace Rnet
 {
 
     static class EnumerableExtensions
