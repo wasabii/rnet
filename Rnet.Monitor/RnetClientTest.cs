@@ -1,6 +1,4 @@
 ﻿using System;
-using Rnet.Model;
-using Rnet.Protocol;
 
 namespace Rnet.Monitor
 {
@@ -9,7 +7,7 @@ namespace Rnet.Monitor
     {
 
         static RnetClient c;
-        static Bus b;
+        static RnetBus b;
 
         public static void Main(string[] args)
         {
@@ -20,7 +18,7 @@ namespace Rnet.Monitor
             c.MessageReceived += c_MessageReceived;
             c.Error += c_Error;
 
-            b = new Bus(c);
+            b = new RnetBus(c);
             b.Start();
         }
 
