@@ -35,7 +35,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ModelObject.cs" />
+    <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBus.cs" />
     <Compile Include="RnetClient.cs" />
     <Compile Include="RnetClientErrorEventArgs.cs" />

@@ -6,7 +6,7 @@ namespace Rnet
     /// <summary>
     /// Base class for RNET model objects.
     /// </summary>
-    public abstract class ModelObject : INotifyPropertyChanged
+    public abstract class RnetModelObject : INotifyPropertyChanged
     {
 
         /// <summary>
