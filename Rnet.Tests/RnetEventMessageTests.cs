@@ -3,7 +3,9 @@ using System.Linq;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Rnet.Tests
+using Rnet.Protocol;
+
+namespace Rnet.Protocol.Tests
 {
 
     [TestClass]

@@ -1,9 +1,9 @@
-﻿using System.IO;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System.IO;
 using System.Linq;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Rnet.Tests
+namespace Rnet.Protocol.Tests
 {
 
     [TestClass]
