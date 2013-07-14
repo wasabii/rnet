@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -58,6 +59,17 @@ namespace Rnet
         public Task<RnetDevice> GetAsync(RnetDeviceId id)
         {
             return items.GetAsync(i => i.Id == id, id);
+        }
+
+        /// <summary>
+        /// Gets the device given by the specified <see cref="RnetDeviceId"/>.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<RnetDevice> GetAsync(RnetDeviceId id, CancellationToken cancellationToken)
+        {
+            return items.GetAsync(i => i.Id == id, cancellationToken, id);
         }
 
         /// <summary>

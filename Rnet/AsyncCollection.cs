@@ -102,6 +102,17 @@ namespace Rnet
         /// Returns the discovered item or waits until it is discovered.
         /// </summary>
         /// <param name="predicate"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<T> GetAsync(Predicate<T> predicate, CancellationToken cancellationToken)
+        {
+            return GetAsync(predicate, cancellationToken, null);
+        }
+
+        /// <summary>
+        /// Returns the discovered item or waits until it is discovered.
+        /// </summary>
+        /// <param name="predicate"></param>
         /// <param name="userState"></param>
         /// <returns></returns>
         public Task<T> GetAsync(Predicate<T> predicate, object userState)
@@ -119,16 +130,13 @@ namespace Rnet
         {
             lock (subscribers)
             {
-                // cancels
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
-                    new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
-
                 var item = this.FirstOrDefault(i => predicate(i));
                 if (item != null)
                     return Task.FromResult(item);
 
                 // subscribe to device event
                 var tcs = new TaskCompletionSource<T>();
+                cancellationToken.Register(() => tcs.SetCanceled());
                 AddSubscriber(predicate, tcs, userState);
                 return tcs.Task;
             }

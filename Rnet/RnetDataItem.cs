@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -82,10 +83,19 @@ namespace Rnet
         public DateTime Timestamp { get; private set; }
 
         /// <summary>
-        /// Gets 
+        /// Gets the buffer.
         /// </summary>
         /// <returns></returns>
         public Task<byte[]> GetBufferAsync()
+        {
+            return GetBufferAsync(CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Gets the buffer.
+        /// </summary>
+        /// <returns></returns>
+        public Task<byte[]> GetBufferAsync(CancellationToken cancellationToken)
         {
             lock (subscribers)
             {
@@ -94,6 +104,7 @@ namespace Rnet
 
                 // subscribe to data
                 var tcs = new TaskCompletionSource<byte[]>();
+                cancellationToken.Register(() => tcs.SetCanceled());
                 subscribers.Add(tcs);
                 return tcs.Task;
             }

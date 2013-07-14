@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -33,14 +34,33 @@ namespace Rnet
             RaiseSubscriberAdded((RnetPath)args.Subscriber.UserState);
         }
 
-        internal void Remove(RnetDataItem device)
+        /// <summary>
+        /// Removes the given item.
+        /// </summary>
+        /// <param name="item"></param>
+        internal void Remove(RnetDataItem item)
         {
-            items.Remove(device);
+            items.Remove(item);
         }
 
+        /// <summary>
+        /// Gets the <see cref="RnetDataItem"/> at the specified path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public Task<RnetDataItem> GetAsync(RnetPath path)
         {
             return items.GetAsync(i => i.Path == path, path);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="RnetDataItem"/> at the specified path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Task<RnetDataItem> GetAsync(RnetPath path, CancellationToken cancellationToken)
+        {
+            return items.GetAsync(i => i.Path == path, cancellationToken, path);
         }
 
         /// <summary>
