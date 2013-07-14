@@ -20,6 +20,14 @@ namespace Rnet.Monitor
 
             b = new RnetBus(c);
             b.Start();
+
+            Run();
+        }
+
+        static async void Run()
+        {
+            var d = await b.Devices.GetAsync(RnetDeviceId.RootController);
+            Console.WriteLine(d.Id);
         }
 
         static void c_StateChanged(object sender, RnetClientStateEventArgs args)

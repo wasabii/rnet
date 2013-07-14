@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -12,9 +13,38 @@ namespace Rnet
     public sealed class RnetBus : RnetDevice, IDisposable
     {
 
+        class DeviceSubscriber
+        {
+
+            /// <summary>
+            /// Initializes a new instance.
+            /// </summary>
+            /// <param name="deviceId"></param>
+            /// <param name="completionSource"></param>
+            public DeviceSubscriber(RnetDeviceId deviceId, TaskCompletionSource<RnetDevice> completionSource)
+            {
+                DeviceId = deviceId;
+                CompletionSource = completionSource;
+            }
+
+            /// <summary>
+            /// DeviceId being waited.
+            /// </summary>
+            public RnetDeviceId DeviceId { get; private set; }
+
+            /// <summary>
+            /// Notify upon device discovery.
+            /// </summary>
+            public TaskCompletionSource<RnetDevice> CompletionSource { get; private set; }
+
+        }
+
         object sync = new object();
         RnetDeviceId id;
         Timer timer;
+
+        List<DeviceSubscriber> deviceSubscribers =
+            new List<DeviceSubscriber>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -34,7 +64,7 @@ namespace Rnet
             Client.MessageReceived += Client_MessageReceived;
 
             // initialize set of known devices, including ourselves
-            Devices = new ObservableCollection<RnetDevice>();
+            Devices = new RnetDeviceCollection();
             Devices.Add(this);
 
             // periodically requests a refresh of all data
@@ -64,7 +94,7 @@ namespace Rnet
         /// <summary>
         /// RNET devices detected on the bus.
         /// </summary>
-        public ObservableCollection<RnetDevice> Devices { get; private set; }
+        public RnetDeviceCollection Devices { get; private set; }
 
         /// <summary>
         /// Starts the RNET bus.
@@ -142,14 +172,14 @@ namespace Rnet
             {
                 // initialize new write on first packet
                 if (msg.PacketNumber == 0)
-                    device.Items.WriteBegin(msg.SourcePath);
+                    device.DataItems.WriteBegin(msg.SourcePath);
 
                 // write data of packet
-                device.Items.Write(msg.SourcePath, msg.Data.ToArray());
+                device.DataItems.Write(msg.SourcePath, msg.Data.ToArray());
 
                 // end write on last packet
                 if (msg.PacketNumber == msg.PacketCount - 1)
-                    device.Items.WriteEnd(msg.SourcePath);
+                    device.DataItems.WriteEnd(msg.SourcePath);
             }
         }
 
@@ -164,14 +194,14 @@ namespace Rnet
                 foreach (var device in Devices)
                 {
                     // remove expired items
-                    foreach (var item in device.Items.ToList())
+                    foreach (var item in device.DataItems.ToList())
                         if ((DateTime.UtcNow - item.Timestamp) > TimeSpan.FromMinutes(15))
                             if (item.Buffer != null)
-                                device.Items.Remove(item.Path);
+                                device.DataItems.Remove(item.Path);
 
                     // remove devices with no items
                     if (device != this)
-                        if (!device.Items.Any())
+                        if (!device.DataItems.Any())
                             Devices.Remove(device);
                 }
 

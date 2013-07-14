@@ -35,6 +35,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncCollection.cs" />
+    <Compile Include="RnetDeviceCollection.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBus.cs" />
     <Compile Include="RnetClient.cs" />

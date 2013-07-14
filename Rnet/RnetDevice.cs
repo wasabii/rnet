@@ -4,7 +4,7 @@
     /// <summary>
     /// Base class of RNET devices.
     /// </summary>
-    public abstract class RnetDevice
+    public abstract class RnetDevice : RnetModelObject
     {
 
         /// <summary>
@@ -12,7 +12,7 @@
         /// </summary>
         protected RnetDevice()
         {
-            Items = new RnetDataItemCollection();
+            DataItems = new RnetDataItemCollection();
         }
 
         /// <summary>
@@ -21,9 +21,9 @@
         public abstract RnetDeviceId Id { get; }
 
         /// <summary>
-        /// Gets the set of items stored in this device.
+        /// Gets the set of data items stored in this device.
         /// </summary>
-        public RnetDataItemCollection Items { get; private set; }
+        public RnetDataItemCollection DataItems { get; private set; }
 
     }
 

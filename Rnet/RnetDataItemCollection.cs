@@ -2,17 +2,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
 
     /// <summary>
-    /// Stores a set of <see cref="Item"/>s.
+    /// Stores a set of <see cref="DataItem"/>s.
     /// </summary>
     public class RnetDataItemCollection : IEnumerable<RnetDataItem>
     {
 
-        Dictionary<RnetPath, RnetDataItem> items = new Dictionary<RnetPath, RnetDataItem>();
+        AsyncCollection<RnetDataItem> items = new AsyncCollection<RnetDataItem>();
+
+        internal void Remove(RnetDataItem device)
+        {
+            items.Remove(device);
+        }
+
+        public Task<RnetDataItem> GetAsync(RnetPath path)
+        {
+            return items.GetAsync(i => i.Path == path);
+        }
 
         /// <summary>
         /// Gets the data item at the specified path.
@@ -21,8 +32,7 @@ namespace Rnet
         /// <returns></returns>
         RnetDataItem GetData(RnetPath path)
         {
-            RnetDataItem item;
-            return items.TryGetValue(path, out item) ? item : null;
+            return items.FirstOrDefault(i => i.Path == path);
         }
 
         /// <summary>
@@ -32,8 +42,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataItem this[RnetPath path]
         {
-            get
-            { return GetData(path); }
+            get { return GetData(path); }
         }
 
         /// <summary>
@@ -44,7 +53,7 @@ namespace Rnet
         {
             var item = GetData(path);
             if (item == null)
-                item = items[path] = new RnetDataItem(path);
+                items.Add(item = new RnetDataItem(path));
 
             item.WriteBegin();
         }
@@ -82,13 +91,14 @@ namespace Rnet
         /// <param name="path"></param>
         public void Remove(RnetPath path)
         {
-            if (items.ContainsKey(path))
-                items.Remove(path);
+            var item = GetData(path);
+            if (item != null)
+                items.Remove(item);
         }
 
         public IEnumerator<RnetDataItem> GetEnumerator()
         {
-            return items.Values.GetEnumerator();
+            return items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
