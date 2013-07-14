@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Rnet
 {
 
-    internal class AsyncCollectionSubscriber<T>
+    class AsyncCollectionSubscriber<T>
     {
 
         /// <summary>

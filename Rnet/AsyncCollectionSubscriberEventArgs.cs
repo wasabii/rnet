@@ -3,7 +3,7 @@
 namespace Rnet
 {
 
-    internal class AsyncCollectionSubscriberEventArgs<T> : EventArgs
+    class AsyncCollectionSubscriberEventArgs<T> : EventArgs
     {
 
         /// <summary>
