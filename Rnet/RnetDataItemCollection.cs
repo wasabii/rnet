@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace Rnet
     /// <summary>
     /// Stores a set of <see cref="DataItem"/>s.
     /// </summary>
-    public class RnetDataItemCollection : IEnumerable<RnetDataItem>
+    public class RnetDataItemCollection : IEnumerable<RnetDataItem>, INotifyCollectionChanged
     {
 
         AsyncCollection<RnetDataItem> items = new AsyncCollection<RnetDataItem>();
@@ -21,6 +22,7 @@ namespace Rnet
         /// </summary>
         public RnetDataItemCollection()
         {
+            items.CollectionChanged += (s, a) => RaiseCollectionChanged(a);
             items.SubscriberAdded += items_SubscriberAdded;
         }
 
@@ -157,6 +159,21 @@ namespace Rnet
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Raised when a data item is added or removed.
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        /// <summary>
+        /// Raises the CollectionChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void RaiseCollectionChanged(NotifyCollectionChangedEventArgs args)
+        {
+            if (CollectionChanged != null)
+                CollectionChanged(this, args);
         }
 
     }

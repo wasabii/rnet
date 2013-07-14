@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace Rnet
     /// <summary>
     /// Provides a collection of devices that supports waiting on a device.
     /// </summary>
-    public class RnetDeviceCollection : IEnumerable<RnetDevice>
+    public class RnetDeviceCollection : IEnumerable<RnetDevice>, INotifyCollectionChanged
     {
 
         AsyncCollection<RnetDevice> items = new AsyncCollection<RnetDevice>();
@@ -20,6 +21,7 @@ namespace Rnet
         /// </summary>
         public RnetDeviceCollection()
         {
+            items.CollectionChanged += (s, a) => RaiseCollectionChanged(a);
             items.SubscriberAdded += items_SubscriberAdded;
         }
 
@@ -95,6 +97,21 @@ namespace Rnet
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Raised when an device is added or removed.
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        /// <summary>
+        /// Raises the CollectionChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void RaiseCollectionChanged(NotifyCollectionChangedEventArgs args)
+        {
+            if (CollectionChanged != null)
+                CollectionChanged(this, args);
         }
 
     }
