@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -7,9 +10,13 @@ namespace Rnet
     public class RnetDataItem
     {
 
-        DateTime timestamp;
-        byte[] buffer;
         MemoryStream stream;
+
+        /// <summary>
+        /// Subscribers waiting for data.
+        /// </summary>
+        List<TaskCompletionSource<byte[]>> subscribers =
+            new List<TaskCompletionSource<byte[]>>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -50,6 +57,18 @@ namespace Rnet
             Timestamp = DateTime.UtcNow;
             Buffer = stream.ToArray();
             stream = null;
+
+            // notify subscribers
+            lock (subscribers)
+            {
+                foreach (var subscriber in subscribers)
+                    subscriber.SetResult(Buffer);
+
+                // remove completed subscriptions
+                foreach (var subscriber in subscribers.ToList())
+                    if (subscriber.Task.IsCompleted)
+                        subscribers.Remove(subscriber);
+            }
         }
 
         /// <summary>
@@ -61,6 +80,24 @@ namespace Rnet
         /// Gets the timestamp the data was entered.
         /// </summary>
         public DateTime Timestamp { get; private set; }
+
+        /// <summary>
+        /// Gets 
+        /// </summary>
+        /// <returns></returns>
+        public Task<byte[]> GetBufferAsync()
+        {
+            lock (subscribers)
+            {
+                if (Buffer != null)
+                    return Task.FromResult(Buffer);
+
+                // subscribe to data
+                var tcs = new TaskCompletionSource<byte[]>();
+                subscribers.Add(tcs);
+                return tcs.Task;
+            }
+        }
 
     }
 

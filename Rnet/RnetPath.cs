@@ -12,6 +12,28 @@ namespace Rnet
     public class RnetPath : IEnumerable<byte>
     {
 
+        /// <summary>
+        /// Returns <c>true</c> if the two paths are equal.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static bool operator ==(RnetPath x, RnetPath y)
+        {
+            return object.Equals(x, y);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the two paths are not equal.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static bool operator !=(RnetPath x, RnetPath y)
+        {
+            return !object.Equals(x, y);
+        }
+
         byte[] items;
 
         /// <summary>
@@ -73,6 +95,16 @@ namespace Rnet
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj != null && ((IStructuralEquatable)items).Equals(((RnetPath)obj).items, StructuralComparisons.StructuralEqualityComparer);
+        }
+
+        public override int GetHashCode()
+        {
+            return ((IStructuralEquatable)items).GetHashCode(StructuralComparisons.StructuralEqualityComparer);
         }
 
         public string DebugView

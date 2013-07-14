@@ -11,7 +11,8 @@
         /// Initializes a new instance.
         /// </summary>
         /// <param name="controllerId"></param>
-        public RnetController(RnetControllerId controllerId)
+        public RnetController(RnetBus bus, RnetControllerId controllerId)
+            : base(bus)
         {
             ControllerId = controllerId;
         }

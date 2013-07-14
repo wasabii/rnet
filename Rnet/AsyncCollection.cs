@@ -9,39 +9,13 @@ using System.Threading.Tasks;
 namespace Rnet
 {
 
-    public class AsyncCollection<T> : ObservableCollection<T>
+    class AsyncCollection<T> : ObservableCollection<T>
     {
-
-        class Subscriber
-        {
-
-            /// <summary>
-            /// Initializes a new instance.
-            /// </summary>
-            /// <param name="predicate"></param>
-            /// <param name="completionSource"></param>
-            public Subscriber(Predicate<T> predicate, TaskCompletionSource<T> completionSource)
-            {
-                Predicate = predicate;
-                CompletionSource = completionSource;
-            }
-
-            /// <summary>
-            /// Expression to test for element.
-            /// </summary>
-            public Predicate<T> Predicate { get; private set; }
-
-            /// <summary>
-            /// Notify upon discovery.
-            /// </summary>
-            public TaskCompletionSource<T> CompletionSource { get; private set; }
-
-        }
 
         /// <summary>
         /// Subscriptions to the list.
         /// </summary>
-        List<Subscriber> subscribers = new List<Subscriber>();
+        List<AsyncCollectionSubscriber<T>> subscribers = new List<AsyncCollectionSubscriber<T>>();
 
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
         {
@@ -89,13 +63,50 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Raised when a new subscription is added.
+        /// </summary>
+        internal EventHandler<AsyncCollectionSubscriberEventArgs<T>> SubscriberAdded;
+
+        /// <summary>
+        /// Raises the SubscriberAdded event.
+        /// </summary>
+        /// <param name="subscriber"></param>
+        void RaiseSubscriberAdded(AsyncCollectionSubscriber<T> subscriber)
+        {
+            if (SubscriberAdded != null)
+                SubscriberAdded(this, new AsyncCollectionSubscriberEventArgs<T>(subscriber));
+        }
+
+        /// <summary>
+        /// Adds a new subscriber.
+        /// </summary>
+        /// <param name="subscriber"></param>
+        void AddSubscriber(Predicate<T> predicate, TaskCompletionSource<T> taskSource, object userState)
+        {
+            var subscriber = new AsyncCollectionSubscriber<T>(predicate, taskSource, userState);
+            subscribers.Add(subscriber);
+            RaiseSubscriberAdded(subscriber);
+        }
+
+        /// <summary>
         /// Returns the discovered item or waits until it is discovered.
         /// </summary>
         /// <param name="predicate"></param>
         /// <returns></returns>
         public Task<T> GetAsync(Predicate<T> predicate)
         {
-            return GetAsync(predicate, CancellationToken.None);
+            return GetAsync(predicate, CancellationToken.None, null);
+        }
+
+        /// <summary>
+        /// Returns the discovered item or waits until it is discovered.
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <param name="userState"></param>
+        /// <returns></returns>
+        public Task<T> GetAsync(Predicate<T> predicate, object userState)
+        {
+            return GetAsync(predicate, CancellationToken.None, userState);
         }
 
         /// <summary>
@@ -104,7 +115,7 @@ namespace Rnet
         /// <param name="predicate"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<T> GetAsync(Predicate<T> predicate, CancellationToken cancellationToken)
+        public Task<T> GetAsync(Predicate<T> predicate, CancellationToken cancellationToken, object userState)
         {
             lock (subscribers)
             {
@@ -117,9 +128,9 @@ namespace Rnet
                     return Task.FromResult(item);
 
                 // subscribe to device event
-                var ts = new TaskCompletionSource<T>();
-                subscribers.Add(new Subscriber(predicate, ts));
-                return ts.Task;
+                var tcs = new TaskCompletionSource<T>();
+                AddSubscriber(predicate, tcs, userState);
+                return tcs.Task;
             }
         }
 

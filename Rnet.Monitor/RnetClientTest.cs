@@ -28,6 +28,10 @@ namespace Rnet.Monitor
         {
             var d = await b.Devices.GetAsync(RnetDeviceId.RootController);
             Console.WriteLine(d.Id);
+
+            var z1 = await d.DataItems.GetAsync(new RnetPath(2, 0, 0, 7));
+            var data = await z1.GetBufferAsync();
+            Console.Write(data);
         }
 
         static void c_StateChanged(object sender, RnetClientStateEventArgs args)

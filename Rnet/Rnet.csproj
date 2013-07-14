@@ -36,6 +36,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncCollection.cs" />
+    <Compile Include="AsyncCollectionSubscriberEventArgs.cs" />
+    <Compile Include="AsyncCollectionSubscriber.cs" />
     <Compile Include="RnetDeviceCollection.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBus.cs" />
@@ -78,6 +80,7 @@
     <Compile Include="RnetSpecialMessageChars.cs" />
     <Compile Include="RnetConnection.cs" />
     <Compile Include="RnetTcpConnection.cs" />
+    <Compile Include="ValueEventArgs.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

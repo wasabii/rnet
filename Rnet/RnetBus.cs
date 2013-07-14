@@ -13,45 +13,20 @@ namespace Rnet
     public sealed class RnetBus : RnetDevice, IDisposable
     {
 
-        class DeviceSubscriber
-        {
-
-            /// <summary>
-            /// Initializes a new instance.
-            /// </summary>
-            /// <param name="deviceId"></param>
-            /// <param name="completionSource"></param>
-            public DeviceSubscriber(RnetDeviceId deviceId, TaskCompletionSource<RnetDevice> completionSource)
-            {
-                DeviceId = deviceId;
-                CompletionSource = completionSource;
-            }
-
-            /// <summary>
-            /// DeviceId being waited.
-            /// </summary>
-            public RnetDeviceId DeviceId { get; private set; }
-
-            /// <summary>
-            /// Notify upon device discovery.
-            /// </summary>
-            public TaskCompletionSource<RnetDevice> CompletionSource { get; private set; }
-
-        }
-
         object sync = new object();
         RnetDeviceId id;
         Timer timer;
-
-        List<DeviceSubscriber> deviceSubscribers =
-            new List<DeviceSubscriber>();
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="client"></param>
         public RnetBus(RnetClient client, RnetDeviceId id)
+            : base(null)
         {
+            // we are our own bus
+            Bus = this;
+
             if (client == null)
                 throw new ArgumentNullException("client");
             if (id.KeypadId >= 0x7c && id.KeypadId <= 0x7f)
@@ -66,6 +41,7 @@ namespace Rnet
             // initialize set of known devices, including ourselves
             Devices = new RnetDeviceCollection();
             Devices.Add(this);
+            Devices.SubscriberAdded += Devices_SubscriberAdded;
 
             // periodically requests a refresh of all data
             timer = new Timer(timer_Run, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(60));
@@ -160,7 +136,7 @@ namespace Rnet
                 // source is a controller
                 if (msg.SourceDeviceId.ZoneId == RnetZoneId.Zone1 &&
                     msg.SourceDeviceId.KeypadId == RnetKeypadId.Controller)
-                    device = new RnetController(msg.SourceDeviceId.ControllerId);
+                    device = new RnetController(this, msg.SourceDeviceId.ControllerId);
 
                 // add to set of known devices
                 if (device != null)
@@ -209,13 +185,27 @@ namespace Rnet
                 if (Client.ConnectionState != RnetConnectionState.Open)
                     return;
 
-                // request all zone info for each zone
-                for (byte i = 0; i < 6; i++)
-                    Client.SendMessage(new RnetRequestDataMessage(RnetDeviceId.RootController, Id,
-                        new RnetPath(2, 0, i, 7),
-                        null,
-                        RnetRequestMessageType.Data));
+                //// request all zone info for each zone
+                //for (byte i = 0; i < 6; i++)
+                //    Client.SendMessage(new RnetRequestDataMessage(RnetDeviceId.RootController, Id,
+                //        new RnetPath(2, 0, i, 7),
+                //        null,
+                //        RnetRequestMessageType.Data));
             }
+        }
+
+        /// <summary>
+        /// Invoked when a subscriber is added for a device id.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        void Devices_SubscriberAdded(object sender, ValueEventArgs<RnetDeviceId> args)
+        {
+            // some sort of probe message
+            Client.SendMessage(new RnetRequestDataMessage(args.Value, Id,
+                new RnetPath(2, 0),
+                null,
+                RnetRequestMessageType.Data));
         }
 
         /// <summary>

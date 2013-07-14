@@ -15,6 +15,24 @@ namespace Rnet
 
         AsyncCollection<RnetDataItem> items = new AsyncCollection<RnetDataItem>();
 
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        public RnetDataItemCollection()
+        {
+            items.SubscriberAdded += items_SubscriberAdded;
+        }
+
+        /// <summary>
+        /// Invoked when a new subscriber is added.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        void items_SubscriberAdded(object sender, AsyncCollectionSubscriberEventArgs<RnetDataItem> args)
+        {
+            RaiseSubscriberAdded((RnetPath)args.Subscriber.UserState);
+        }
+
         internal void Remove(RnetDataItem device)
         {
             items.Remove(device);
@@ -22,7 +40,7 @@ namespace Rnet
 
         public Task<RnetDataItem> GetAsync(RnetPath path)
         {
-            return items.GetAsync(i => i.Path == path);
+            return items.GetAsync(i => i.Path == path, path);
         }
 
         /// <summary>
@@ -94,6 +112,21 @@ namespace Rnet
             var item = GetData(path);
             if (item != null)
                 items.Remove(item);
+        }
+
+        /// <summary>
+        /// Raised when a subscriber for a path is added.
+        /// </summary>
+        internal event EventHandler<ValueEventArgs<RnetPath>> SubscriberAdded;
+
+        /// <summary>
+        /// Raises the SubscriberAdded event.
+        /// </summary>
+        /// <param name="path"></param>
+        void RaiseSubscriberAdded(RnetPath path)
+        {
+            if (SubscriberAdded != null)
+                SubscriberAdded(this, new ValueEventArgs<RnetPath>(path));
         }
 
         public IEnumerator<RnetDataItem> GetEnumerator()
