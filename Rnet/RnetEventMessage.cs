@@ -30,8 +30,8 @@ namespace Rnet
             RnetPath sourcePath, RnetEvents evt, ushort timestamp, ushort data, byte priority)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.Event)
         {
-            TargetPath = targetPath ?? new RnetPath();
-            SourcePath = sourcePath ?? new RnetPath();
+            TargetPath = targetPath;
+            SourcePath = sourcePath;
             Event = evt;
             Timestamp = timestamp;
             Data = data;

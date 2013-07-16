@@ -15,8 +15,8 @@ namespace Rnet
     public class RnetDeviceDirectory : RnetModelObject, IEnumerable<RnetDeviceDirectory>, INotifyCollectionChanged
     {
 
-        Dictionary<byte, RnetDeviceDirectory> directories =
-            new Dictionary<byte, RnetDeviceDirectory>();
+        SortedDictionary<byte, RnetDeviceDirectory> directories =
+            new SortedDictionary<byte, RnetDeviceDirectory>();
 
         RnetDeviceData data;
 
@@ -30,8 +30,6 @@ namespace Rnet
         {
             if (device == null)
                 throw new ArgumentNullException("device");
-            if (path == null)
-                throw new ArgumentNullException("path");
 
             Device = device;
             Parent = parent;
@@ -175,7 +173,7 @@ namespace Rnet
                 if (directory == null)
                 {
                     directory = directories[index] = new RnetDeviceDirectory(Device, this, Path.Navigate(index));
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, directory));
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                 }
 
                 return directory;

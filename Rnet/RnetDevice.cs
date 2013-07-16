@@ -182,7 +182,7 @@ namespace Rnet
                             continue;
 
                         // check message timestamp
-                        if (m.Timestamp < message.Timestamp)
+                        if (m.MessageTimestamp < message.MessageTimestamp)
                             continue;
 
                         // is this message a valid reply?
@@ -213,7 +213,7 @@ namespace Rnet
             // add a conversation that sends a request data message and expects a set data message in return
             return await RequestReplyAsync(new RnetRequestDataMessage(Id, Bus.ClientDevice.Id,
                 targetPath,
-                null,
+                RnetPath.Empty,
                 RnetRequestMessageType.Data),
                 i =>
                 {

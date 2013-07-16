@@ -33,8 +33,8 @@ namespace Rnet
             RnetPath sourcePath, ushort packetNumber, ushort packetCount, RnetData data)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.SetData)
         {
-            TargetPath = targetPath ?? new RnetPath();
-            SourcePath = sourcePath ?? new RnetPath();
+            TargetPath = targetPath;
+            SourcePath = sourcePath;
             PacketNumber = packetNumber;
             PacketCount = packetCount;
             Data = data;

@@ -14,8 +14,8 @@ namespace Rnet
     public class RnetDeviceCollection : IEnumerable<RnetDevice>, INotifyCollectionChanged
     {
 
-        Dictionary<RnetDeviceId, RnetDevice> items =
-            new Dictionary<RnetDeviceId, RnetDevice>();
+        SortedDictionary<RnetDeviceId, RnetDevice> items =
+            new SortedDictionary<RnetDeviceId, RnetDevice>(Comparer<RnetDeviceId>.Default);
 
         /// <summary>
         /// Initializes a new instance.
@@ -38,13 +38,8 @@ namespace Rnet
         {
             lock (items)
             {
-                var oldDevice = items.ValueOrDefault(device.Id);
                 items[device.Id] = device;
-
-                if (oldDevice == null)
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, device));
-                else if (!object.ReferenceEquals(oldDevice, device))
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, device, oldDevice));
+                RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
 
@@ -55,20 +50,8 @@ namespace Rnet
         internal void Remove(RnetDevice device)
         {
             lock (items)
-            {
-                if (!items.ContainsKey(device.Id))
-                    return;
-
-                // find existing index of device item
-                var index = items.Values
-                    .Select((i, j) => new { Index = j, Device = i })
-                    .Where(i => i.Device.Id == device.Id)
-                    .Select(i => i.Index)
-                    .First();
-
                 if (items.Remove(device.Id))
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, device, index));
-            }
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         /// <summary>

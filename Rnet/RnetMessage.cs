@@ -28,7 +28,7 @@ namespace Rnet
         protected RnetMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType messageType)
             : this()
         {
-            Timestamp = DateTime.UtcNow;
+            MessageTimestamp = DateTime.UtcNow;
             TargetDeviceId = targetDeviceId;
             SourceDeviceId = sourceDeviceId;
             MessageType = messageType;
@@ -37,7 +37,7 @@ namespace Rnet
         /// <summary>
         /// Timestamp of message.
         /// </summary>
-        public DateTime Timestamp { get; private set; }
+        public DateTime MessageTimestamp { get; private set; }
 
         /// <summary>
         /// Gets or sets the target Device ID.

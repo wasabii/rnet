@@ -5,6 +5,7 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using System.Windows.Threading;
 
 using ReactiveUI;
@@ -26,8 +27,8 @@ namespace Rnet.Monitor.Wpf
             SentMessages = new ObservableCollection<RnetMessage>();
             ReceivedMessages = new ObservableCollection<RnetMessage>();
 
-            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
-            Bus.ConnectionStateChanged +=  Bus_ConnectionStateChanged;
+            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("72.181.255.134"), 9999));
+            Bus.ConnectionStateChanged += Bus_ConnectionStateChanged;
             Bus.MessageSent += (s, a) => SentMessages.Add(a.Message);
             Bus.MessageReceived += (s, a) => ReceivedMessages.Add(a.Message);
             Bus.Error += Bus_Error;
@@ -49,7 +50,7 @@ namespace Rnet.Monitor.Wpf
             SetDataCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => SelectedDataItem.SetBufferAsync(new byte[] { 0x00 })));
 
             // wrap devices in synchronized collection
-            Devices = new SynchronizedCollection<RnetDevice>(Bus.Devices);
+            Devices = Bus.Devices;
 
             selectedDataItemViewModel = this.ObservableForProperty(i => i.SelectedDataItem)
                 .Select(i => i.Value != null ? new DataItemViewModel(i.Value) : null)
@@ -83,7 +84,7 @@ namespace Rnet.Monitor.Wpf
 
         public ReactiveCommand SetDataCommand { get; private set; }
 
-        public SynchronizedCollection<RnetDevice> Devices { get; private set; }
+        public IEnumerable<RnetDevice> Devices { get; private set; }
 
         public RnetDevice SelectedDevice
         {
@@ -116,21 +117,16 @@ namespace Rnet.Monitor.Wpf
 
         async void DiscoverDeviceData(RnetDevice device)
         {
-            for (byte i = 0; i < 6; i++)
-                await device.Directories.GetAsync(2, 0, i, 7);
-
-            //foreach (var path in GetPaths(2))
-            //    await GetDataItemAsync(device, path);
-
-            //foreach (var path in GetPaths(new RnetPath(2, 0), 4))
-            //    await GetDataItemAsync(device, path);
+            for (byte i = 0; i < 8; i++)
+                await DiscoverDeviceData(device, new RnetPath(i));
         }
 
-        IEnumerable<RnetPath> GetPaths(int maxDepth)
+        async Task DiscoverDeviceData(RnetDevice device, RnetPath path)
         {
-            for (byte i = 0; i < 10; i++)
-                foreach (var p in GetPaths(new RnetPath(i), maxDepth))
-                    yield return p;
+            var d = await GetDataItemAsync(device, path.ToArray());
+            if (d != null && d.Data != null && path.Length < 8)
+                for (byte i = 0; i < 8; i++)
+                    await DiscoverDeviceData(device, path.Navigate(i));
         }
 
         IEnumerable<RnetPath> GetPaths(RnetPath path, int maxDepth)
@@ -140,7 +136,7 @@ namespace Rnet.Monitor.Wpf
 
             yield return path;
 
-            for (byte i = 0; i < 10; i++)
+            for (byte i = 0; i < 8; i++)
                 foreach (var p in GetPaths(path.Navigate(i), maxDepth))
                     yield return p;
         }

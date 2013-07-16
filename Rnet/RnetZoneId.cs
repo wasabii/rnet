@@ -1,10 +1,12 @@
-﻿namespace Rnet
+﻿using System;
+
+namespace Rnet
 {
 
     /// <summary>
     /// Specifies an RNET ZoneID component of a <see cref="RnetDeviceId"/>.
     /// </summary>
-    public struct RnetZoneId
+    public struct RnetZoneId : IComparable<RnetZoneId>, IComparable
     {
 
         public static readonly RnetZoneId Zone1 = 0x00;
@@ -108,6 +110,26 @@
                 return string.Format("{0} /* Zone6 */", Value);
 
             return Value.ToString();
+        }
+
+        /// <summary>
+        /// Compares this <see cref="RnetZoneId"/> to another <see cref="RnetZoneId"/>.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        int IComparable<RnetZoneId>.CompareTo(RnetZoneId other)
+        {
+            return Value.CompareTo(other.Value);
+        }
+
+        /// <summary>
+        /// Compares the current object with another object.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        int IComparable.CompareTo(object obj)
+        {
+            return ((IComparable<RnetZoneId>)this).CompareTo((RnetZoneId)obj);
         }
 
     }

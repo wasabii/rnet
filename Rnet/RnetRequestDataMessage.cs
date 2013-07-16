@@ -33,8 +33,8 @@ namespace Rnet
             RnetPath sourcePath, RnetRequestMessageType type)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.RequestData)
         {
-            TargetPath = targetPath ?? new RnetPath();
-            SourcePath = sourcePath ?? new RnetPath();
+            TargetPath = targetPath;
+            SourcePath = sourcePath;
             Type = type;
         }
 

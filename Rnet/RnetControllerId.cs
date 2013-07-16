@@ -1,10 +1,12 @@
-﻿namespace Rnet
+﻿using System;
+
+namespace Rnet
 {
 
     /// <summary>
     /// Specifies an RNET ControllerID component of a <see cref="RnetDeviceId"/>.
     /// </summary>
-    public struct RnetControllerId
+    public struct RnetControllerId : IComparable<RnetControllerId>, IComparable
     {
 
         public static readonly RnetControllerId AllDevices = 0x7f;
@@ -79,6 +81,26 @@
                 return string.Format("{0} /* AllDevices */", Value);
 
             return Value.ToString();
+        }
+
+        /// <summary>
+        /// Compares this <see cref="RnetControllerId"/> to another <see cref="RnetControllerId"/>.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        int IComparable<RnetControllerId>.CompareTo(RnetControllerId other)
+        {
+            return Value.CompareTo(other.Value);
+        }
+
+        /// <summary>
+        /// Compares the current object with another object.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        int IComparable.CompareTo(object obj)
+        {
+            return ((IComparable<RnetControllerId>)this).CompareTo((RnetControllerId)obj);
         }
 
     }

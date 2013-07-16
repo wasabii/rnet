@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Rnet
 {
@@ -6,7 +9,7 @@ namespace Rnet
     /// <summary>
     /// RNET DeviceID structure.
     /// </summary>
-    public struct RnetDeviceId
+    public struct RnetDeviceId : IComparable<RnetDeviceId>, IComparable
     {
 
         /// <summary>
@@ -153,6 +156,36 @@ namespace Rnet
         public override string ToString()
         {
             return DebugView;
+        }
+
+        /// <summary>
+        /// Compares this <see cref="RnetDeviceId"/> to another <see cref="RnetDeviceId"/>.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        int IComparable<RnetDeviceId>.CompareTo(RnetDeviceId other)
+        {
+            var a = Comparer<RnetControllerId>.Default.Compare(ControllerId, other.ControllerId);
+            if (a != 0)
+                return a;
+            var b = Comparer<RnetZoneId>.Default.Compare(ZoneId, other.ZoneId);
+            if (b != 0)
+                return b;
+            var c = Comparer<RnetKeypadId>.Default.Compare(KeypadId, other.KeypadId);
+            if (c != 0)
+                return c;
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Compares the current object with another object.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        int IComparable.CompareTo(object obj)
+        {
+            return ((IComparable<RnetDeviceId>)this).CompareTo((RnetDeviceId)obj);
         }
 
     }

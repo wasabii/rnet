@@ -1,10 +1,12 @@
-﻿namespace Rnet
+﻿using System;
+
+namespace Rnet
 {
 
     /// <summary>
     /// Specifies an RNET KeypadID component of a <see cref="RnetDeviceId"/>.
     /// </summary>
-    public struct RnetKeypadId
+    public struct RnetKeypadId : IComparable<RnetKeypadId>, IComparable
     {
 
         public static readonly RnetKeypadId Controller = 0x7f;
@@ -91,6 +93,26 @@
                 return string.Format("{0} /* External */", Value);
 
             return Value.ToString();
+        }
+
+        /// <summary>
+        /// Compares this <see cref="RnetKeypadId"/> to another <see cref="RnetKeypadId"/>.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        int IComparable<RnetKeypadId>.CompareTo(RnetKeypadId other)
+        {
+            return Value.CompareTo(other.Value);
+        }
+
+        /// <summary>
+        /// Compares the current object with another object.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        int IComparable.CompareTo(object obj)
+        {
+            return ((IComparable<RnetKeypadId>)this).CompareTo((RnetKeypadId)obj);
         }
 
     }
