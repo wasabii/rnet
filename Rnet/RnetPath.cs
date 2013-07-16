@@ -72,18 +72,20 @@ namespace Rnet
         {
             // split path string and validate for only digits
             var a = path.Split('.');
+            if (a.Length < 0 || a.Length > 8)
+                throw new ArgumentOutOfRangeException("path", "RnetPath only supports 8 nested levels.");
             for (int i = 0; i < a.Length; i++)
                 for (int j = 0; j < a[i].Length; j++)
                     if (!char.IsDigit(a[i][j]))
                         throw new FormatException("RnetPath string is in an invalid format.");
 
-            // convert each element into byte
-            var b = new byte[a.Length];
+            // generate new path instance
+            var p = new RnetPath();
+            p.length = (byte)a.Length;
             for (int i = 0; i < a.Length; i++)
-                b[i] = byte.Parse(a[i]);
+                p.Set(i, byte.Parse(a[i]));
 
-            // generate path
-            return new RnetPath(b);
+            return p;
         }
 
         byte a, b, c, d, e, f, g, h;
