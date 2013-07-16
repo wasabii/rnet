@@ -45,7 +45,7 @@
         public RnetDataItem Item
         {
             get { return item; }
-            private set { item = value; RaisePropertyChanged("Item"); }
+            internal set { item = value; RaisePropertyChanged("Item"); }
         }
 
         internal override RnetPath GetChildPath(byte folder)

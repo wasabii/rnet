@@ -91,11 +91,7 @@ namespace Rnet
                 var node = GetItem(folder);
                 if (node != null &&
                     node.Item != item)
-                {
-                    // remove mismatched item node
-                    items.Remove(node);
-                    node = null;
-                }
+                    node.Item = item;
 
                 if (node == null)
                     items.Add(node = new RnetDataTreeItem(device, this, GetChildPath(folder), item));

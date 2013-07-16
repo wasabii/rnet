@@ -42,7 +42,7 @@ namespace Rnet.Monitor.Wpf
 
             var canProbeDevice = this.WhenAny(i => i.SelectedDevice, i => i.Value != null);
             ProbeDeviceCommand = new ReactiveCommand(canProbeDevice, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
-            ProbeDeviceCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => ProbeDevice(SelectedDevice)));
+            ProbeDeviceCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => DiscoverDeviceData(SelectedDevice)));
 
             // wrap devices in synchronized collection
             Devices = new SynchronizedCollection<RnetDevice>(Bus.Devices);
@@ -65,7 +65,7 @@ namespace Rnet.Monitor.Wpf
         void Client_StateChanged(object sender, RnetClientStateEventArgs args)
         {
             if (args.State == RnetClientState.Started)
-                ProbeDevices();
+                DiscoverDevices();
         }
 
         public ObservableCollection<RnetMessage> SentMessages { get; private set; }
@@ -108,28 +108,45 @@ namespace Rnet.Monitor.Wpf
             get { return selectedDataItemViewModel.Value; }
         }
 
-        async void ProbeDevices()
+        async void DiscoverDevices()
+        {
+            await Task.WhenAll(GetDevices());
+        }
+
+        IEnumerable<Task<RnetDevice>> GetDevices()
         {
             for (int i = 0; i < 6; i++)
-                await GetDeviceAsync(new RnetDeviceId(i, 0, RnetKeypadId.Controller));
+                yield return GetDeviceAsync(new RnetDeviceId(i, 0, RnetKeypadId.Controller));
         }
 
-        async void ProbeDevice(RnetDevice device)
+        async void DiscoverDeviceData(RnetDevice device)
         {
-            for (byte i = 0; i < 16; i++)
-                await ProbeDevice(device, new RnetPath(i));
+            await GetDataItemAsync(device, new RnetPath(4, 6));
+
+            //foreach (var path in GetPaths(2))
+            //    await GetDataItemAsync(device, path);
+
+            //foreach (var path in GetPaths(new RnetPath(2, 0), 4))
+            //    await GetDataItemAsync(device, path);
         }
 
-        async Task<RnetDataItem> ProbeDevice(RnetDevice device, RnetPath path)
+        IEnumerable<RnetPath> GetPaths(int maxDepth)
         {
-            if (path.Length > 4)
-                return null;
+            for (byte i = 0; i < 10; i++)
+                foreach (var p in GetPaths(new RnetPath(i), maxDepth))
+                    yield return p;
+        }
 
-            var data = await GetDataItemAsync(device, path);
-            for (byte i = 0; i < 16; i++)
-                await ProbeDevice(device, path.Child(i));
+        IEnumerable<RnetPath> GetPaths(RnetPath path, int maxDepth)
+        {
+            if (path.Length > maxDepth)
+                yield break;
 
-            return data;
+            yield return path;
+
+            for (byte i = 0; i < 10; i++)
+                foreach (var p in GetPaths(path.Child(i), maxDepth))
+                    yield return p;
         }
 
         async Task<RnetDevice> GetDeviceAsync(RnetDeviceId deviceId)
@@ -148,7 +165,7 @@ namespace Rnet.Monitor.Wpf
         {
             try
             {
-                return await device.DataItems.GetAsync(path, new CancellationTokenSource(TimeSpan.FromSeconds(.2)).Token);
+                return await device.DataItems.GetAsync(path, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
             }
             catch (OperationCanceledException)
             {

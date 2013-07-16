@@ -12,20 +12,18 @@
         /// </summary>
         /// <param name="controllerId"></param>
         public RnetController(RnetBus bus, RnetControllerId controllerId)
-            : base(bus)
+            : base(bus, new RnetDeviceId(controllerId, 0, RnetKeypadId.Controller))
         {
-            ControllerId = controllerId;
-        }
 
-        public override RnetDeviceId Id
-        {
-            get { return new RnetDeviceId(ControllerId, 0, RnetKeypadId.Controller); }
         }
 
         /// <summary>
         /// Gets the controller ID.
         /// </summary>
-        public RnetControllerId ControllerId { get; private set; }
+        public RnetControllerId ControllerId
+        {
+            get { return Id.ControllerId; }
+        }
 
         /// <summary>
         /// Returns a string representation of the current instance.

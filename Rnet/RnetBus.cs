@@ -21,20 +21,6 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Gets the cancellation token that drives timeouts.
-        /// </summary>
-        /// <returns></returns>
-        internal static CancellationToken GetTimeoutCancellationToken()
-        {
-            return new CancellationTokenSource(TimeSpan.FromSeconds(2.5)).Token;
-        }
-
-        /// <summary>
-        /// My device ID.
-        /// </summary>
-        RnetDeviceId id;
-
-        /// <summary>
         /// Signals to the bus to stop all threads.
         /// </summary>
         CancellationTokenSource cancellationTokenSource;
@@ -44,7 +30,7 @@ namespace Rnet
         /// </summary>
         /// <param name="client"></param>
         public RnetBus(RnetClient client, RnetDeviceId id, SynchronizationContext synchronizationContext)
-            : base(null)
+            : base(null, id)
         {
             // we are our own bus
             SynchronizationContext = synchronizationContext;
@@ -54,8 +40,6 @@ namespace Rnet
                 throw new ArgumentNullException("client");
             if (id.KeypadId >= 0x7c && id.KeypadId <= 0x7f)
                 throw new ArgumentOutOfRangeException("id", "RnetKeypadId cannot be in a reserved range.");
-
-            this.id = id;
 
             // hook ourselves up to the client
             Client = client;
@@ -73,12 +57,7 @@ namespace Rnet
         public RnetBus(RnetClient client)
             : this(client, RnetDeviceId.External, SynchronizationContext.Current)
         {
-
-        }
-
-        public override RnetDeviceId Id
-        {
-            get { return id; }
+            Visible = true;
         }
 
         /// <summary>
@@ -136,22 +115,15 @@ namespace Rnet
                 return;
 
             // skip messages not destined to us
-            var msg = args.Message;
-            if (msg.TargetDeviceId != Id &&
-                msg.TargetDeviceId != RnetDeviceId.AllDevices)
+            var message = args.Message;
+            if (message.TargetDeviceId != Id &&
+                message.TargetDeviceId != RnetDeviceId.AllDevices)
                 return;
 
             // add message to device queue
-            var device = Devices[msg.SourceDeviceId];
+            var device = Devices[message.SourceDeviceId];
             if (device != null)
-                await device.Messages.AddAsync(msg);
-
-            // handshake to acknowledge message
-            var dmsg = msg as RnetSetDataMessage;
-            if (dmsg != null)
-                Client.SendMessage(new RnetHandshakeMessage(msg.SourceDeviceId, Id,
-                    RnetHandshakeType.Data),
-                    RnetMessagePriority.High);
+                await device.ReceiveMessage(message);
         }
 
         /// <summary>
@@ -175,8 +147,12 @@ namespace Rnet
                 if (await device.DataItems.GetAsync(new RnetPath(0, 0), cancellationToken) == null)
                     Devices.Remove(device);
 
-            // return whatever is left
-            return Devices[deviceId];
+            // set the device to visible if we've successfully detected it
+            device = Devices[deviceId];
+            if (device != null)
+                device.Visible = true;
+
+            return device;
         }
 
         /// <summary>
