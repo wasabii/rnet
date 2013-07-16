@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+
 using ReactiveUI;
 
 namespace Rnet.Monitor.Wpf
@@ -14,20 +15,21 @@ namespace Rnet.Monitor.Wpf
     public class BusViewModel : ReactiveObject
     {
 
+        Dispatcher dispatcher;
         RnetDevice selectedDevice;
         RnetDataItem selectedDataItem;
 
         public BusViewModel()
         {
-            var d = Dispatcher.CurrentDispatcher;
+            dispatcher = Dispatcher.CurrentDispatcher;
 
             SentMessages = new ObservableCollection<RnetMessage>();
             ReceivedMessages = new ObservableCollection<RnetMessage>();
 
             Client = new RnetClient(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
             Client.StateChanged += Client_StateChanged;
-            Client.MessageSent += (s, a) => d.Invoke(() => SentMessages.Add(a.Message));
-            Client.MessageReceived += (s, a) => d.Invoke(() => ReceivedMessages.Add(a.Message));
+            Client.MessageSent += (s, a) => dispatcher.Invoke(() => SentMessages.Add(a.Message));
+            Client.MessageReceived += (s, a) => dispatcher.Invoke(() => ReceivedMessages.Add(a.Message));
             Bus = new RnetBus(Client);
 
             var canStart = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Stopped);
@@ -63,11 +65,8 @@ namespace Rnet.Monitor.Wpf
         /// <param name="args"></param>
         void Client_StateChanged(object sender, RnetClientStateEventArgs args)
         {
-            Dispatcher.CurrentDispatcher.Invoke(() =>
-            {
-                if (args.State == RnetClientState.Started)
-                    ProbeDevices();
-            });
+            if (args.State == RnetClientState.Started)
+                ProbeDevices();
         }
 
         public ObservableCollection<RnetMessage> SentMessages { get; private set; }

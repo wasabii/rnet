@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Threading;
@@ -14,26 +13,21 @@ namespace Rnet
     public class RnetDeviceCollection : IEnumerable<RnetDevice>, INotifyCollectionChanged
     {
 
-        AsyncCollection<RnetDevice> items = new AsyncCollection<RnetDevice>();
+        Dictionary<RnetDeviceId, RnetDevice> items =
+            new Dictionary<RnetDeviceId, RnetDevice>();
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetDeviceCollection()
+        public RnetDeviceCollection(RnetBus bus)
         {
-            items.CollectionChanged += (s, a) => RaiseCollectionChanged(a);
-            items.SubscriberAdded += items_SubscriberAdded;
+            Bus = bus;
         }
 
         /// <summary>
-        /// Invoked when a new subscriber is added.
+        /// Bus devices are a member of.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        void items_SubscriberAdded(object sender, AsyncCollectionSubscriberEventArgs<RnetDevice> args)
-        {
-            RaiseRequestDevice((RnetDeviceId)args.Subscriber.UserState);
-        }
+        public RnetBus Bus { get; private set; }
 
         /// <summary>
         /// Adds the given device to the collection.
@@ -41,7 +35,16 @@ namespace Rnet
         /// <param name="device"></param>
         internal void Add(RnetDevice device)
         {
-            items.Add(device);
+            lock (items)
+            {
+                var oldDevice = items.ValueOrDefault(device.Id);
+                items[device.Id] = device;
+
+                if (oldDevice == null)
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, device));
+                else if (!object.ReferenceEquals(oldDevice, device))
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, device, oldDevice));
+            }
         }
 
         /// <summary>
@@ -50,7 +53,11 @@ namespace Rnet
         /// <param name="device"></param>
         internal void Remove(RnetDevice device)
         {
-            items.Remove(device);
+            lock (items)
+            {
+                if (items.Remove(device.Id))
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, device));
+            }
         }
 
         /// <summary>
@@ -60,7 +67,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetDevice> GetAsync(RnetDeviceId id)
         {
-            return items.GetAsync(i => i.Id == id, id);
+            return GetAsync(id, CancellationToken.None);
         }
 
         /// <summary>
@@ -71,27 +78,35 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetDevice> GetAsync(RnetDeviceId id, CancellationToken cancellationToken)
         {
-            return items.GetAsync(i => i.Id == id, cancellationToken, id);
+            lock (items)
+            {
+                var device = items.ValueOrDefault(id);
+                if (device != null)
+                    return Task.FromResult(device);
+
+                return RequestDevice(id, cancellationToken);
+            }
         }
 
         /// <summary>
-        /// Raised when a device is requested.
+        /// Initiates a device request.
         /// </summary>
-        internal event EventHandler<ValueEventArgs<RnetDeviceId>> RequestDevice;
-
-        /// <summary>
-        /// Raises the RequestDevice event.
-        /// </summary>
-        /// <param name="id"></param>
-        void RaiseRequestDevice(RnetDeviceId id)
+        /// <param name="deviceId"></param>
+        async Task<RnetDevice> RequestDevice(RnetDeviceId deviceId, CancellationToken cancellationToken)
         {
-            if (RequestDevice != null)
-                RequestDevice(this, new ValueEventArgs<RnetDeviceId>(id));
+            var d = await Bus.RequestDevice(deviceId, cancellationToken);
+            if (d == null)
+                return null;
+
+            // add to collection
+            Add(d);
+
+            return d;
         }
 
         public IEnumerator<RnetDevice> GetEnumerator()
         {
-            return items.GetEnumerator();
+            return items.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

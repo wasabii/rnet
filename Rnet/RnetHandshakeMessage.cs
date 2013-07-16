@@ -47,6 +47,12 @@ namespace Rnet
                 handshakeType);
         }
 
+        protected override void WriteBodyDebugView(TextWriter writer)
+        {
+            writer.WriteLine("/* handshake */");
+            writer.WriteLine("HandshakeType = {0},", HandshakeType);
+        }
+
     }
 
 }
