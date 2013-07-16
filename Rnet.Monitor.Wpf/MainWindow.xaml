@@ -50,6 +50,9 @@
                     <Button
                         Content="Probe"
                         Command="{Binding ProbeDeviceCommand}" />
+                    <Button
+                        Content="Set Data"
+                        Command="{Binding SetDataCommand}" />
                 </ToolBar>
                 <ListBox
                     x:Name="DeviceListBox"
@@ -75,7 +78,15 @@
                         <HierarchicalDataTemplate
                             ItemsSource="{Binding}">
                             <TextBlock
-                                Text="{Binding Path}" />
+                                Text="{Binding Path}">
+                                <TextBlock.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem
+                                            Command="{Binding}"
+                                            Header="Set Value" />
+                                    </ContextMenu>
+                                </TextBlock.ContextMenu>
+                            </TextBlock>
                         </HierarchicalDataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>

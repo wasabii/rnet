@@ -89,10 +89,13 @@ namespace Rnet
 
             cts = new CancellationTokenSource();
             sendThread = new Thread(SendThreadStart);
+            sendThread.IsBackground = true;
             sendThread.Start();
             receiveThread = new Thread(ReceiveThreadStart);
+            receiveThread.IsBackground = true;
             receiveThread.Start();
             dispatchThread = new Thread(DispatchThreadStart);
+            dispatchThread.IsBackground = true;
             dispatchThread.Start();
 
             OnStateChanged(new RnetClientStateEventArgs(State));

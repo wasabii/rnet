@@ -26,23 +26,27 @@ namespace Rnet.Monitor.Wpf
             SentMessages = new ObservableCollection<RnetMessage>();
             ReceivedMessages = new ObservableCollection<RnetMessage>();
 
-            Client = new RnetClient(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
-            Client.StateChanged += (s, a) => dispatcher.Invoke(() => Client_StateChanged(s, a));
-            Client.MessageSent += (s, a) => dispatcher.Invoke(() => SentMessages.Add(a.Message));
-            Client.MessageReceived += (s, a) => dispatcher.Invoke(() => ReceivedMessages.Add(a.Message));
-            Bus = new RnetBus(Client);
+            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
+            Bus.ConnectionStateChanged +=  Bus_ConnectionStateChanged;
+            Bus.MessageSent += (s, a) => SentMessages.Add(a.Message);
+            Bus.MessageReceived += (s, a) => ReceivedMessages.Add(a.Message);
+            Bus.Error += Bus_Error;
 
             var canStart = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Stopped);
-            StartCommand = new ReactiveCommand(canStart, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
+            StartCommand = new ReactiveCommand(canStart);
             StartCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => Bus.Start()));
 
             var canStop = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Started);
-            StopCommand = new ReactiveCommand(canStop, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
+            StopCommand = new ReactiveCommand(canStop);
             StopCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => Bus.Stop()));
 
             var canProbeDevice = this.WhenAny(i => i.SelectedDevice, i => i.Value != null);
-            ProbeDeviceCommand = new ReactiveCommand(canProbeDevice, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
+            ProbeDeviceCommand = new ReactiveCommand(canProbeDevice);
             ProbeDeviceCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => DiscoverDeviceData(SelectedDevice)));
+
+            var canSetData = this.WhenAny(i => i.SelectedDataItem, i => i.Value != null);
+            SetDataCommand = new ReactiveCommand(canSetData);
+            SetDataCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => SelectedDataItem.SetBufferAsync(new byte[] { 0x00 })));
 
             // wrap devices in synchronized collection
             Devices = new SynchronizedCollection<RnetDevice>(Bus.Devices);
@@ -52,14 +56,14 @@ namespace Rnet.Monitor.Wpf
                 .ToProperty(this, i => i.SelectedDataItemViewModel);
         }
 
-        /// <summary>
-        /// Invoked when the client becomes connected.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        void Client_StateChanged(object sender, RnetClientStateEventArgs args)
+        void Bus_Error(object sender, RnetClientErrorEventArgs e)
         {
-            if (args.State == RnetClientState.Started)
+            throw e.Exception;
+        }
+
+        void Bus_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
+        {
+            if (args.State == RnetConnectionState.Open)
                 DiscoverDevices();
         }
 
@@ -76,6 +80,8 @@ namespace Rnet.Monitor.Wpf
         public ReactiveCommand StopCommand { get; private set; }
 
         public ReactiveCommand ProbeDeviceCommand { get; private set; }
+
+        public ReactiveCommand SetDataCommand { get; private set; }
 
         public SynchronizedCollection<RnetDevice> Devices { get; private set; }
 

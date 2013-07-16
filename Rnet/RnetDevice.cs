@@ -41,6 +41,7 @@ namespace Rnet
             RequiresHandshake = true;
             RetryDelay = TimeSpan.FromSeconds(1);
             RequestTimeout = TimeSpan.FromSeconds(2.5);
+            SetDataTimeout = TimeSpan.FromSeconds(2.5);
         }
 
         /// <summary>
@@ -72,6 +73,11 @@ namespace Rnet
         /// Gets or sets the amount of time to wait for a response to a request message.
         /// </summary>
         public TimeSpan RequestTimeout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount of time to wait for a handshake for a set data message.
+        /// </summary>
+        public TimeSpan SetDataTimeout { get; set; }
 
         /// <summary>
         /// Model name of the device.
@@ -205,7 +211,7 @@ namespace Rnet
             RnetSetDataMessage[] msgs = null;
 
             // add a conversation that sends a request data message and expects a set data message in return
-            return await RequestReplyAsync(new RnetRequestDataMessage(Id, Bus.Id,
+            return await RequestReplyAsync(new RnetRequestDataMessage(Id, Bus.ClientDevice.Id,
                 targetPath,
                 null,
                 RnetRequestMessageType.Data),
@@ -241,13 +247,13 @@ namespace Rnet
         /// <summary>
         /// Gets the <see cref="RnetDeviceData"/> at the specified path by querying the device.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="data"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        internal async Task<RnetDeviceData> RequestDataAsync(RnetPath path, CancellationToken cancellationToken)
+        internal async Task<RnetDeviceData> RequestDataAsync(RnetDeviceData data, CancellationToken cancellationToken)
         {
             // request message stream for path
-            var l = await RequestDataStreamAsync(path, cancellationToken);
+            var l = await RequestDataStreamAsync(data.Path, cancellationToken);
             if (l == null)
                 return null;
 
@@ -257,12 +263,38 @@ namespace Rnet
                 return null;
 
             // write packets to new data item
-            var d = new RnetDeviceData(path);
-            d.WriteBegin(m.PacketCount);
+            data.WriteBegin(m.PacketCount);
             foreach (var i in l)
-                d.Write(i.Data.ToArray(), i.PacketNumber);
-            d.WriteEnd();
-            return d;
+                data.Write(i.Data.ToArray(), i.PacketNumber);
+            data.WriteEnd();
+
+            return data;
+        }
+
+        /// <summary>
+        /// Sets the data on the specified item at the device, then initiates a refresh.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<RnetDeviceData> SetDataAsync(RnetDeviceData data, CancellationToken cancellationToken)
+        {
+            // add a conversation that sends a request data message and expects a set data message in return
+            return await RequestReplyAsync(new RnetSetDataMessage(Id, Bus.ClientDevice.Id,
+                data.Path,
+                null,
+                0,
+                1,
+                new RnetData(data.Buffer)),
+                i =>
+                {
+                    // expected handshake message
+                    var msg = i as RnetHandshakeMessage;
+                    if (msg != null)
+                        return data;
+
+                    return null;
+                }, cancellationToken, new CancellationTokenSource(RequestTimeout).Token);
         }
 
         /// <summary>

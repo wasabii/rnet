@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -22,10 +24,16 @@ namespace Rnet
         /// Initializes a new instance.
         /// </summary>
         /// <param name="path"></param>
-        internal RnetDeviceData(RnetPath path)
+        internal RnetDeviceData(RnetDevice device, RnetPath path)
         {
+            Device = device;
             Path = path;
         }
+
+        /// <summary>
+        /// Device that holds this data.
+        /// </summary>
+        public RnetDevice Device { get; private set; }
 
         /// <summary>
         /// Path to the data item.
@@ -35,7 +43,7 @@ namespace Rnet
         /// <summary>
         /// Clears any active input buffer.
         /// </summary>
-        public void WriteBegin(int packetCount)
+        internal void WriteBegin(int packetCount)
         {
             this.stream = new MemoryStream();
             this.packetCount = packetCount;
@@ -46,7 +54,7 @@ namespace Rnet
         /// Writes the data.
         /// </summary>
         /// <param name="data"></param>
-        public void Write(byte[] data, int packetNumber)
+        internal void Write(byte[] data, int packetNumber)
         {
             stream.Write(data, 0, data.Length);
             this.packetNumber = packetNumber;
@@ -55,7 +63,7 @@ namespace Rnet
         /// <summary>
         /// Closes the stream and sets the new data as the current data.
         /// </summary>
-        public void WriteEnd()
+        internal void WriteEnd()
         {
             Timestamp = DateTime.UtcNow;
             Buffer = stream.ToArray();
@@ -77,7 +85,7 @@ namespace Rnet
         public DateTime Timestamp
         {
             get { return timestamp; }
-            private set { timestamp = value; RaisePropertyChanged("Timestamp"); RaisePropertyChanged("Age"); RaisePropertyChanged("Valid"); }
+            internal set { timestamp = value; RaisePropertyChanged("Timestamp"); RaisePropertyChanged("Age"); RaisePropertyChanged("Valid"); }
         }
 
         /// <summary>
@@ -94,6 +102,27 @@ namespace Rnet
         public bool Valid
         {
             get { return Buffer != null && Age < Lifetime; }
+        }
+
+        /// <summary>
+        /// Sets the value of the data in the device.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Task SetBufferAsync(byte[] value)
+        {
+            return SetBufferAsync(value, RnetBus.CreateDefaultCancellationToken());
+        }
+
+        /// <summary>
+        /// Sets the value of the data in the device.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public async Task SetBufferAsync(byte[] value, CancellationToken cancellationToken)
+        {
+            Buffer = value;
+            await Device.Data.SetAsync(this, cancellationToken);
         }
 
     }

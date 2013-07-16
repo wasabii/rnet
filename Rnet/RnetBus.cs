@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 namespace Rnet
 {
 
-    /// <summary>
-    /// Initializes a connection to the Rnet bus and assembles a model of the available devices.
-    /// </summary>
-    public sealed class RnetBus : RnetDevice, IDisposable
+    public class RnetBus : RnetModelObject
     {
 
         /// <summary>
@@ -29,36 +26,37 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="client"></param>
-        public RnetBus(RnetClient client, RnetDeviceId id, SynchronizationContext synchronizationContext)
-            : base(null, id)
+        /// <param name="connection"></param>
+        public RnetBus(RnetConnection connection, RnetDeviceId id, SynchronizationContext synchronizationContext)
         {
             // we are our own bus
             SynchronizationContext = synchronizationContext;
-            Bus = this;
 
-            if (client == null)
+            if (connection == null)
                 throw new ArgumentNullException("client");
-            if (id.KeypadId >= 0x7c && id.KeypadId <= 0x7f)
-                throw new ArgumentOutOfRangeException("id", "RnetKeypadId cannot be in a reserved range.");
 
             // hook ourselves up to the client
-            Client = client;
+            Client = new RnetClient(connection);
+            Client.StateChanged += Client_StateChanged;
+            Client.ConnectionStateChanged += Client_ConnectionStateChanged;
             Client.MessageReceived += Client_MessageReceived;
+            Client.MessageSent += Client_MessageSent;
+            Client.Error += Client_Error;
 
             // initialize set of known devices, including ourselves
+            ClientDevice = new RnetClientDevice(this, id);
             Devices = new RnetDeviceCollection(this);
-            Devices.Add(this);
+            Devices.Add(ClientDevice);
         }
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="client"></param>
-        public RnetBus(RnetClient client)
-            : this(client, RnetDeviceId.External, SynchronizationContext.Current)
+        public RnetBus(RnetConnection connection)
+            : this(connection, RnetDeviceId.External, SynchronizationContext.Current)
         {
-            Visible = true;
+
         }
 
         /// <summary>
@@ -72,6 +70,27 @@ namespace Rnet
         public RnetClient Client { get; private set; }
 
         /// <summary>
+        /// Gets the current state of the client.
+        /// </summary>
+        public RnetClientState ClientState
+        {
+            get { return Client.State; }
+        }
+
+        /// <summary>
+        /// Gets the current state of the connection.
+        /// </summary>
+        public RnetConnectionState ConnectionState
+        {
+            get { return Client.ConnectionState; }
+        }
+
+        /// <summary>
+        /// Device node representing ourselves.
+        /// </summary>
+        public RnetClientDevice ClientDevice { get; private set; }
+
+        /// <summary>
         /// RNET devices detected on the bus.
         /// </summary>
         public RnetDeviceCollection Devices { get; private set; }
@@ -82,7 +101,7 @@ namespace Rnet
         public void Start()
         {
             if (Client == null)
-                throw new ObjectDisposedException("Bus");
+                throw new ObjectDisposedException("RnetBus");
 
             Client.Start();
         }
@@ -93,7 +112,7 @@ namespace Rnet
         public void Stop()
         {
             if (Client == null)
-                throw new ObjectDisposedException("Bus");
+                throw new ObjectDisposedException("RnetBus");
 
             Client.Stop();
 
@@ -102,6 +121,26 @@ namespace Rnet
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource = null;
             }
+        }
+
+        /// <summary>
+        /// Invoked when the client's state changes.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void Client_StateChanged(object sender, RnetClientStateEventArgs args)
+        {
+            SynchronizationContext.Post(i => OnClientStateChanged(args), null);
+        }
+
+        /// <summary>
+        /// Invoked when the connection's state changes.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void Client_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
+        {
+            SynchronizationContext.Post(i => OnConnectionStateChanged(args), null);
         }
 
         /// <summary>
@@ -117,7 +156,7 @@ namespace Rnet
 
             // skip messages not destined to us
             var message = args.Message;
-            if (message.TargetDeviceId != Id &&
+            if (message.TargetDeviceId != ClientDevice.Id &&
                 message.TargetDeviceId != RnetDeviceId.AllDevices)
                 return;
 
@@ -125,6 +164,28 @@ namespace Rnet
             var device = Devices[message.SourceDeviceId];
             if (device != null)
                 await device.ReceiveMessage(message);
+
+            SynchronizationContext.Post(i => OnMessageReceived(args), null);
+        }
+
+        /// <summary>
+        /// Invoked when a message is sent.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        void Client_MessageSent(object sender, RnetMessageEventArgs args)
+        {
+            SynchronizationContext.Post(i => OnMessageSent(args), null);
+        }
+
+        /// <summary>
+        /// Invoked when an error is emitted by the client.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        void Client_Error(object sender, RnetClientErrorEventArgs args)
+        {
+            SynchronizationContext.Post(i => OnError(args), null);
         }
 
         /// <summary>
@@ -135,7 +196,7 @@ namespace Rnet
         /// <param name="sourcePath"></param>
         internal void SendRequestDataMessage(RnetDeviceId deviceId, RnetPath targetPath, RnetPath sourcePath)
         {
-            Client.SendMessage(new RnetRequestDataMessage(deviceId, Id, targetPath, sourcePath, RnetRequestMessageType.Data));
+            Client.SendMessage(new RnetRequestDataMessage(deviceId, ClientDevice.Id, targetPath, sourcePath, RnetRequestMessageType.Data));
         }
 
         /// <summary>
@@ -163,11 +224,88 @@ namespace Rnet
             device = Devices[deviceId];
             if (device != null)
             {
-                device.ModelName = Encoding.ASCII.GetString((await device.Data.GetAsync(new RnetPath(0, 0), cancellationToken)).Buffer);
+                device.ModelName = Encoding.ASCII.GetString((await device.Data.GetAsync(new RnetPath(0, 0), cancellationToken)).Buffer).Trim();
                 device.Visible = true;
             }
 
             return device;
+        }
+
+        /// <summary>
+        /// Raised when a message is sent.
+        /// </summary>
+        public event EventHandler<RnetMessageEventArgs> MessageSent;
+
+        /// <summary>
+        /// Raises the MessageSent event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnMessageSent(RnetMessageEventArgs args)
+        {
+            if (MessageSent != null)
+                MessageSent(this, args);
+        }
+
+        /// <summary>
+        /// Raised when a new message is received.
+        /// </summary>
+        public event EventHandler<RnetMessageEventArgs> MessageReceived;
+
+        /// <summary>
+        /// Raises the MessageReceived event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnMessageReceived(RnetMessageEventArgs args)
+        {
+            if (MessageReceived != null)
+                MessageReceived(this, args);
+        }
+
+        /// <summary>
+        /// Raised when an error occurs.
+        /// </summary>
+        public event EventHandler<RnetClientErrorEventArgs> Error;
+
+        /// <summary>
+        /// Raises the Error event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnError(RnetClientErrorEventArgs args)
+        {
+            if (Error != null)
+                Error(this, args);
+        }
+
+        /// <summary>
+        /// Raised when the state changes.
+        /// </summary>
+        public event EventHandler<RnetClientStateEventArgs> ClientStateChanged;
+
+        /// <summary>
+        /// Raises the ClientStateChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnClientStateChanged(RnetClientStateEventArgs args)
+        {
+            if (ClientStateChanged != null)
+                ClientStateChanged(this, args);
+            RaisePropertyChanged("ClientState");
+        }
+
+        /// <summary>
+        /// Raised when the connection state changes.
+        /// </summary>
+        public event EventHandler<RnetConnectionStateEventArgs> ConnectionStateChanged;
+
+        /// <summary>
+        /// Raises the ConnectionStateChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnConnectionStateChanged(RnetConnectionStateEventArgs args)
+        {
+            if (ConnectionStateChanged != null)
+                ConnectionStateChanged(this, args);
+            RaisePropertyChanged("ConnectionState");
         }
 
         /// <summary>
@@ -178,14 +316,14 @@ namespace Rnet
             if (Client != null)
             {
                 Stop();
+                Client.StateChanged -= Client_StateChanged;
+                Client.ConnectionStateChanged -= Client_ConnectionStateChanged;
                 Client.MessageReceived -= Client_MessageReceived;
+                Client.MessageSent -= Client_MessageSent;
+                Client.Error -= Client_Error;
+                Client.Dispose();
                 Client = null;
             }
-        }
-
-        public override string ToString()
-        {
-            return "Bus";
         }
 
     }

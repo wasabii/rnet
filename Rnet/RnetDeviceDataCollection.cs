@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -108,9 +109,10 @@ namespace Rnet
         {
             lock (items)
             {
-                // check cache
+                // check cache for valid item
                 var item = items.ValueOrDefault(path);
-                if (item != null)
+                if (item != null &&
+                    item.Valid)
                     return Task.FromResult(item);
             }
 
@@ -126,7 +128,7 @@ namespace Rnet
         async Task<RnetDeviceData> RequestDataAsync(RnetPath path, CancellationToken cancellationToken)
         {
             // request data from device
-            var d = await Device.RequestDataAsync(path, cancellationToken);
+            var d = await Device.RequestDataAsync(new RnetDeviceData(Device, path), cancellationToken);
             if (d == null)
                 return null;
 
@@ -134,6 +136,22 @@ namespace Rnet
             Add(d);
 
             return d;
+        }
+
+        /// <summary>
+        /// Updates the device with the current value of the <see cref="RnetDeviceData"/>.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<RnetDeviceData> SetAsync(RnetDeviceData data, CancellationToken cancellationToken)
+        {
+            // update data in the device and expire locally
+            await Device.SetDataAsync(data, cancellationToken);
+            data.Timestamp = DateTime.MinValue;
+
+            // refresh data from the device
+            return await GetAsync(data.Path, cancellationToken);
         }
 
         /// <summary>

@@ -53,12 +53,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DictionaryExtensions.cs" />
+    <Compile Include="RnetBus.cs" />
     <Compile Include="RnetConnectionManager.cs" />
     <Compile Include="RnetDeviceDirectory.cs" />
     <Compile Include="RnetDeviceCollection.cs" />
     <Compile Include="RnetMessagePriority.cs" />
     <Compile Include="RnetModelObject.cs" />
-    <Compile Include="RnetBus.cs" />
+    <Compile Include="RnetClientDevice.cs" />
     <Compile Include="RnetClient.cs" />
     <Compile Include="RnetClientErrorEventArgs.cs" />
     <Compile Include="RnetClientState.cs" />
