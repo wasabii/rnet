@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -55,8 +56,32 @@ namespace Rnet
         {
             lock (items)
             {
+                if (!items.ContainsKey(device.Id))
+                    return;
+
+                // find existing index of device item
+                var index = items.Values
+                    .Select((i, j) => new { Index = j, Device = i })
+                    .Where(i => i.Device.Id == device.Id)
+                    .Select(i => i.Index)
+                    .First();
+
                 if (items.Remove(device.Id))
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, device));
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, device, index));
+            }
+        }
+
+        /// <summary>
+        /// Gets the specified device if it exists.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        internal RnetDevice this[RnetDeviceId id]
+        {
+            get
+            {
+                lock (items)
+                    return items.ValueOrDefault(id);
             }
         }
 
@@ -67,7 +92,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetDevice> GetAsync(RnetDeviceId id)
         {
-            return GetAsync(id, CancellationToken.None);
+            return GetAsync(id, RnetBus.GetDefaultCancellationToken());
         }
 
         /// <summary>
@@ -83,9 +108,9 @@ namespace Rnet
                 var device = items.ValueOrDefault(id);
                 if (device != null)
                     return Task.FromResult(device);
-
-                return RequestDevice(id, cancellationToken);
             }
+
+            return RequestDevice(id, cancellationToken);
         }
 
         /// <summary>

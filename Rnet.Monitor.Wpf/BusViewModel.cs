@@ -27,34 +27,33 @@ namespace Rnet.Monitor.Wpf
             ReceivedMessages = new ObservableCollection<RnetMessage>();
 
             Client = new RnetClient(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
-            Client.StateChanged += Client_StateChanged;
+            Client.StateChanged += (s, a) => dispatcher.Invoke(() => Client_StateChanged(s, a));
             Client.MessageSent += (s, a) => dispatcher.Invoke(() => SentMessages.Add(a.Message));
             Client.MessageReceived += (s, a) => dispatcher.Invoke(() => ReceivedMessages.Add(a.Message));
             Bus = new RnetBus(Client);
 
             var canStart = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Stopped);
-            StartCommand = new ReactiveCommand(canStart);
-            StartCommand.RegisterAsyncAction(i => Bus.Start());
+            StartCommand = new ReactiveCommand(canStart, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
+            StartCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => Bus.Start()));
 
             var canStop = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Started);
-            StopCommand = new ReactiveCommand(canStop);
-            StopCommand.RegisterAsyncAction(i => Bus.Stop());
+            StopCommand = new ReactiveCommand(canStop, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
+            StopCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => Bus.Stop()));
 
             var canProbeDevice = this.WhenAny(i => i.SelectedDevice, i => i.Value != null);
-            ProbeDeviceCommand = new ReactiveCommand(canProbeDevice);
-            ProbeDeviceCommand.RegisterAsyncAction(i => ProbeDevice(SelectedDevice));
+            ProbeDeviceCommand = new ReactiveCommand(canProbeDevice, false, System.Reactive.Concurrency.DispatcherScheduler.Current);
+            ProbeDeviceCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => ProbeDevice(SelectedDevice)));
 
             // wrap devices in synchronized collection
             Devices = new SynchronizedCollection<RnetDevice>(Bus.Devices);
 
             // subscribe data items collection to selected device
             dataItems = this.ObservableForProperty(i => i.SelectedDevice)
-                .Select(i => i.Value.DataItems)
-                .Select(i => new SynchronizedCollection<RnetDataItem>(i))
+                .Select(i => i.Value != null ? new SynchronizedCollection<RnetDataItem>(i.Value.DataItems) : null)
                 .ToProperty(this, i => i.DataItems);
 
             selectedDataItemViewModel = this.ObservableForProperty(i => i.SelectedDataItem)
-                .Select(i => new DataItemViewModel(i.Value))
+                .Select(i => i.Value != null ? new DataItemViewModel(i.Value) : null)
                 .ToProperty(this, i => i.SelectedDataItemViewModel);
         }
 
@@ -111,14 +110,8 @@ namespace Rnet.Monitor.Wpf
 
         async void ProbeDevices()
         {
-            foreach (var t in GetDevicesAsync())
-                await t;
-        }
-
-        IEnumerable<Task<RnetDevice>> GetDevicesAsync()
-        {
             for (int i = 0; i < 6; i++)
-                yield return Bus.Devices.GetAsync(new RnetDeviceId(i, 0, RnetKeypadId.Controller));
+                await GetDeviceAsync(new RnetDeviceId(i, 0, RnetKeypadId.Controller));
         }
 
         async void ProbeDevice(RnetDevice device)
@@ -139,18 +132,28 @@ namespace Rnet.Monitor.Wpf
             return data;
         }
 
+        async Task<RnetDevice> GetDeviceAsync(RnetDeviceId deviceId)
+        {
+            try
+            {
+                return await Bus.Devices.GetAsync(deviceId);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
+        }
+
         async Task<RnetDataItem> GetDataItemAsync(RnetDevice device, RnetPath path)
         {
             try
             {
-                return await device.DataItems.GetAsync(path, new CancellationTokenSource(TimeSpan.FromSeconds(.25)).Token);
+                return await device.DataItems.GetAsync(path, new CancellationTokenSource(TimeSpan.FromSeconds(.2)).Token);
             }
-            catch (TaskCanceledException e)
+            catch (OperationCanceledException)
             {
-                // ignore
+                return null;
             }
-
-            return null;
         }
 
     }

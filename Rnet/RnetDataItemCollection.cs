@@ -57,8 +57,32 @@ namespace Rnet
         {
             lock (items)
             {
+                if (!items.ContainsKey(item.Path))
+                    return;
+
+                // find existing index of device item
+                var index = items.Values
+                    .Select((i, j) => new { Index = j, DataItem = i })
+                    .Where(i => i.DataItem.Path == item.Path)
+                    .Select(i => i.Index)
+                    .First();
+
                 if (items.Remove(item.Path))
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
+                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
+            }
+        }
+
+        /// <summary>
+        /// Gets the data at the specified path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataItem this[RnetPath path]
+        {
+            get
+            {
+                lock (items)
+                    return items.ValueOrDefault(path);
             }
         }
 
@@ -69,7 +93,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetDataItem> GetAsync(RnetPath path)
         {
-            return GetAsync(path, CancellationToken.None);
+            return GetAsync(path, RnetBus.GetDefaultCancellationToken());
         }
 
         /// <summary>
@@ -85,9 +109,9 @@ namespace Rnet
                 var item = items.ValueOrDefault(path);
                 if (item != null)
                     return Task.FromResult(item);
-
-                return RequestItem(path, cancellationToken);
             }
+
+            return RequestItem(path, cancellationToken);
         }
 
         /// <summary>
@@ -104,16 +128,6 @@ namespace Rnet
             Add(d);
 
             return d;
-        }
-
-        /// <summary>
-        /// Gets the data at the specified path.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public RnetDataItem this[RnetPath path]
-        {
-            get { return items.ValueOrDefault(path); }
         }
 
         public IEnumerator<RnetDataItem> GetEnumerator()

@@ -261,6 +261,9 @@ namespace Rnet
             }
         }
 
+        /// <summary>
+        /// Dispatches received messages to the event handlers.
+        /// </summary>
         void DispatchThreadStart()
         {
             // cache token

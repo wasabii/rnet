@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -16,12 +15,14 @@ namespace Rnet
     public abstract class RnetDevice : RnetModelObject
     {
 
+        AsyncLock asyncLock = new AsyncLock();
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         RnetDevice()
         {
-            Messages = new BlockingCollection<RnetMessage>();
+            Messages = new AsyncCollection<RnetMessage>();
             DataItems = new RnetDataItemCollection(this);
             DataItems.CollectionChanged += DataItems_CollectionChanged;
             DataItemsTree = new RnetDataTreeRoot(this);
@@ -89,7 +90,10 @@ namespace Rnet
         /// <returns></returns>
         internal async Task<RnetDataItem> RequestDataItem(RnetPath path, CancellationToken cancellationToken)
         {
-            var m = await RequestData(Id, path, cancellationToken);
+            var m = await RequestData(path, cancellationToken);
+            if (m == null)
+                return null;
+
             if (m.PacketCount > 1)
                 throw new NotSupportedException("Multi-package messages not supported.");
 
@@ -101,50 +105,82 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Schedules the given conversation for execution.
+        /// Submits the given request message and waits for a valid reply.
         /// </summary>
-        /// <param name="conversation"></param>
-        internal async Task<T> Converse<T>(RnetMessage message, Func<RnetMessage, T> getReply, CancellationToken cancellationToken)
+        /// <typeparam name="T"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="getReply"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        internal async Task<T> RequestReply<T>(
+            RnetMessage message,
+            Func<RnetMessage, T> getReply,
+            CancellationToken cancellationToken,
+            CancellationToken timeoutCancellationToken)
             where T : class
         {
             if (message == null)
                 throw new ArgumentNullException("message");
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // send initial conversation message
-            Bus.Client.SendMessage(message);
-
-            // wait for reply
-            while (getReply != null)
+            using (await asyncLock.LockAsync())
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                // send initial conversation message
+                Bus.Client.SendMessage(message);
 
-                // wait for new possible reply message
-                var r = await Messages.TryTakeAsync(cancellationToken);
-                if (!r.Success)
-                    continue;
+                // time between retries
+                var retryTimeout = TimeSpan.FromSeconds(.25);
+                var retryTimeoutCancellationToken = new CancellationTokenSource(retryTimeout).Token;
 
-                // extract message
-                var m = r.Item;
-                if (m == null)
-                    continue;
+                // wait for reply
+                while (getReply != null)
+                {
+                    // retry initial packet if retry time has elapsed
+                    if (message != null)
+                        if (retryTimeoutCancellationToken.IsCancellationRequested)
+                            Bus.Client.SendMessage(message);
 
-                // check message timestamp
-                if (m.Timestamp < message.Timestamp)
-                    continue;
+                    // time between retries
+                    if (retryTimeoutCancellationToken.IsCancellationRequested)
+                        retryTimeoutCancellationToken = new CancellationTokenSource(retryTimeout).Token;
 
-                // is this message a valid reply?
-                var reply = getReply(m);
-                if (reply != null)
-                    return reply;
+                    // throw for user cancellation
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                // retry initial packet
-                if (message != null)
-                    Bus.Client.SendMessage(message);
+                    // if the global timeout has expired, return null
+                    if (timeoutCancellationToken.IsCancellationRequested)
+                        return null;
+
+                    try
+                    {
+                        // cancel for any reason
+                        var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+                            cancellationToken,
+                            timeoutCancellationToken,
+                            retryTimeoutCancellationToken).Token;
+
+                        // wait for new possible reply message
+                        var m = await Messages.TakeAsync(linkedCancellationToken);
+                        if (m == null)
+                            continue;
+
+                        // check message timestamp
+                        if (m.Timestamp < message.Timestamp)
+                            continue;
+
+                        // is this message a valid reply?
+                        var reply = getReply(m);
+                        if (reply != null)
+                            return reply;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // ignore
+                    }
+                }
+
+                return null;
             }
-
-            return null;
         }
 
         /// <summary>
@@ -152,10 +188,10 @@ namespace Rnet
         /// </summary>
         /// <param name="deviceId"></param>
         /// <param name="targetPath"></param>
-        internal async Task<RnetSetDataMessage> RequestData(RnetDeviceId deviceId, RnetPath targetPath, CancellationToken cancellationToken)
+        internal async Task<RnetSetDataMessage> RequestData(RnetPath targetPath, CancellationToken cancellationToken)
         {
             // add a conversation that sends a request data message and expects a set data message in return
-            return await Converse(new RnetRequestDataMessage(deviceId, Id,
+            return await RequestReply(new RnetRequestDataMessage(Id, Bus.Id,
                 targetPath,
                 null,
                 RnetRequestMessageType.Data),
@@ -164,12 +200,11 @@ namespace Rnet
                     // expected set data message
                     var msg = i as RnetSetDataMessage;
                     if (msg != null &&
-                        msg.SourceDeviceId == deviceId &&
                         msg.SourcePath == targetPath)
                         return msg;
 
                     return null;
-                }, cancellationToken);
+                }, cancellationToken, RnetBus.GetTimeoutCancellationToken());
         }
 
         /// <summary>

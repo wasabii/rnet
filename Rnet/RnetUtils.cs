@@ -2,6 +2,8 @@
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -23,45 +25,31 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Invokes the specified function, ignoring exceptions of the specified type.
+        /// Attempts to execute the given function. Throws exceptions only if the first <see cref="CancellationToken"/>
+        /// is cancelled, or unknown exceptions occur.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <typeparam name="TException"></typeparam>
         /// <param name="func"></param>
+        /// <param name="fatal"></param>
+        /// <param name="exit"></param>
         /// <returns></returns>
-        public static TResult TryContinue<TResult, TException>(Func<TResult> func)
-            where TException : Exception
+        public static async Task<TResult> TryTask<TResult>(Func<Task<TResult>> func, CancellationToken fatal, CancellationToken exit)
         {
             try
             {
-                return func();
+                return await func();
             }
-            catch (TException)
+            catch (OperationCanceledException e)
             {
-                return default(TResult);
+                if (exit.IsCancellationRequested)
+                    return default(TResult);
+                else if (fatal.IsCancellationRequested)
+                    fatal.ThrowIfCancellationRequested();
+                else
+                    throw e;
             }
-        }
 
-        /// <summary>
-        /// Invokes the specified function, ignoring exceptions of the specified type.
-        /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <typeparam name="TException"></typeparam>
-        /// <param name="func"></param>
-        /// <param name="onException"></param>
-        /// <returns></returns>
-        public static TResult TryCatch<TResult, TException>(Func<TResult> func, Action<TException> onException)
-            where TException : Exception
-        {
-            try
-            {
-                return func();
-            }
-            catch (TException e)
-            {
-                onException(e);
-                return default(TResult);
-            }
+            return default(TResult);
         }
 
     }

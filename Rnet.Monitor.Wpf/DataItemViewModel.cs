@@ -11,13 +11,6 @@ namespace Rnet.Monitor.Wpf
         public DataItemViewModel(RnetDataItem dataItem)
         {
             DataItem = dataItem;
-            if (DataItem != null)
-                DataItem.BufferAvailable += DataItem_BufferAvailable;
-        }
-
-        void DataItem_BufferAvailable(object sender, EventArgs args)
-        {
-            raisePropertyChanged("Text");
         }
 
         public RnetDataItem DataItem { get; private set; }

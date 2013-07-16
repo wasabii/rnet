@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Rnet
 {
 
-    public class RnetDataItem : RnetModelObject, IDisposable
+    public class RnetDataItem : RnetModelObject
     {
 
         /// <summary>
@@ -21,12 +17,6 @@ namespace Rnet
         int packetNumber;
         byte[] buffer;
         DateTime timestamp;
-
-        /// <summary>
-        /// Subscribers waiting for data.
-        /// </summary>
-        List<TaskCompletionSource<byte[]>> subscribers =
-            new List<TaskCompletionSource<byte[]>>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -70,19 +60,6 @@ namespace Rnet
             Timestamp = DateTime.UtcNow;
             Buffer = stream.ToArray();
             stream = null;
-            RaiseBufferAvailable();
-
-            // notify subscribers
-            lock (subscribers)
-            {
-                foreach (var subscriber in subscribers)
-                    subscriber.SetResult(Buffer);
-
-                // remove completed subscriptions
-                foreach (var subscriber in subscribers.ToList())
-                    if (subscriber.Task.IsCompleted)
-                        subscribers.Remove(subscriber);
-            }
         }
 
         /// <summary>
@@ -119,58 +96,6 @@ namespace Rnet
             get { return Buffer != null && Age < Lifetime; }
         }
 
-        /// <summary>
-        /// Raised when the data buffer is finished.
-        /// </summary>
-        public EventHandler<EventArgs> BufferAvailable;
-
-        /// <summary>
-        /// Raises the BufferAvailable event.
-        /// </summary>
-        void RaiseBufferAvailable()
-        {
-            if (BufferAvailable != null)
-                BufferAvailable(this, new EventArgs());
-        }
-
-        /// <summary>
-        /// Gets the buffer.
-        /// </summary>
-        /// <returns></returns>
-        public Task<byte[]> GetBufferAsync()
-        {
-            return GetBufferAsync(CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Gets the buffer.
-        /// </summary>
-        /// <returns></returns>
-        public Task<byte[]> GetBufferAsync(CancellationToken cancellationToken)
-        {
-            lock (subscribers)
-            {
-                if (Valid)
-                    return Task.FromResult(Buffer);
-
-                // subscribe to data
-                var tcs = new TaskCompletionSource<byte[]>();
-                cancellationToken.Register(() => tcs.SetCanceled());
-                subscribers.Add(tcs);
-                return tcs.Task;
-            }
-        }
-
-        /// <summary>
-        /// Disposes of the instance.
-        /// </summary>
-        public void Dispose()
-        {
-            // cancel all subscribers
-            foreach (var subscriber in subscribers)
-                if (!subscriber.Task.IsCompleted)
-                    subscriber.SetCanceled();
-        }
     }
 
 }

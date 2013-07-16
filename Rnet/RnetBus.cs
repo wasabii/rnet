@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,29 +12,32 @@ namespace Rnet
     {
 
         /// <summary>
+        /// Gets the default cancellation token.
+        /// </summary>
+        /// <returns></returns>
+        internal static CancellationToken GetDefaultCancellationToken()
+        {
+            return CancellationToken.None;
+        }
+
+        /// <summary>
+        /// Gets the cancellation token that drives timeouts.
+        /// </summary>
+        /// <returns></returns>
+        internal static CancellationToken GetTimeoutCancellationToken()
+        {
+            return new CancellationTokenSource(TimeSpan.FromSeconds(2.5)).Token;
+        }
+
+        /// <summary>
         /// My device ID.
         /// </summary>
         RnetDeviceId id;
 
         /// <summary>
-        /// Outstanding conversations to engage in.
-        /// </summary>
-        BlockingCollection<Conversation> conversations;
-
-        /// <summary>
-        /// Incoming messages to be processed by the conversation thread.
-        /// </summary>
-        BlockingCollection<RnetMessage> conversationMessageBuffer;
-
-        /// <summary>
         /// Signals to the bus to stop all threads.
         /// </summary>
         CancellationTokenSource cancellationTokenSource;
-
-        /// <summary>
-        /// Manages conversations.
-        /// </summary>
-        Thread conversationThread;
 
         /// <summary>
         /// Initializes a new instance.
@@ -105,13 +104,6 @@ namespace Rnet
             if (Client == null)
                 throw new ObjectDisposedException("Bus");
 
-            cancellationTokenSource = new CancellationTokenSource();
-            conversations = new BlockingCollection<Conversation>();
-            conversationMessageBuffer = new BlockingCollection<RnetMessage>();
-            conversationThread = new Thread(ConversationThreadStart);
-            conversationThread.IsBackground = true;
-            conversationThread.Start();
-
             Client.Start();
         }
 
@@ -130,24 +122,6 @@ namespace Rnet
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource = null;
             }
-
-            if (conversationThread != null)
-            {
-                conversationThread.Join();
-                conversationThread = null;
-            }
-
-            if (conversations != null)
-            {
-                conversations.CompleteAdding();
-                conversations = null;
-            }
-
-            if (conversationMessageBuffer != null)
-            {
-                conversationMessageBuffer.CompleteAdding();
-                conversationMessageBuffer = null;
-            }
         }
 
         /// <summary>
@@ -155,7 +129,7 @@ namespace Rnet
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        void Client_MessageReceived(object sender, RnetMessageEventArgs args)
+        async void Client_MessageReceived(object sender, RnetMessageEventArgs args)
         {
             // client is stopped, ignore any trailing events
             if (Client.State != RnetClientState.Started)
@@ -167,87 +141,17 @@ namespace Rnet
                 msg.TargetDeviceId != RnetDeviceId.AllDevices)
                 return;
 
-            msg
+            // add message to device queue
+            var device = Devices[msg.SourceDeviceId];
+            if (device != null)
+                await device.Messages.AddAsync(msg);
 
+            // handshake to acknowledge message
             var dmsg = msg as RnetSetDataMessage;
             if (dmsg != null)
-                ProcessMessage(dmsg);
-
-            // buffer for conversation thread to handle messages
-            if (conversationMessageBuffer != null)
-                conversationMessageBuffer.Add(msg);
-        }
-
-        /// <summary>
-        /// Processes an incoming <see cref="RnetSetDataMessage"/>.
-        /// </summary>
-        /// <param name="msg"></param>
-        void ProcessMessage(RnetSetDataMessage msg)
-        {
-            SynchronizationContext.Post(state =>
-            {
-                // handshake to acknowledge message
                 Client.SendMessage(new RnetHandshakeMessage(msg.SourceDeviceId, Id,
                     RnetHandshakeType.Data),
                     RnetMessagePriority.High);
-            }, null);
-        }
-
-        /// <summary>
-        /// Dispatches conversations to the client and handles responses.
-        /// </summary>
-        void ConversationThreadStart()
-        {
-            var cancellationToken = cancellationTokenSource.Token;
-            if (cancellationToken == null)
-                return;
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var conversations_ = conversations;
-                if (conversations_ == null)
-                    return;
-
-                // find next conversation
-                Conversation conversation = null;
-                if (!conversations_.TryTake(out conversation, 15000, cancellationToken))
-                    continue;
-
-                // cancelled conversation
-                if (conversation.CancellationToken.IsCancellationRequested)
-                    continue;
-
-                // send initial conversation message
-                var message = conversation.GetMessage();
-                if (message != null)
-                    Client.SendMessage(message);
-
-                // are we to wait for a reply message for continuing?
-                object reply = null;
-                if (conversation.ExpectReply)
-                    for (int n = 0; n < 4 && reply == null; n++)
-                    {
-                        // cancelled conversation
-                        if (conversation.CancellationToken.IsCancellationRequested)
-                            continue;
-
-                        // retry initial packet
-                        if (n > 0 && message != null)
-                            Client.SendMessage(message);
-
-                        // wait for reply by checking incoming messages
-                        reply = RnetUtils.TryCatch<RnetMessage, OperationCanceledException>(() =>
-                            conversationMessageBuffer.GetConsumingEnumerable(
-                                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
-                                    new CancellationTokenSource(500).Token).Token)
-                                .Where(i => i.Timestamp >= message.Timestamp)
-                                .FirstOrDefault(i => conversation.GetReply(i) != null),
-                            e => conversation.SetException(e));
-                    }
-
-                // complete conversation with matched message, if any
-                conversation.SetComplete(reply);
-            }
         }
 
         /// <summary>
@@ -257,14 +161,22 @@ namespace Rnet
         /// <returns></returns>
         internal async Task<RnetDevice> RequestDevice(RnetDeviceId deviceId, CancellationToken cancellationToken)
         {
-            var msg = await RequestData(deviceId, new RnetPath(0, 0), cancellationToken);
+            var device = Devices[deviceId];
+            if (device != null)
+                return device;
 
-            // source is a controller
-            if (msg.SourceDeviceId.ZoneId == RnetZoneId.Zone1 &&
-                msg.SourceDeviceId.KeypadId == RnetKeypadId.Controller)
-                return new RnetController(this, msg.SourceDeviceId.ControllerId);
+            // establish device before requesting data
+            if (deviceId.ZoneId == RnetZoneId.Zone1 &&
+                deviceId.KeypadId == RnetKeypadId.Controller)
+                Devices.Add(device = new RnetController(this, deviceId.ControllerId));
 
-            return null;
+            // prime device model if possible; else remove
+            if (device != null)
+                if (await device.DataItems.GetAsync(new RnetPath(0, 0), cancellationToken) == null)
+                    Devices.Remove(device);
+
+            // return whatever is left
+            return Devices[deviceId];
         }
 
         /// <summary>
