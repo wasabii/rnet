@@ -86,8 +86,8 @@ namespace Rnet
                 writer.Write(" /* {0} */", data[0]);
             else if (data.Length == 2)
                 writer.Write(" /* {0} */", data[0] << 8 + data[1]);
-            else if (GetText() != null)
-                writer.Write(" /* \"{0}\" */", GetText());
+            else if (GetDebugText() != null)
+                writer.Write(" /* \"{0}\" */", GetDebugText());
         }
 
         /// <summary>
@@ -121,6 +121,27 @@ namespace Rnet
                         return null;
 
                 return new string(c, 0, l);
+            }
+            catch (DecoderFallbackException)
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to extract an RNET text stream from the data.
+        /// </summary>
+        /// <returns></returns>
+        string GetDebugText()
+        {
+            try
+            {
+                if (data.Length < 4)
+                    return null;
+
+                return Encoding.ASCII.GetString(data);
             }
             catch (DecoderFallbackException)
             {

@@ -33,7 +33,7 @@ namespace Rnet
         /// <param name="args"></param>
         void items_SubscriberAdded(object sender, AsyncCollectionSubscriberEventArgs<RnetDataItem> args)
         {
-            RaiseSubscriberAdded((RnetPath)args.Subscriber.UserState);
+            RaiseRequestData((RnetPath)args.Subscriber.UserState);
         }
 
         /// <summary>
@@ -89,13 +89,13 @@ namespace Rnet
         /// Begins a write of new data to the specified path.
         /// </summary>
         /// <param name="path"></param>
-        public void WriteBegin(RnetPath path)
+        public void WriteBegin(RnetPath path, int packetCount)
         {
             var item = GetData(path);
             if (item == null)
                 items.Add(item = new RnetDataItem(path));
 
-            item.WriteBegin();
+            item.WriteBegin(packetCount);
         }
 
         /// <summary>
@@ -103,13 +103,13 @@ namespace Rnet
         /// </summary>
         /// <param name="path"></param>
         /// <param name="data"></param>
-        public void Write(RnetPath path, byte[] buffer)
+        public void Write(RnetPath path, byte[] buffer, int packetNumber)
         {
             var item = GetData(path);
             if (item == null)
                 throw new NullReferenceException();
 
-            item.Write(buffer);
+            item.Write(buffer, packetNumber);
         }
 
         /// <summary>
@@ -133,22 +133,25 @@ namespace Rnet
         {
             var item = GetData(path);
             if (item != null)
+            {
                 items.Remove(item);
+                item.Dispose();
+            }
         }
 
         /// <summary>
-        /// Raised when a subscriber for a path is added.
+        /// Raised when data is requested.
         /// </summary>
-        internal event EventHandler<ValueEventArgs<RnetPath>> SubscriberAdded;
+        internal event EventHandler<ValueEventArgs<RnetPath>> RequestData;
 
         /// <summary>
         /// Raises the SubscriberAdded event.
         /// </summary>
         /// <param name="path"></param>
-        void RaiseSubscriberAdded(RnetPath path)
+        void RaiseRequestData(RnetPath path)
         {
-            if (SubscriberAdded != null)
-                SubscriberAdded(this, new ValueEventArgs<RnetPath>(path));
+            if (RequestData != null)
+                RequestData(this, new ValueEventArgs<RnetPath>(path));
         }
 
         public IEnumerator<RnetDataItem> GetEnumerator()

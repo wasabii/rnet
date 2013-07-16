@@ -37,7 +37,7 @@ namespace Rnet
         /// Scans the set of items and notifies waiters.
         /// </summary>
         /// <param name="items"></param>
-        void Evaluate(IEnumerable<T> items)
+        internal void Evaluate(IEnumerable<T> items)
         {
             lock (subscribers)
             {
@@ -136,7 +136,7 @@ namespace Rnet
 
                 // subscribe to device event
                 var tcs = new TaskCompletionSource<T>();
-                cancellationToken.Register(() => tcs.SetCanceled());
+                cancellationToken.Register(() => tcs.TrySetCanceled());
                 AddSubscriber(predicate, tcs, userState);
                 return tcs.Task;
             }

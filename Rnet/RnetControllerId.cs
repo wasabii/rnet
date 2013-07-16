@@ -30,6 +30,16 @@
         }
 
         /// <summary>
+        /// Implicitly converts a <see cref="Int32"/> to a <see cref="RnetControllerId"/>.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static implicit operator RnetControllerId(int value)
+        {
+            return new RnetControllerId((byte)value);
+        }
+
+        /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="value"></param>

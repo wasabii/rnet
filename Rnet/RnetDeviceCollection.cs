@@ -32,7 +32,7 @@ namespace Rnet
         /// <param name="args"></param>
         void items_SubscriberAdded(object sender, AsyncCollectionSubscriberEventArgs<RnetDevice> args)
         {
-            RaiseSubscriberAdded((RnetDeviceId)args.Subscriber.UserState);
+            RaiseRequestDevice((RnetDeviceId)args.Subscriber.UserState);
         }
 
         /// <summary>
@@ -75,18 +75,18 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Raised when a subscriber for a device is added.
+        /// Raised when a device is requested.
         /// </summary>
-        internal event EventHandler<ValueEventArgs<RnetDeviceId>> SubscriberAdded;
+        internal event EventHandler<ValueEventArgs<RnetDeviceId>> RequestDevice;
 
         /// <summary>
-        /// Raises the SubscriberAdded event.
+        /// Raises the RequestDevice event.
         /// </summary>
         /// <param name="id"></param>
-        void RaiseSubscriberAdded(RnetDeviceId id)
+        void RaiseRequestDevice(RnetDeviceId id)
         {
-            if (SubscriberAdded != null)
-                SubscriberAdded(this, new ValueEventArgs<RnetDeviceId>(id));
+            if (RequestDevice != null)
+                RequestDevice(this, new ValueEventArgs<RnetDeviceId>(id));
         }
 
         public IEnumerator<RnetDevice> GetEnumerator()

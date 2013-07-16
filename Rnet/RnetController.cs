@@ -27,6 +27,15 @@
         /// </summary>
         public RnetControllerId ControllerId { get; private set; }
 
+        /// <summary>
+        /// Returns a string representation of the current instance.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("Controller: {0}", ControllerId);
+        }
+
     }
 
 }

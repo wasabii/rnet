@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -85,6 +86,33 @@ namespace Rnet
                 buf[i] = reader.ReadByte();
 
             return new RnetPath(buf);
+        }
+
+        /// <summary>
+        /// Navigates to the specified child item.
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <returns></returns>
+        public RnetPath Child(byte folder)
+        {
+            var a = new byte[items.Length + 1];
+            Array.Copy(items, a, items.Length);
+            a[items.Length] = folder;
+            return new RnetPath(a);
+        }
+
+        /// <summary>
+        /// Navigates to the parent item.
+        /// </summary>
+        /// <returns></returns>
+        public RnetPath Parent()
+        {
+            if (items.Length == 1)
+                return null;
+
+            var a = new byte[items.Length - 1];
+            Array.Copy(items, a, a.Length);
+            return new RnetPath(a);
         }
 
         public IEnumerator<byte> GetEnumerator()

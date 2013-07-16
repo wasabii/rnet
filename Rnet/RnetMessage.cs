@@ -1,4 +1,5 @@
-﻿using System.CodeDom.Compiler;
+﻿using System;
+using System.CodeDom.Compiler;
 using System.IO;
 
 namespace Rnet
@@ -27,10 +28,16 @@ namespace Rnet
         protected RnetMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetMessageType messageType)
             : this()
         {
+            Timestamp = DateTime.UtcNow;
             TargetDeviceId = targetDeviceId;
             SourceDeviceId = sourceDeviceId;
             MessageType = messageType;
         }
+
+        /// <summary>
+        /// Timestamp of message.
+        /// </summary>
+        public DateTime Timestamp { get; private set; }
 
         /// <summary>
         /// Gets or sets the target Device ID.

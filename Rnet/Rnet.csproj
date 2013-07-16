@@ -31,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
@@ -38,7 +39,12 @@
     <Compile Include="AsyncCollection.cs" />
     <Compile Include="AsyncCollectionSubscriberEventArgs.cs" />
     <Compile Include="AsyncCollectionSubscriber.cs" />
+    <Compile Include="RnetDataTreeItem.cs" />
+    <Compile Include="RnetConnectionManager.cs" />
+    <Compile Include="RnetDataTreeRoot.cs" />
+    <Compile Include="RnetDataTreeNode.cs" />
     <Compile Include="RnetDeviceCollection.cs" />
+    <Compile Include="RnetMessagePriority.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBus.cs" />
     <Compile Include="RnetClient.cs" />

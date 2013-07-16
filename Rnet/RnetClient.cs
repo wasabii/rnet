@@ -8,7 +8,7 @@ namespace Rnet
     /// <summary>
     /// Provides a durable wrapper around a <see cref="RnetConnection"/>.
     /// </summary>
-    public class RnetClient : IDisposable
+    public class RnetClient : RnetModelObject, IDisposable
     {
 
         /// <summary>
@@ -30,6 +30,11 @@ namespace Rnet
         /// Queued messages to send.
         /// </summary>
         BlockingCollection<RnetMessage> sendQueue = new BlockingCollection<RnetMessage>();
+
+        /// <summary>
+        /// Queued messages to send.
+        /// </summary>
+        BlockingCollection<RnetMessage> prioritySendQueue = new BlockingCollection<RnetMessage>();
 
         /// <summary>
         /// Queued messages to receive.
@@ -179,7 +184,12 @@ namespace Rnet
                 {
                     EnsureConnection(ct);
 
-                    if (sendQueue.TryTake(out message, 1000))
+                    // take from any of the send queues
+                    var b = BlockingCollection<RnetMessage>.TryTakeFromAny(
+                        new[] { prioritySendQueue, sendQueue },
+                        out message, 1000);
+
+                    if (b != -1)
                     {
                         connection.Send(message);
                         OnMessageSent(new RnetMessageEventArgs(message));
@@ -295,7 +305,24 @@ namespace Rnet
         /// <param name="message"></param>
         public void SendMessage(RnetMessage message)
         {
-            sendQueue.Add(message);
+            SendMessage(message, RnetMessagePriority.Normal);
+        }
+
+        /// <summary>
+        /// Sends the message.
+        /// </summary>
+        /// <param name="message"></param>
+        public void SendMessage(RnetMessage message, RnetMessagePriority priority)
+        {
+            switch (priority)
+            {
+                case RnetMessagePriority.Normal:
+                    sendQueue.Add(message);
+                    break;
+                case RnetMessagePriority.High:
+                    prioritySendQueue.Add(message);
+                    break;
+            }
         }
 
         /// <summary>
@@ -356,6 +383,7 @@ namespace Rnet
         {
             if (StateChanged != null)
                 StateChanged(this, args);
+            RaisePropertyChanged("State");
         }
 
         /// <summary>
@@ -371,6 +399,7 @@ namespace Rnet
         {
             if (ConnectionStateChanged != null)
                 ConnectionStateChanged(this, args);
+            RaisePropertyChanged("ConnectionState");
         }
 
         /// <summary>

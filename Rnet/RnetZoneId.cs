@@ -40,6 +40,16 @@
         }
 
         /// <summary>
+        /// Implicitly converts a <see cref="Int32"/> to an <see cref="RnetZoneId"/>.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static implicit operator RnetZoneId(int value)
+        {
+            return new RnetZoneId((byte)value);
+        }
+
+        /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="value"></param>
