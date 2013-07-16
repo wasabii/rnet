@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Rnet
 {
 
-    public class RnetBus : RnetModelObject
+    public class RnetBus : RnetModelObject, IDisposable
     {
 
         /// <summary>
@@ -324,6 +324,16 @@ namespace Rnet
                 Client.Dispose();
                 Client = null;
             }
+
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Finalizes the instance.
+        /// </summary>
+        ~RnetBus()
+        {
+            Dispose();
         }
 
     }

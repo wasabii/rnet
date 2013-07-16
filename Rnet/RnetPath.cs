@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Rnet
 {
@@ -94,17 +95,30 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetPath(params byte[] items)
+        /// <param name="items"></param>
+        public RnetPath(IEnumerable<byte> items)
             : this()
         {
-            if (items.Length > 8)
-                throw new ArgumentOutOfRangeException("items", "RnetPath can be a maximum of 8 levels.");
+            foreach (var i in items)
+            {
+                if (length >= 8)
+                    throw new ArgumentOutOfRangeException("items", "RnetPath can be a maximum of 8 levels.");
 
-            // copy array to instance
-            length = (byte)items.Length;
-            for (byte i = 0; i < length; i++)
-                Set(i, items[i]);
+                // extend path and set value
+                length++;
+                Set(length - 1, i);
+            }
         }
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        public RnetPath(params byte[] items)
+            : this((IEnumerable<byte>)items)
+        {
+
+        }
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>

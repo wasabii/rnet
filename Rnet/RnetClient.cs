@@ -423,6 +423,15 @@ namespace Rnet
         public void Dispose()
         {
             Stop();
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Finalizes the instance.
+        /// </summary>
+        ~RnetClient()
+        {
+            Dispose();
         }
 
     }

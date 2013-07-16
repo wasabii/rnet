@@ -261,9 +261,18 @@ namespace Rnet
         /// <summary>
         /// Disposes of the current connection.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
         {
             Close();
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Finalizes the instance.
+        /// </summary>
+        ~RnetConnection()
+        {
+            Dispose();
         }
 
     }
