@@ -11,16 +11,16 @@ namespace Rnet
     /// <summary>
     /// Stores a set of <see cref="DataItem"/>s.
     /// </summary>
-    public class RnetDataItemCollection : IEnumerable<RnetDataItem>, INotifyCollectionChanged
+    public class RnetDeviceDataCollection : IEnumerable<RnetDeviceData>, INotifyCollectionChanged
     {
 
-        Dictionary<RnetPath, RnetDataItem> items =
-            new Dictionary<RnetPath, RnetDataItem>();
+        Dictionary<RnetPath, RnetDeviceData> items =
+            new Dictionary<RnetPath, RnetDeviceData>();
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetDataItemCollection(RnetDevice device)
+        public RnetDeviceDataCollection(RnetDevice device)
         {
             Device = device;
         }
@@ -34,13 +34,15 @@ namespace Rnet
         /// Adds the given item to the collection.
         /// </summary>
         /// <param name="item"></param>
-        internal void Add(RnetDataItem item)
+        void Add(RnetDeviceData item)
         {
             lock (items)
             {
+                // replace old item with new
                 var oldItem = items.ValueOrDefault(item.Path);
                 items[item.Path] = item;
 
+                // raise appropriate event
                 if (oldItem == null)
                     RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
                 else if (!object.ReferenceEquals(oldItem, item))
@@ -52,10 +54,11 @@ namespace Rnet
         /// Removes the given item from the collection.
         /// </summary>
         /// <param name="item"></param>
-        internal void Remove(RnetDataItem item)
+        void Remove(RnetDeviceData item)
         {
             lock (items)
             {
+                // item already removed
                 if (!items.ContainsKey(item.Path))
                     return;
 
@@ -72,11 +75,11 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Gets the data at the specified path.
+        /// Gets the cached data at the specified path if already retrieved.
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public RnetDataItem this[RnetPath path]
+        public RnetDeviceData this[RnetPath path]
         {
             get
             {
@@ -86,40 +89,44 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Gets the <see cref="RnetDataItem"/> at the specified path.
+        /// Gets the <see cref="RnetDeviceData"/> at the specified path, returning from cache or the device as appropriate.
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public Task<RnetDataItem> GetAsync(RnetPath path)
+        public Task<RnetDeviceData> GetAsync(RnetPath path)
         {
-            return GetAsync(path, RnetBus.GetDefaultCancellationToken());
+            return GetAsync(path, RnetBus.CreateDefaultCancellationToken());
         }
 
         /// <summary>
-        /// Gets the <see cref="RnetDataItem"/> at the specified path.
+        /// Gets the <see cref="RnetDeviceData"/> at the specified path, returning from cache or the device as appropriate.
         /// </summary>
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<RnetDataItem> GetAsync(RnetPath path, CancellationToken cancellationToken)
+        public Task<RnetDeviceData> GetAsync(RnetPath path, CancellationToken cancellationToken)
         {
             lock (items)
             {
+                // check cache
                 var item = items.ValueOrDefault(path);
                 if (item != null)
                     return Task.FromResult(item);
             }
 
-            return RequestItem(path, cancellationToken);
+            return RequestDataAsync(path, cancellationToken);
         }
 
         /// <summary>
-        /// Initiates a data request.
+        /// Requests the data for the specified path from the device.
         /// </summary>
         /// <param name="path"></param>
-        async Task<RnetDataItem> RequestItem(RnetPath path, CancellationToken cancellationToken)
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        async Task<RnetDeviceData> RequestDataAsync(RnetPath path, CancellationToken cancellationToken)
         {
-            var d = await Device.RequestDataItem(path, cancellationToken);
+            // request data from device
+            var d = await Device.RequestDataAsync(path, cancellationToken);
             if (d == null)
                 return null;
 
@@ -129,7 +136,11 @@ namespace Rnet
             return d;
         }
 
-        public IEnumerator<RnetDataItem> GetEnumerator()
+        /// <summary>
+        /// Returns an enumerator that iterates through all the available data items.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<RnetDeviceData> GetEnumerator()
         {
             return items.Values.GetEnumerator();
         }

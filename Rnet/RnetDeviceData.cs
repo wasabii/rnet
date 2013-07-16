@@ -4,7 +4,7 @@ using System.IO;
 namespace Rnet
 {
 
-    public class RnetDataItem : RnetModelObject
+    public class RnetDeviceData : RnetModelObject
     {
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace Rnet
         /// Initializes a new instance.
         /// </summary>
         /// <param name="path"></param>
-        internal RnetDataItem(RnetPath path)
+        internal RnetDeviceData(RnetPath path)
         {
             Path = path;
         }

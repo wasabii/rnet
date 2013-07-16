@@ -57,18 +57,18 @@
                     Grid.RowSpan="2"
                     Grid.Column="0"
                     ItemsSource="{Binding Devices}"
-                    SelectedItem="{Binding SelectedDevice,Mode=TwoWay}">
+                    SelectedItem="{Binding SelectedDevice, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock
-                                Text="{Binding}" />
+                                Text="{Binding DisplayName}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <TreeView
                     Grid.Row="1"
                     Grid.Column="1"
-                    ItemsSource="{Binding SelectedDevice.DataItemsTree}"
+                    ItemsSource="{Binding SelectedDevice.Directories}"
                     SelectedValuePath="Item"
                     SelectedItemChanged="TreeView_SelectedItemChanged">
                     <TreeView.ItemTemplate>

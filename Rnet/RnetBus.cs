@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +16,7 @@ namespace Rnet
         /// Gets the default cancellation token.
         /// </summary>
         /// <returns></returns>
-        internal static CancellationToken GetDefaultCancellationToken()
+        internal static CancellationToken CreateDefaultCancellationToken()
         {
             return CancellationToken.None;
         }
@@ -127,6 +128,17 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Sends a RequestData message to the specified device id with the specified paths.
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <param name="targetPath"></param>
+        /// <param name="sourcePath"></param>
+        internal void SendRequestDataMessage(RnetDeviceId deviceId, RnetPath targetPath, RnetPath sourcePath)
+        {
+            Client.SendMessage(new RnetRequestDataMessage(deviceId, Id, targetPath, sourcePath, RnetRequestMessageType.Data));
+        }
+
+        /// <summary>
         /// Requests the device with the given <see cref="RnetDeviceId"/>.
         /// </summary>
         /// <param name="deviceId"></param>
@@ -144,13 +156,16 @@ namespace Rnet
 
             // prime device model if possible; else remove
             if (device != null)
-                if (await device.DataItems.GetAsync(new RnetPath(0, 0), cancellationToken) == null)
+                if (await device.Data.GetAsync(new RnetPath(0, 0), cancellationToken) == null)
                     Devices.Remove(device);
 
             // set the device to visible if we've successfully detected it
             device = Devices[deviceId];
             if (device != null)
+            {
+                device.ModelName = Encoding.ASCII.GetString((await device.Data.GetAsync(new RnetPath(0, 0), cancellationToken)).Buffer);
                 device.Visible = true;
+            }
 
             return device;
         }
@@ -166,6 +181,11 @@ namespace Rnet
                 Client.MessageReceived -= Client_MessageReceived;
                 Client = null;
             }
+        }
+
+        public override string ToString()
+        {
+            return "Bus";
         }
 
     }

@@ -17,7 +17,7 @@ namespace Rnet.Monitor.Wpf
 
         Dispatcher dispatcher;
         RnetDevice selectedDevice;
-        RnetDataItem selectedDataItem;
+        RnetDeviceData selectedDataItem;
 
         public BusViewModel()
         {
@@ -46,11 +46,6 @@ namespace Rnet.Monitor.Wpf
 
             // wrap devices in synchronized collection
             Devices = new SynchronizedCollection<RnetDevice>(Bus.Devices);
-
-            // subscribe data items collection to selected device
-            dataItems = this.ObservableForProperty(i => i.SelectedDevice)
-                .Select(i => i.Value != null ? new SynchronizedCollection<RnetDataItem>(i.Value.DataItems) : null)
-                .ToProperty(this, i => i.DataItems);
 
             selectedDataItemViewModel = this.ObservableForProperty(i => i.SelectedDataItem)
                 .Select(i => i.Value != null ? new DataItemViewModel(i.Value) : null)
@@ -90,13 +85,7 @@ namespace Rnet.Monitor.Wpf
             set { this.RaiseAndSetIfChanged(ref selectedDevice, value); }
         }
 
-        ObservableAsPropertyHelper<SynchronizedCollection<RnetDataItem>> dataItems;
-        public SynchronizedCollection<RnetDataItem> DataItems
-        {
-            get { return dataItems.Value; }
-        }
-
-        public RnetDataItem SelectedDataItem
+        public RnetDeviceData SelectedDataItem
         {
             get { return selectedDataItem; }
             set { this.RaiseAndSetIfChanged(ref selectedDataItem, value); }
@@ -121,7 +110,8 @@ namespace Rnet.Monitor.Wpf
 
         async void DiscoverDeviceData(RnetDevice device)
         {
-            await GetDataItemAsync(device, new RnetPath(4, 6));
+            for (byte i = 0; i < 6; i++)
+                await device.Directories.GetAsync(2, 0, i, 7);
 
             //foreach (var path in GetPaths(2))
             //    await GetDataItemAsync(device, path);
@@ -145,7 +135,7 @@ namespace Rnet.Monitor.Wpf
             yield return path;
 
             for (byte i = 0; i < 10; i++)
-                foreach (var p in GetPaths(path.Child(i), maxDepth))
+                foreach (var p in GetPaths(path.Navigate(i), maxDepth))
                     yield return p;
         }
 
@@ -161,11 +151,11 @@ namespace Rnet.Monitor.Wpf
             }
         }
 
-        async Task<RnetDataItem> GetDataItemAsync(RnetDevice device, RnetPath path)
+        async Task<RnetDeviceDirectory> GetDataItemAsync(RnetDevice device, params byte[] path)
         {
             try
             {
-                return await device.DataItems.GetAsync(path, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+                return await device.Directories.GetAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token, path);
             }
             catch (OperationCanceledException)
             {

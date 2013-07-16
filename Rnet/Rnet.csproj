@@ -53,10 +53,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DictionaryExtensions.cs" />
-    <Compile Include="RnetDataTreeItem.cs" />
     <Compile Include="RnetConnectionManager.cs" />
-    <Compile Include="RnetDataTreeRoot.cs" />
-    <Compile Include="RnetDataTreeNode.cs" />
+    <Compile Include="RnetDeviceDirectory.cs" />
     <Compile Include="RnetDeviceCollection.cs" />
     <Compile Include="RnetMessagePriority.cs" />
     <Compile Include="RnetModelObject.cs" />
@@ -70,8 +68,8 @@
     <Compile Include="RnetConnectionStateEventArgs.cs" />
     <Compile Include="RnetController.cs" />
     <Compile Include="RnetData.cs" />
-    <Compile Include="RnetDataItem.cs" />
-    <Compile Include="RnetDataItemCollection.cs" />
+    <Compile Include="RnetDeviceData.cs" />
+    <Compile Include="RnetDeviceDataCollection.cs" />
     <Compile Include="RnetDevice.cs" />
     <Compile Include="RnetMessageEventArgs.cs" />
     <Compile Include="RnetRequestMessageType.cs" />

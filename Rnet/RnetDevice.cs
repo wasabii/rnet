@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -16,7 +15,10 @@ namespace Rnet
     {
 
         AsyncLock asyncLock = new AsyncLock();
+        string modelName;
         AsyncCollection<RnetMessage> messages = new AsyncCollection<RnetMessage>();
+        RnetDeviceDataCollection items;
+        RnetDeviceDirectory directories;
 
         /// <summary>
         /// Initializes a new instance.
@@ -24,8 +26,8 @@ namespace Rnet
         RnetDevice(RnetDeviceId id)
         {
             Id = id;
-            DataItems = new RnetDataItemCollection(this);
-            DataItemsTree = new RnetDataTreeRoot(this);
+            items = new RnetDeviceDataCollection(this);
+            directories = new RnetDeviceDirectory(this, null, new RnetPath());
         }
 
         /// <summary>
@@ -72,14 +74,37 @@ namespace Rnet
         public TimeSpan RequestTimeout { get; set; }
 
         /// <summary>
-        /// Gets the set of data items stored in this device.
+        /// Model name of the device.
         /// </summary>
-        public RnetDataItemCollection DataItems { get; private set; }
+        public string ModelName
+        {
+            get { return modelName; }
+            set { modelName = value; RaisePropertyChanged("ModelName"); RaisePropertyChanged("DisplayName"); }
+        }
 
         /// <summary>
-        /// Gets the tree organized set of data items stored in this device.
+        /// Gets the display name of the device.
         /// </summary>
-        public RnetDataTreeNode DataItemsTree { get; private set; }
+        public string DisplayName
+        {
+            get { return ToString(); }
+        }
+
+        /// <summary>
+        /// Gets all of the discovered data items in the device.
+        /// </summary>
+        internal RnetDeviceDataCollection Data
+        {
+            get { return items; }
+        }
+
+        /// <summary>
+        /// Gets the root of the device data directory tree.
+        /// </summary>
+        public RnetDeviceDirectory Directories
+        {
+            get { return directories; }
+        }
 
         /// <summary>
         /// Bus has received a message from the device.
@@ -91,42 +116,16 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Initiates a request for the data at the specified path.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        internal async Task<RnetDataItem> RequestDataItem(RnetPath path, CancellationToken cancellationToken)
-        {
-            // request message stream for path
-            var l = await RequestData(path, cancellationToken);
-            if (l == null)
-                return null;
-
-            // first message in stream
-            var m = l.FirstOrDefault();
-            if (m == null)
-                return null;
-
-            // write packets to new data item
-            var d = new RnetDataItem(path);
-            d.WriteBegin(m.PacketCount);
-            foreach (var i in l)
-                d.Write(i.Data.ToArray(), i.PacketNumber);
-            d.WriteEnd();
-            return d;
-        }
-
-        /// <summary>
-        /// Submits the given request message and waits for a valid reply.
+        /// Submits the given RNET message to the device and invokes the handler function once per received message
+        /// until it returns a non-null value, indicating the reply has been received.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="message"></param>
         /// <param name="handleReply"></param>
         /// <param name="cancellationToken"></param>
-        /// <param name="timeout"></param>
+        /// <param name="timeoutCancellationToken"></param>
         /// <returns></returns>
-        internal async Task<T> RequestReply<T>(
+        internal async Task<T> RequestReplyAsync<T>(
             RnetMessage message,
             Func<RnetMessage, T> handleReply,
             CancellationToken cancellationToken,
@@ -136,25 +135,25 @@ namespace Rnet
             if (message == null)
                 throw new ArgumentNullException("message");
 
+            // only a single request/reply series can be ongoing per-device
             using (await asyncLock.LockAsync())
             {
                 // send initial conversation message
                 Bus.Client.SendMessage(message);
 
                 // time between retries
-                var retryTimeoutCancellationToken = new CancellationTokenSource(RetryDelay).Token;
+                var retryCancellationToken = new CancellationTokenSource(RetryDelay).Token;
 
                 // wait for reply
                 while (handleReply != null)
                 {
                     // retry initial packet if retry time has elapsed
-                    if (message != null)
-                        if (retryTimeoutCancellationToken.IsCancellationRequested)
-                            Bus.Client.SendMessage(message);
+                    if (retryCancellationToken.IsCancellationRequested)
+                        Bus.Client.SendMessage(message);
 
                     // time between retries
-                    if (retryTimeoutCancellationToken.IsCancellationRequested)
-                        retryTimeoutCancellationToken = new CancellationTokenSource(RetryDelay).Token;
+                    if (retryCancellationToken.IsCancellationRequested)
+                        retryCancellationToken = new CancellationTokenSource(RetryDelay).Token;
 
                     // throw for user cancellation
                     cancellationToken.ThrowIfCancellationRequested();
@@ -169,7 +168,7 @@ namespace Rnet
                         var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
                             cancellationToken,
                             timeoutCancellationToken,
-                            retryTimeoutCancellationToken).Token;
+                            retryCancellationToken).Token;
 
                         // wait for new possible reply message
                         var m = await messages.TakeAsync(linkedCancellationToken);
@@ -196,16 +195,17 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Initiates a request for data for the specified device and path.
+        /// Gets a stream of SetData messages for the specified path from the device.
         /// </summary>
-        /// <param name="deviceId"></param>
         /// <param name="targetPath"></param>
-        internal async Task<IEnumerable<RnetSetDataMessage>> RequestData(RnetPath targetPath, CancellationToken cancellationToken)
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<IEnumerable<RnetSetDataMessage>> RequestDataStreamAsync(RnetPath targetPath, CancellationToken cancellationToken)
         {
             RnetSetDataMessage[] msgs = null;
 
             // add a conversation that sends a request data message and expects a set data message in return
-            return await RequestReply(new RnetRequestDataMessage(Id, Bus.Id,
+            return await RequestReplyAsync(new RnetRequestDataMessage(Id, Bus.Id,
                 targetPath,
                 null,
                 RnetRequestMessageType.Data),
@@ -239,12 +239,42 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Gets the <see cref="RnetDeviceData"/> at the specified path by querying the device.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<RnetDeviceData> RequestDataAsync(RnetPath path, CancellationToken cancellationToken)
+        {
+            // request message stream for path
+            var l = await RequestDataStreamAsync(path, cancellationToken);
+            if (l == null)
+                return null;
+
+            // first message in stream
+            var m = l.FirstOrDefault();
+            if (m == null)
+                return null;
+
+            // write packets to new data item
+            var d = new RnetDeviceData(path);
+            d.WriteBegin(m.PacketCount);
+            foreach (var i in l)
+                d.Write(i.Data.ToArray(), i.PacketNumber);
+            d.WriteEnd();
+            return d;
+        }
+
+        /// <summary>
         /// Returns a string representation of the current instance.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Format("{0}/{1}/{2}", Id.ControllerId, Id.ZoneId, Id.KeypadId);
+            if (string.IsNullOrWhiteSpace(ModelName))
+                return string.Format("({0}.{1}.{2})", (byte)Id.ControllerId, (byte)Id.ZoneId, (byte)Id.KeypadId);
+            else
+                return string.Format("{0} ({1}.{2}.{3})", ModelName, (byte)Id.ControllerId, (byte)Id.ZoneId, (byte)Id.KeypadId);
         }
 
     }

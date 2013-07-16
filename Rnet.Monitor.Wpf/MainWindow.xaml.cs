@@ -21,7 +21,7 @@ namespace Rnet.Monitor.Wpf
 
         void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            ((BusViewModel)LayoutRoot.DataContext).SelectedDataItem = e.NewValue != null ? ((RnetDataTreeItem)e.NewValue).Item : null;
+            ((BusViewModel)LayoutRoot.DataContext).SelectedDataItem = e.NewValue != null ? ((RnetDeviceDirectory)e.NewValue).Data : null;
         }
 
     }

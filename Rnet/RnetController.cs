@@ -31,7 +31,10 @@
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Format("Controller: {0}", ControllerId);
+            if (string.IsNullOrWhiteSpace(ModelName))
+                return string.Format("Controller {0}", ControllerId);
+            else
+                return string.Format("{0} (Controller {1})", ModelName, ControllerId);
         }
 
     }

@@ -92,7 +92,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetDevice> GetAsync(RnetDeviceId id)
         {
-            return GetAsync(id, RnetBus.GetDefaultCancellationToken());
+            return GetAsync(id, RnetBus.CreateDefaultCancellationToken());
         }
 
         /// <summary>

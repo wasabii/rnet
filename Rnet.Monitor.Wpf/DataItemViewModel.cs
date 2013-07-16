@@ -8,12 +8,12 @@ namespace Rnet.Monitor.Wpf
     public class DataItemViewModel : ReactiveObject
     {
 
-        public DataItemViewModel(RnetDataItem dataItem)
+        public DataItemViewModel(RnetDeviceData dataItem)
         {
             DataItem = dataItem;
         }
 
-        public RnetDataItem DataItem { get; private set; }
+        public RnetDeviceData DataItem { get; private set; }
 
         public string Text
         {
