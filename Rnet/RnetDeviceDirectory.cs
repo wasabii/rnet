@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Nito.AsyncEx;
+
 namespace Rnet
 {
 
@@ -15,10 +17,11 @@ namespace Rnet
     public class RnetDeviceDirectory : RnetModelObject, IEnumerable<RnetDeviceDirectory>, INotifyCollectionChanged
     {
 
+        AsyncLock asyncLock = new AsyncLock();
+        AsyncMonitor monitor = new AsyncMonitor();
         SortedDictionary<byte, RnetDeviceDirectory> directories =
             new SortedDictionary<byte, RnetDeviceDirectory>();
-
-        RnetDeviceData data;
+        byte[] buffer;
 
         /// <summary>
         /// Initializes a new instance.
@@ -54,126 +57,145 @@ namespace Rnet
         /// <summary>
         /// Data at the path.
         /// </summary>
-        public RnetDeviceData Data
+        public byte[] Buffer
         {
-            get { return data; }
-            internal set { data = value; RaisePropertyChanged("Data"); }
+            get { return buffer; }
+            private set { buffer = value; RaisePropertyChanged("Buffer"); }
         }
 
         /// <summary>
-        /// Gets the directory at the specified index inside this directory, if already retrieved from the device.
+        /// Gets the data at the index in the current local directory structure. Returns <c>null</c> if the data does
+        /// not yet exist locally.
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
         public RnetDeviceDirectory this[byte index]
         {
-            get
-            {
-                lock (directories)
-                    return directories.ValueOrDefault(index);
-            }
+            get { return FindAsync(index).Result; }
         }
 
         /// <summary>
-        /// Gets the directory at the specified index.
+        /// Sets the data item of the directory.
         /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        public Task<RnetDeviceDirectory> GetAsync(byte index)
-        {
-            return GetAsync(index, RnetBus.CreateDefaultCancellationToken());
-        }
-
-        /// <summary>
-        /// Gets the directory at the specified index.
-        /// </summary>
-        /// <param name="index"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<RnetDeviceDirectory> GetAsync(byte index, CancellationToken cancellationToken)
-        {
-            // directory node already exists
-            var directory = this[index];
-            if (directory != null)
-                return directory;
-
-            // retrieve data
-            var data = await Device.Data.GetAsync(Path.Navigate(index), cancellationToken);
-            if (data == null)
-                return GetOrCreate(index);
-
-            // incorporate into directory
-            return Add(data);
-        }
-
-        /// <summary>
-        /// Gets the directory at the specified sub-path.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public Task<RnetDeviceDirectory> GetAsync(params byte[] path)
-        {
-            return GetAsync(RnetBus.CreateDefaultCancellationToken(), path);
-        }
-
-        /// <summary>
-        /// Gets the directory at the specified sub-path.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public async Task<RnetDeviceDirectory> GetAsync(CancellationToken cancellationToken, params byte[] path)
-        {
-            // recurse through each directory in the path
-            var directory = this;
-            foreach (var p in path)
-                directory = await directory.GetAsync(p, cancellationToken);
-
-            return (RnetDeviceDirectory)directory;
-        }
-
-        /// <summary>
-        /// Adds a new directory item at the specified index.
-        /// </summary>
-        /// <param name="index"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        RnetDeviceDirectory Add(RnetDeviceData data)
+        internal async Task SetAsync(byte[] buffer)
         {
-            // check prefix of data to match with ourselves
-            var prefix = data.Path.Take(Path.Length);
-            if (!prefix.SequenceEqual(Path))
-                throw new InvalidOperationException("Adding data at inappropriate directory node.");
+            Buffer = buffer;
 
-            // path of data relative to this
-            var tail = data.Path.Skip(Path.Length).ToList();
-            var directory = GetOrCreate(tail[0]);
-
-            if (tail.Count == 1)
-            {
-                // directory is final resting place
-                directory.Data = data;
-                return directory;
-            }
-            else
-                // dispatch to sub-directory
-                return directory.Add(data);
+            // notify any waiters
+            using (await monitor.EnterAsync())
+                monitor.PulseAll();
         }
 
         /// <summary>
-        /// Gets or creates the directory at the specified index.
+        /// Sets the data item of the directory at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="buffer"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task SetAsync(byte index, byte[] buffer)
+        {
+            var d = await FindOrCreateAsync(index, CancellationToken.None);
+            if (d != null)
+                await d.SetAsync(buffer);
+        }
+
+        /// <summary>
+        /// Sets the data item of the directory at the specified relative path.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        internal async Task SetAsync(byte[] buffer, params byte[] path)
+        {
+            var d = this;
+            foreach (var p in path)
+                if ((d = await d.FindOrCreateAsync(p, CancellationToken.None)) == null)
+                    return;
+
+            await d.SetAsync(buffer);
+        }
+
+        /// <summary>
+        /// Gets the data in the currently local directory structure. Returns <c>null</c> if the data is not yet
+        /// available locally.
+        /// </summary>
+        /// <returns></returns>
+        public Task<byte[]> FindAsync()
+        {
+            return FindAsync(Device.RequestDataCancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the data in the currently local directory structure. Returns <c>null</c> if the data is not yet
+        /// available locally.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<byte[]> FindAsync(CancellationToken cancellationToken)
+        {
+            using (await monitor.EnterAsync(cancellationToken))
+                return buffer;
+        }
+
+        /// <summary>
+        /// Gets the directory at the index in the current local directory structure. Returns <c>null</c> if the
+        /// directory does not yet exist locally.
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        RnetDeviceDirectory GetOrCreate(byte index)
+        public async Task<RnetDeviceDirectory> FindAsync(byte index, CancellationToken cancellationToken)
         {
-            lock (directories)
+            using (await monitor.EnterAsync(cancellationToken))
+                return directories.GetOrDefault(index);
+        }
+
+        /// <summary>
+        /// Gets the directory at the path in the current local directory structure. Returns <c>null</c> if the
+        /// directory does not yet exist locally.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Task<RnetDeviceDirectory> FindAsync(params byte[] path)
+        {
+            return FindAsync(Device.RequestDataCancellationToken, path);
+        }
+
+        /// <summary>
+        /// Gets the directory at the specified relative path in the current local directory structure. Returns
+        /// <c>null</c> if the directory does not yet exist locally.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<RnetDeviceDirectory> FindAsync(CancellationToken cancellationToken, params byte[] path)
+        {
+            var d = this;
+            foreach (var i in path)
+                if ((d = await d.FindAsync(i, cancellationToken)) == null)
+                    break;
+
+            return d;
+        }
+
+        /// <summary>
+        /// Gets the directory at the specified index or creates it if it does not yet exist.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<RnetDeviceDirectory> FindOrCreateAsync(byte index, CancellationToken cancellationToken)
+        {
+            using (await monitor.EnterAsync(cancellationToken))
             {
-                var directory = directories.ValueOrDefault(index);
+                var directory = directories.GetOrDefault(index);
                 if (directory == null)
                 {
                     directory = directories[index] = new RnetDeviceDirectory(Device, this, Path.Navigate(index));
                     RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    monitor.PulseAll();
                 }
 
                 return directory;
@@ -181,25 +203,202 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Removes the specified data item at the specified sub-folder.
+        /// Gets the directory at the specified relative path or creates it if it does not yet exist.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        internal async Task<RnetDeviceDirectory> FindOrCreateAsync(CancellationToken cancellationToken, params byte[] path)
+        {
+            var d = this;
+            foreach (var i in path)
+                if ((d = await d.FindOrCreateAsync(i, cancellationToken)) == null)
+                    break;
+
+            return d;
+        }
+
+        /// <summary>
+        /// Reads the data in this directory from the device.
+        /// </summary>
+        /// <returns></returns>
+        public Task<byte[]> RequestAsync()
+        {
+            return RequestAsync(Device.RequestDataCancellationToken);
+        }
+
+        /// <summary>
+        /// Reads the data in this directory from the device.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<byte[]> RequestAsync(CancellationToken cancellationToken)
+        {
+            return await (await Device.RequestAsync(Path, cancellationToken)).FindAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Reads the directory at the specified index from the device.
         /// </summary>
         /// <param name="index"></param>
-        void Remove(byte index)
+        /// <returns></returns>
+        public Task<RnetDeviceDirectory> RequestAsync(byte index)
         {
-            //lock (directories)
-            //{
-            //    if (!directories.ContainsKey(index))
-            //        return;
+            return RequestAsync(index, Device.RequestDataCancellationToken);
+        }
 
-            //    // find existing index of device item
-            //    var p = directories
-            //        .Select((i,j) => new { Position = j, Index = i.Key})
-            //        .Where(j => j.Index == index)
-            //        .First();
+        /// <summary>
+        /// Reads the directory at the specified index from the device.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<RnetDeviceDirectory> RequestAsync(byte index, CancellationToken cancellationToken)
+        {
+            return Device.RequestAsync(Path.Navigate(index), cancellationToken);
+        }
 
-            //    if (directories.Remove(index))
-            //        RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, ))
-            //}
+        /// <summary>
+        /// Reads the directory at the specified relative path from the device.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Task<RnetDeviceDirectory> RequestAsync(CancellationToken cancellationToken, params byte[] path)
+        {
+            var p = Path;
+            foreach (var i in path)
+                p = p.Navigate(i);
+
+            return Device.RequestAsync(p, cancellationToken);
+        }
+
+        /// <summary>
+        /// Waits for the data to be available.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<byte[]> WaitAsync(CancellationToken cancellationToken)
+        {
+            byte[] buffer = null;
+            using (await monitor.EnterAsync(cancellationToken))
+                while ((buffer = await FindAsync(cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+                    await monitor.WaitAsync(cancellationToken);
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Waits for the directory at the specified index to appear.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<RnetDeviceDirectory> WaitAsync(byte index, CancellationToken cancellationToken)
+        {
+            var directory = this;
+            using (await monitor.EnterAsync(cancellationToken))
+                while ((directory = await FindAsync(index, cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+                    await monitor.WaitAsync(cancellationToken);
+
+            return directory;
+        }
+
+        /// <summary>
+        /// Waits for the directory at the specified relative path to appear.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        internal async Task<RnetDeviceDirectory> WaitAsync(CancellationToken cancellationToken, params byte[] path)
+        {
+            var d = this;
+            foreach (var p in path)
+                if ((d = await d.WaitAsync(p, cancellationToken)) == null || cancellationToken.IsCancellationRequested)
+                    return null;
+
+            return d;
+        }
+
+        /// <summary>
+        /// Writes the data to the directory.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public Task WriteAsync(byte[] buffer)
+        {
+            return WriteAsync(buffer, Device.RequestDataCancellationToken);
+        }
+
+        /// <summary>
+        /// Writes the data to the directory.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task WriteAsync(byte[] buffer, CancellationToken cancellationToken)
+        {
+            return Device.WriteAsync(Path, buffer, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the directory data.
+        /// </summary>
+        /// <returns></returns>
+        public Task<byte[]> GetAsync()
+        {
+            return GetAsync(Device.RequestDataCancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the directory data.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<byte[]> GetAsync(CancellationToken cancellationToken)
+        {
+            return WaitAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the directory at the specified index if available or requests it from the remote device.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public Task<RnetDeviceDirectory> GetAsync(byte index)
+        {
+            return GetAsync(index, Device.RequestDataCancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the directory at the specified index if available or requests it from the remote device.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<RnetDeviceDirectory> GetAsync(byte index, CancellationToken cancellationToken)
+        {
+            var directory = await FindAsync(index, cancellationToken);
+            if (directory == null)
+                directory = await RequestAsync(index, cancellationToken);
+
+            return directory;
+        }
+
+        /// <summary>
+        /// Gets the directory at the specified relative path if available or requests it from the remote device.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<RnetDeviceDirectory> GetAsync(CancellationToken cancellationToken, params byte[] path)
+        {
+            var d = this;
+            foreach (var p in path)
+                if ((d = await d.GetAsync(p, cancellationToken)) == null || cancellationToken.IsCancellationRequested)
+                    return null;
+
+            return d;
         }
 
         /// <summary>
@@ -208,7 +407,7 @@ namespace Rnet
         /// <returns></returns>
         public IEnumerator<RnetDeviceDirectory> GetEnumerator()
         {
-            return directories.Values.GetEnumerator();
+            return directories.Values.ToList().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

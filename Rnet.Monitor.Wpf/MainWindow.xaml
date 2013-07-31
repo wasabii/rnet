@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:e="http://schemas.microsoft.com/expression/2010/interactivity"
     xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Rnet.Monitor.Wpf"
@@ -54,26 +55,46 @@
                         Content="Set Data"
                         Command="{Binding SetDataCommand}" />
                 </ToolBar>
-                <ListBox
+                <TreeView
                     x:Name="DeviceListBox"
                     Grid.Row="1"
                     Grid.RowSpan="2"
                     Grid.Column="0"
-                    ItemsSource="{Binding Devices}"
-                    SelectedItem="{Binding SelectedDevice, Mode=TwoWay}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock
-                                Text="{Binding DisplayName}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                    ItemsSource="{Binding Controllers}">
+                    <e:Interaction.Behaviors>
+                        <local:TreeViewBehavior
+                            SelectedItem="{Binding SelectedObject, Mode=TwoWay}" />
+                    </e:Interaction.Behaviors>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate
+                            ItemsSource="{Binding Zones}">
+                            <HierarchicalDataTemplate.ItemTemplate>
+                                <HierarchicalDataTemplate
+                                    ItemsSource="{Binding Devices}">
+                                    <HierarchicalDataTemplate.ItemTemplate>
+                                        <DataTemplate>
+                                            <ContentPresenter
+                                                Content="{Binding}" />
+                                        </DataTemplate>
+                                    </HierarchicalDataTemplate.ItemTemplate>
+                                    <ContentPresenter
+                                        Content="{Binding}" />
+                                </HierarchicalDataTemplate>
+                            </HierarchicalDataTemplate.ItemTemplate>
+                            <ContentPresenter
+                                Content="{Binding}" />
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
                 <TreeView
                     Grid.Row="1"
                     Grid.Column="1"
-                    ItemsSource="{Binding SelectedDevice.Directories}"
-                    SelectedValuePath="Item"
-                    SelectedItemChanged="TreeView_SelectedItemChanged">
+                    ItemsSource="{Binding SelectedDevice.Directory}"
+                    SelectedValuePath="Item">
+                    <e:Interaction.Behaviors>
+                        <local:TreeViewBehavior
+                            SelectedItem="{Binding SelectedObject, Mode=TwoWay}" />
+                    </e:Interaction.Behaviors>
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate
                             ItemsSource="{Binding}">

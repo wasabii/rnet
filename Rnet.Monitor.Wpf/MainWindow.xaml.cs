@@ -19,11 +19,6 @@ namespace Rnet.Monitor.Wpf
             LayoutRoot.DataContext = new BusViewModel();
         }
 
-        void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            ((BusViewModel)LayoutRoot.DataContext).SelectedDataItem = e.NewValue != null ? ((RnetDeviceDirectory)e.NewValue).Data : null;
-        }
-
     }
 
 }

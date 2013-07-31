@@ -9,6 +9,7 @@ namespace Rnet
     public struct RnetControllerId : IComparable<RnetControllerId>, IComparable
     {
 
+        public static readonly RnetControllerId Root = 0x00;
         public static readonly RnetControllerId AllDevices = 0x7f;
 
         /// <summary>

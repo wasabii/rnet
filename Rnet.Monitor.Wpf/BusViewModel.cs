@@ -9,6 +9,7 @@ using System.Linq;
 using System.Windows.Threading;
 
 using ReactiveUI;
+using System.Runtime.ExceptionServices;
 
 namespace Rnet.Monitor.Wpf
 {
@@ -17,8 +18,8 @@ namespace Rnet.Monitor.Wpf
     {
 
         Dispatcher dispatcher;
-        RnetDevice selectedDevice;
-        RnetDeviceData selectedDataItem;
+        RnetBusObject selectedObject;
+        RnetDeviceDirectory selectedDataItem;
 
         public BusViewModel()
         {
@@ -27,7 +28,7 @@ namespace Rnet.Monitor.Wpf
             SentMessages = new ObservableCollection<RnetMessage>();
             ReceivedMessages = new ObservableCollection<RnetMessage>();
 
-            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("72.181.255.134"), 9999));
+            Bus = new RnetBus(new RnetTcpConnection("tokyo.cogito.cx", 9999));
             Bus.ConnectionStateChanged += Bus_ConnectionStateChanged;
             Bus.MessageSent += (s, a) => SentMessages.Add(a.Message);
             Bus.MessageReceived += (s, a) => ReceivedMessages.Add(a.Message);
@@ -47,19 +48,19 @@ namespace Rnet.Monitor.Wpf
 
             var canSetData = this.WhenAny(i => i.SelectedDataItem, i => i.Value != null);
             SetDataCommand = new ReactiveCommand(canSetData);
-            SetDataCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => SelectedDataItem.SetBufferAsync(new byte[] { 0x00 })));
+            SetDataCommand.RegisterAsyncAction(i => dispatcher.Invoke(async () => await SelectedDataItem.WriteAsync(new byte[] { 0x00 })));
 
             // wrap devices in synchronized collection
-            Devices = Bus.Devices;
+            Controllers = Bus.Controllers;
 
             selectedDataItemViewModel = this.ObservableForProperty(i => i.SelectedDataItem)
                 .Select(i => i.Value != null ? new DataItemViewModel(i.Value) : null)
                 .ToProperty(this, i => i.SelectedDataItemViewModel);
         }
 
-        void Bus_Error(object sender, RnetClientErrorEventArgs e)
+        void Bus_Error(object sender, RnetClientErrorEventArgs args)
         {
-            throw e.Exception;
+            ExceptionDispatchInfo.Capture(args.Exception).Throw();
         }
 
         void Bus_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
@@ -84,15 +85,20 @@ namespace Rnet.Monitor.Wpf
 
         public ReactiveCommand SetDataCommand { get; private set; }
 
-        public IEnumerable<RnetDevice> Devices { get; private set; }
+        public IEnumerable<RnetController> Controllers { get; private set; }
+
+        public RnetBusObject SelectedObject
+        {
+            get { return selectedObject; }
+            set { this.RaiseAndSetIfChanged(ref selectedObject, value); this.RaisePropertyChanged("SelectedDevice"); }
+        }
 
         public RnetDevice SelectedDevice
         {
-            get { return selectedDevice; }
-            set { this.RaiseAndSetIfChanged(ref selectedDevice, value); }
+            get { return SelectedObject as RnetDevice; }
         }
 
-        public RnetDeviceData SelectedDataItem
+        public RnetDeviceDirectory SelectedDataItem
         {
             get { return selectedDataItem; }
             set { this.RaiseAndSetIfChanged(ref selectedDataItem, value); }
@@ -124,7 +130,7 @@ namespace Rnet.Monitor.Wpf
         async Task DiscoverDeviceData(RnetDevice device, RnetPath path)
         {
             var d = await GetDataItemAsync(device, path.ToArray());
-            if (d != null && d.Data != null && path.Length < 8)
+            if (d != null && d.Buffer != null && path.Length < 8)
                 for (byte i = 0; i < 8; i++)
                     await DiscoverDeviceData(device, path.Navigate(i));
         }
@@ -145,7 +151,7 @@ namespace Rnet.Monitor.Wpf
         {
             try
             {
-                return await Bus.Devices.GetAsync(deviceId);
+                return await Bus.GetAsync(deviceId);
             }
             catch (OperationCanceledException)
             {
@@ -157,7 +163,7 @@ namespace Rnet.Monitor.Wpf
         {
             try
             {
-                return await device.Directories.GetAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token, path);
+                return await device.Directory.FindAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token, path);
             }
             catch (OperationCanceledException)
             {
