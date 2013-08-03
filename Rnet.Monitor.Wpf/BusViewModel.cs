@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Reactive.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 using System.Windows.Threading;
 
 using ReactiveUI;
-using System.Runtime.ExceptionServices;
 
 namespace Rnet.Monitor.Wpf
 {
@@ -28,7 +27,8 @@ namespace Rnet.Monitor.Wpf
             SentMessages = new ObservableCollection<RnetMessage>();
             ReceivedMessages = new ObservableCollection<RnetMessage>();
 
-            Bus = new RnetBus(new RnetTcpConnection("tokyo.cogito.cx", 9999));
+            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
+            //Bus = new RnetBus(new RnetTcpConnection("tokyo.cogito.cx", 9999));
             Bus.ConnectionStateChanged += Bus_ConnectionStateChanged;
             Bus.MessageSent += (s, a) => SentMessages.Add(a.Message);
             Bus.MessageReceived += (s, a) => ReceivedMessages.Add(a.Message);
@@ -36,11 +36,11 @@ namespace Rnet.Monitor.Wpf
 
             var canStart = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Stopped);
             StartCommand = new ReactiveCommand(canStart);
-            StartCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => Bus.Start()));
+            StartCommand.RegisterAsyncAction(i => dispatcher.InvokeAsync(async () => await Bus.StartAsync()));
 
             var canStop = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Started);
             StopCommand = new ReactiveCommand(canStop);
-            StopCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => Bus.Stop()));
+            StopCommand.RegisterAsyncAction(i => dispatcher.InvokeAsync(async () => await Bus.StopAsync()));
 
             var canProbeDevice = this.WhenAny(i => i.SelectedDevice, i => i.Value != null);
             ProbeDeviceCommand = new ReactiveCommand(canProbeDevice);
@@ -153,22 +153,15 @@ namespace Rnet.Monitor.Wpf
             {
                 return await Bus.GetAsync(deviceId);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException e)
             {
-                return null;
+                throw e;
             }
         }
 
         async Task<RnetDeviceDirectory> GetDataItemAsync(RnetDevice device, params byte[] path)
         {
-            try
-            {
-                return await device.Directory.FindAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token, path);
-            }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
+            return await device.Directory.FindAsync(path);
         }
 
     }

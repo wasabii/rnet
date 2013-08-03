@@ -187,7 +187,7 @@ namespace Rnet
                     handshake = null;
 
                     // send set data packet
-                    Bus.Client.SendMessage(new RnetSetDataMessage(DeviceId, Bus.ClientDevice.DeviceId,
+                    Bus.Client.SendMessage(new RnetSetDataMessage(DeviceId, Bus.BusDevice.DeviceId,
                         path,
                         RnetPath.Empty,
                         n,

@@ -78,7 +78,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetZone> FindAsync(RnetZoneId id)
         {
-            return FindAsync(id, Controller.Bus.DefaultCancellationToken);
+            return FindAsync(id, Controller.Bus.DefaultTimeoutToken);
         }
 
         /// <summary>
@@ -101,8 +101,8 @@ namespace Rnet
         internal async Task<RnetZone> WaitAsync(RnetZoneId id, CancellationToken cancellationToken)
         {
             RnetZone zone = null;
-            using (await monitor.EnterAsync(cancellationToken))
-                while ((zone = await FindAsync(id)) == null && !cancellationToken.IsCancellationRequested)
+            while ((zone = await FindAsync(id)) == null && !cancellationToken.IsCancellationRequested)
+                using (await monitor.EnterAsync(cancellationToken))
                     await monitor.WaitAsync(cancellationToken);
 
             return zone;
@@ -115,7 +115,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetZone> GetAsync(RnetZoneId id)
         {
-            return GetAsync(id, Controller.Bus.DefaultCancellationToken);
+            return GetAsync(id, Controller.Bus.DefaultTimeoutToken);
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetZone> RequestAsync(RnetZoneId id)
         {
-            return RequestAsync(id, Controller.Bus.DefaultCancellationToken);
+            return RequestAsync(id, Controller.Bus.DefaultTimeoutToken);
         }
 
         /// <summary>

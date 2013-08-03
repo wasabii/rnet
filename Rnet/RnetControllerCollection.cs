@@ -1,10 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -51,7 +51,7 @@ namespace Rnet
         /// Remvoes the given controller from the collection.
         /// </summary>
         /// <param name="controller"></param>
-        internal async Task Remove(RnetController controller)
+        internal async Task RemoveAsync(RnetController controller)
         {
             using (await monitor.EnterAsync())
             {
@@ -84,7 +84,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetController> FindAsync(RnetControllerId id)
         {
-            return FindAsync(id, Bus.DefaultCancellationToken);
+            return FindAsync(id, Bus.DefaultTimeoutToken);
         }
 
         /// <summary>
@@ -107,8 +107,8 @@ namespace Rnet
         internal async Task<RnetController> WaitAsync(RnetControllerId id, CancellationToken cancellationToken)
         {
             RnetController controller = null;
-            using (await monitor.EnterAsync(cancellationToken))
-                while ((controller = await FindAsync(id)) == null && !cancellationToken.IsCancellationRequested)
+            while ((controller = await FindAsync(id, cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+                using (await monitor.EnterAsync(cancellationToken))
                     await monitor.WaitAsync(cancellationToken);
 
             return controller;
@@ -119,9 +119,18 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Task<RnetController> GetAsync(RnetControllerId id)
+        public async Task<RnetController> GetAsync(RnetControllerId id)
         {
-            return GetAsync(id, Bus.DefaultCancellationToken);
+            try
+            {
+                return await GetAsync(id, Bus.DefaultTimeoutToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -144,9 +153,18 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Task<RnetController> RequestAsync(RnetControllerId id)
+        public async Task<RnetController> RequestAsync(RnetControllerId id)
         {
-            return RequestAsync(id, Bus.DefaultCancellationToken);
+            try
+            {
+                return await RequestAsync(id, Bus.DefaultTimeoutToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>

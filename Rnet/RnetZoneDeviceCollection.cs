@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -76,7 +77,7 @@ namespace Rnet
         /// <returns></returns>
         public Task<RnetZoneDevice> FindAsync(RnetKeypadId id)
         {
-            return FindAsync(id, Zone.Controller.Bus.DefaultCancellationToken);
+            return FindAsync(id, Zone.Controller.Bus.DefaultTimeoutToken);
         }
 
         /// <summary>
@@ -99,8 +100,8 @@ namespace Rnet
         internal async Task<RnetZoneDevice> WaitAsync(RnetKeypadId id, CancellationToken cancellationToken)
         {
             RnetZoneDevice device = null;
-            using (await monitor.EnterAsync(cancellationToken))
-                while ((device = await FindAsync(id)) == null && !cancellationToken.IsCancellationRequested)
+            while ((device = await FindAsync(id)) == null && !cancellationToken.IsCancellationRequested)
+                using (await monitor.EnterAsync(cancellationToken))
                     await monitor.WaitAsync(cancellationToken);
 
             return device;
@@ -111,9 +112,18 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Task<RnetZoneDevice> GetAsync(RnetKeypadId id)
+        public async Task<RnetZoneDevice> GetAsync(RnetKeypadId id)
         {
-            return GetAsync(id, Zone.Controller.Bus.DefaultCancellationToken);
+            try
+            {
+                return await GetAsync(id, Zone.Controller.Bus.DefaultTimeoutToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -136,9 +146,18 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Task<RnetZoneDevice> RequestAsync(RnetKeypadId id)
+        public async Task<RnetZoneDevice> RequestAsync(RnetKeypadId id)
         {
-            return RequestAsync(id, Zone.Controller.Bus.DefaultCancellationToken);
+            try
+            {
+                return await RequestAsync(id, Zone.Controller.Bus.DefaultTimeoutToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>
