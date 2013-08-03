@@ -1,16 +1,31 @@
-﻿namespace Rnet.Profiles.Basic
+﻿using System.Threading.Tasks;
+
+namespace Rnet.Profiles.Basic
 {
 
     /// <summary>
-    /// Obtains basic device information.
+    /// Provides basic device information.
     /// </summary>
     public interface IDevice : IProfile
     {
 
         /// <summary>
-        /// Provides the device information.
+        /// Gets the model of the device.
         /// </summary>
-        DeviceInfo Info { get; }
+        /// <returns></returns>
+        Task<string> GetModelAsync();
+
+        /// <summary>
+        /// Gets the manufacturer of the device.
+        /// </summary>
+        /// <returns></returns>
+        Task<string> GetManufacturerAsync();
+
+        /// <summary>
+        /// Gets the firmware version of the device.
+        /// </summary>
+        /// <returns></returns>
+        Task<string> GetFirmwareVersionAsync();
 
     }
 

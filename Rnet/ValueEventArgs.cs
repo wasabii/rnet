@@ -7,7 +7,7 @@ namespace Rnet
     /// Generic event args that holds a value.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    class ValueEventArgs<T> : EventArgs
+    public class ValueEventArgs<T> : EventArgs
     {
 
         /// <summary>

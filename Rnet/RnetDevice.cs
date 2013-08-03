@@ -126,9 +126,10 @@ namespace Rnet
         {
             // device requires handshake
             if (RequiresHandshake)
-                Bus.Client.SendMessage(new RnetHandshakeMessage(message.SourceDeviceId, DeviceId,
-                    RnetHandshakeType.Data),
-                    RnetMessagePriority.High);
+                await Bus.Client.SendAsync(new RnetHandshakeMessage(
+                    message.SourceDeviceId,
+                    DeviceId,
+                    RnetHandshakeType.Data));
 
             // get or add data item if first packet
             var data = buffers.GetOrDefault(message.SourcePath);
@@ -158,7 +159,7 @@ namespace Rnet
         {
             using (await asyncMonitor.EnterAsync(cancellationToken))
             {
-                Bus.SendRequestDataMessage(DeviceId, path, RnetPath.Empty);
+                await Bus.RequestDataAsync(DeviceId, path, RnetPath.Empty);
                 return await directory.WaitAsync(path, cancellationToken);
             }
         }
@@ -187,7 +188,9 @@ namespace Rnet
                     handshake = null;
 
                     // send set data packet
-                    Bus.Client.SendMessage(new RnetSetDataMessage(DeviceId, Bus.BusDevice.DeviceId,
+                    await Bus.Client.SendAsync(new RnetSetDataMessage(
+                        DeviceId, 
+                        Bus.BusDevice.DeviceId,
                         path,
                         RnetPath.Empty,
                         n,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -24,13 +25,39 @@ namespace Rnet.Profiles
             .ToList();
 
         /// <summary>
+        /// Initializes the given profile and returns it.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        static async Task<IProfile> InitializeProfileAsync(IProfile profile)
+        {
+            var l = profile as IProfileLifecycle;
+            if (l != null)
+                await l.InitializeAsync();
+
+            return profile;
+        }
+
+        /// <summary>
         /// Gets the set of supported profiles for the target.
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static IEnumerable<Task<IProfile>> GetProfilesAsync(this RnetBusObject target)
+        public static IObservable<IProfile> GetProfilesAsync(this RnetBusObject target)
         {
-            return Providers.SelectMany(i => i.GetProfilesAsync(target));
+            return target.Extensions.GetOrCreate<IObservable<IProfile>>(() =>
+                Providers.ToObservable()
+                    .Select(i =>
+                        Observable.FromAsync(() =>
+                            i.GetProfilesAsync(target) ?? Task.FromResult(Enumerable.Empty<IProfile>())))
+                    .Merge()
+                    .Where(i => i != null)
+                    .SelectMany(i => i)
+                    .Where(i => i != null)
+                    .Select(i =>
+                        Observable.FromAsync(() =>
+                            InitializeProfileAsync(i)))
+                    .Merge());
         }
 
         /// <summary>
@@ -40,9 +67,8 @@ namespace Rnet.Profiles
         /// <returns></returns>
         public static IEnumerable<IProfile> GetProfiles(this RnetBusObject target)
         {
-            foreach (var t in GetProfilesAsync(target))
-                if (t.Result is IProfile)
-                    yield return (IProfile)t.Result;
+            return GetProfilesAsync(target)
+                .ToEnumerable();
         }
 
         /// <summary>
@@ -50,14 +76,13 @@ namespace Rnet.Profiles
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static async Task<T> GetProfileAsync<T>(this RnetBusObject target)
+        public static Task<T> GetProfileAsync<T>(this RnetBusObject target)
             where T : class, IProfile
         {
-            foreach (var t in GetProfilesAsync(target))
-                if ((await t) is T)
-                    return (T)await t;
-
-            return null;
+            return target.Extensions.GetOrCreate<Task<T>>(async () =>
+                await GetProfilesAsync(target)
+                    .OfType<T>()
+                    .FirstOrDefaultAsync());
         }
 
         /// <summary>

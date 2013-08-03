@@ -11,6 +11,7 @@ using Rnet.Profiles;
 
 using ReactiveUI;
 using Rnet.Profiles.Basic;
+using Rnet.Profiles.Media;
 
 namespace Rnet.Monitor.Wpf
 {
@@ -114,11 +115,21 @@ namespace Rnet.Monitor.Wpf
 
         async void DiscoverDevices()
         {
-         //   await Task.WhenAll(GetDevices());
+            //   await Task.WhenAll(GetDevices());
 
-            var d1 = await Bus.GetAsync(RnetDeviceId.RootController);
-            var p1 = await d1.GetProfileAsync<IDevice>();
-            var i1 = p1.Info;
+            var c = await Bus.Controllers.GetAsync(RnetControllerId.Root);
+            var p = await c.GetProfileAsync<IController>();
+
+            for (int i = 0; i < p.ZoneCount; i++)
+            {
+                var z = await c.Zones.GetAsync(i);
+                if (z != null)
+                {
+                    var zp = await z.GetProfileAsync<IZone>();
+                    var zp2 = await z.GetProfileAsync<IZoneAudio>();
+                    
+                }
+            }
         }
 
         IEnumerable<Task<RnetDevice>> GetDevices()

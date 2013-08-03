@@ -4,6 +4,8 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Nito.AsyncEx;
+
 namespace Rnet
 {
 
@@ -13,6 +15,7 @@ namespace Rnet
     public abstract class RnetConnection : IDisposable
     {
 
+        AsyncLock writerLock = new AsyncLock();
         RnetStreamWriter writer;
         RnetStreamReader reader;
 
@@ -38,30 +41,25 @@ namespace Rnet
         protected abstract RnetStreamWriter GetWriter();
 
         /// <summary>
-        /// Initializes the connection.
-        /// </summary>
-        void Init()
-        {
-            reader = GetReader();
-            if (reader == null)
-                throw new RnetException("Unable to obtain RnetReader.");
-
-            writer = GetWriter();
-            if (writer == null)
-                throw new RnetException("Unable to obtain RnetWriter.");
-        }
-
-        /// <summary>
         /// Opens the connection to RNet.
         /// </summary>
-        public void Open()
+        public async Task OpenAsync()
         {
             try
             {
                 try
                 {
-                    Connect();
-                    Init();
+                    await ConnectAsync();
+
+                    // establish reader
+                    reader = GetReader();
+                    if (reader == null)
+                        throw new RnetException("Unable to obtain RnetReader.");
+
+                    // establish writer
+                    writer = GetWriter();
+                    if (writer == null)
+                        throw new RnetException("Unable to obtain RnetWriter.");
                 }
                 catch (AggregateException e)
                 {
@@ -87,13 +85,13 @@ namespace Rnet
         /// <summary>
         /// Closes the current connection.
         /// </summary>
-        public void Close()
+        public async Task CloseAsync()
         {
             try
             {
                 try
                 {
-                    Disconnect();
+                    await DisconnectAsync();
                 }
                 catch (AggregateException e)
                 {
@@ -119,36 +117,14 @@ namespace Rnet
         /// <summary>
         /// Implementations should establish a connection.
         /// </summary>
-        protected abstract void Connect();
-
-        /// <summary>
-        /// Implementations should establish a connection.
-        /// </summary>
         /// <returns></returns>
         protected abstract Task ConnectAsync();
 
         /// <summary>
         /// Implementations should disconnect.
         /// </summary>
-        protected abstract void Disconnect();
-
-        /// <summary>
-        /// Implementations should disconnect.
-        /// </summary>
         /// <returns></returns>
         protected abstract Task DisconnectAsync();
-
-        /// <summary>
-        /// Sends the message to the connection.
-        /// </summary>
-        /// <param name="message"></param>
-        public virtual void Send(RnetMessage message)
-        {
-            if (State != RnetConnectionState.Open)
-                throw new RnetConnectionException("Connection is not open.");
-
-            message.Write(writer);
-        }
 
         /// <summary>
         /// Sends the message to the connection.
@@ -171,35 +147,12 @@ namespace Rnet
             if (State != RnetConnectionState.Open)
                 throw new RnetConnectionException("RNET connection is not open.");
 
-            message.Write(writer);
-
-            return Task.FromResult(0);
-        }
-
-        /// <summary>
-        /// Reads the next message from the connection.
-        /// </summary>
-        /// <returns></returns>
-        public virtual RnetMessage Receive()
-        {
-            try
+            // write to writer in the background, but synchronously
+            return Task.Run(async () =>
             {
-                if (State != RnetConnectionState.Open)
-                    throw new RnetConnectionException("RNET connection is not open.");
-
-                return reader.Read();
-            }
-            catch (AggregateException e)
-            {
-                e = e.Flatten();
-                if (e.InnerExceptions.Count == 1)
-                    ExceptionDispatchInfo.Capture(e.InnerException).Throw();
-                else
-                    ExceptionDispatchInfo.Capture(e).Throw();
-
-                // unreachable
-                return null;
-            }
+                using (await writerLock.LockAsync(cancellationToken))
+                    message.Write(writer);
+            }, cancellationToken);
         }
 
         /// <summary>
@@ -263,7 +216,7 @@ namespace Rnet
         /// </summary>
         public void Dispose()
         {
-            Close();
+            CloseAsync().Wait();
             GC.SuppressFinalize(this);
         }
 

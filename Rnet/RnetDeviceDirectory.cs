@@ -60,7 +60,7 @@ namespace Rnet
         public byte[] Buffer
         {
             get { return buffer; }
-            private set { buffer = value; RaisePropertyChanged("Buffer"); }
+            private set { buffer = value; RaiseBufferChanged(new ValueEventArgs<byte[]>(value)); RaisePropertyChanged("Buffer"); }
         }
 
         /// <summary>
@@ -81,6 +81,11 @@ namespace Rnet
         /// <returns></returns>
         internal async Task SetAsync(byte[] buffer)
         {
+            // do check for duplicates to avoid raising events
+            if (Buffer.ArrayEquals(buffer))
+                return;
+
+            // replace the value
             Buffer = buffer;
 
             // notify any waiters
@@ -261,6 +266,15 @@ namespace Rnet
         /// <summary>
         /// Reads the directory at the specified relative path from the device.
         /// </summary>
+        /// <param name="path"></param>
+        public Task<RnetDeviceDirectory> RequestAsync(params byte[] path)
+        {
+            return RequestAsync(Device.RequestDataCancellationToken, path);
+        }
+
+        /// <summary>
+        /// Reads the directory at the specified relative path from the device.
+        /// </summary>
         /// <param name="cancellationToken"></param>
         /// <param name="path"></param>
         /// <returns></returns>
@@ -345,11 +359,11 @@ namespace Rnet
         /// Gets the directory data.
         /// </summary>
         /// <returns></returns>
-        public async Task<byte[]> GetAsync()
+        public async Task<byte[]> GetDataAsync()
         {
             try
             {
-                return await GetAsync(Device.RequestDataCancellationToken);
+                return await GetDataAsync(Device.RequestDataCancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -364,9 +378,77 @@ namespace Rnet
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<byte[]> GetAsync(CancellationToken cancellationToken)
+        public Task<byte[]> GetDataAsync(CancellationToken cancellationToken)
         {
             return WaitAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified relative index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public async Task<byte[]> GetDataAsync(byte index)
+        {
+            try
+            {
+                return await GetDataAsync(index, Device.RequestDataCancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified relative index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<byte[]> GetDataAsync(byte index, CancellationToken cancellationToken)
+        {
+            var d = await GetAsync(index, cancellationToken);
+            if (d != null)
+                return await d.GetDataAsync();
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified relative path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<byte[]> GetDataAsync(params byte[] path)
+        {
+            try
+            {
+                return await GetDataAsync(Device.RequestDataCancellationToken, path);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified relative path.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<byte[]> GetDataAsync(CancellationToken cancellationToken, params byte[] path)
+        {
+            var d = await GetAsync(cancellationToken, path);
+            if (d != null)
+                return await d.GetDataAsync();
+
+            return null;
         }
 
         /// <summary>
@@ -449,6 +531,21 @@ namespace Rnet
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Raised when the data buffer stored in the directory is changed.
+        /// </summary>
+        public event EventHandler<ValueEventArgs<byte[]>> BufferChanged;
+
+        /// <summary>
+        /// Raises the BufferChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void RaiseBufferChanged(ValueEventArgs<byte[]> args)
+        {
+            if (BufferChanged != null)
+                BufferChanged(this, args);
         }
 
         /// <summary>

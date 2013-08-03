@@ -34,6 +34,15 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.1.30214.0\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,17 +50,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Basic\DeviceInfo.cs" />
-    <Compile Include="Devices\CAM66.cs" />
-    <Compile Include="Devices\RussoundDevice.cs" />
-    <Compile Include="Devices\RussoundDeviceInfo.cs" />
+    <Compile Include="Basic\IController.cs" />
+    <Compile Include="Basic\IDeviceDirectoryMap.cs" />
+    <Compile Include="Basic\IZone.cs" />
+    <Compile Include="ControllerProfileObject.cs" />
+    <Compile Include="ControllerProfileProvider.cs" />
+    <Compile Include="IProfileLifecycle.cs" />
+    <Compile Include="Media\DoNotDisturbMode.cs" />
+    <Compile Include="Media\IZoneAudio.cs" />
+    <Compile Include="Media\PartyMode.cs" />
+    <Compile Include="Media\Power.cs" />
+    <Compile Include="ProfileObject.cs" />
+    <Compile Include="Russound\RussoundZoneAudio.cs" />
+    <Compile Include="ZoneProfileProvider.cs" />
+    <Compile Include="DeviceProfileProvider.cs" />
+    <Compile Include="ZoneProfileObject.cs" />
+    <Compile Include="Russound\CAM66.cs" />
+    <Compile Include="Russound\CAV66.cs" />
+    <Compile Include="Russound\IRussoundController.cs" />
+    <Compile Include="Russound\IRussoundDevice.cs" />
+    <Compile Include="Russound\RussoundController.cs" />
     <Compile Include="Basic\IDevice.cs" />
     <Compile Include="IProfile.cs" />
     <Compile Include="ModelObject.cs" />
+    <Compile Include="DeviceProfileObject.cs" />
     <Compile Include="ProfileProviderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetBusObjectExtensions.cs" />
     <Compile Include="ProfileProvider.cs" />
+    <Compile Include="Russound\IRussoundZone.cs" />
+    <Compile Include="Russound\RussoundZone.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet\Rnet.csproj">

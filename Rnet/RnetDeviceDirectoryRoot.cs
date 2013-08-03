@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -107,6 +108,27 @@ namespace Rnet
         public Task<RnetDeviceDirectory> GetAsync(RnetPath path, CancellationToken cancellationToken)
         {
             return GetAsync(cancellationToken, path.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified absolute path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Task<byte[]> GetDataAsync(RnetPath path)
+        {
+            return GetDataAsync(path.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified absolute path.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Task<byte[]> GetDataAsync(RnetPath path, CancellationToken cancellationToken)
+        {
+            return GetDataAsync(cancellationToken, path.ToArray());
         }
 
     }

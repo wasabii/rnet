@@ -23,6 +23,7 @@
             : base(zone.Controller.Bus)
         {
             Zone = zone;
+            Id = keypadId;
         }
 
         /// <summary>

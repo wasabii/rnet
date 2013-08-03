@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace Rnet
 {
@@ -11,9 +13,7 @@ namespace Rnet
     public class RnetClient : RnetModelObject, IDisposable
     {
 
-        /// <summary>
-        /// Currently active connection.
-        /// </summary>
+        AsyncLock lck = new AsyncLock();
         RnetConnection connection;
 
         /// <summary>
@@ -27,39 +27,9 @@ namespace Rnet
         RnetConnectionState lastConnectionState = RnetConnectionState.Closed;
 
         /// <summary>
-        /// Queued messages to send.
-        /// </summary>
-        BlockingCollection<RnetMessage> sendQueue = new BlockingCollection<RnetMessage>();
-
-        /// <summary>
-        /// Queued messages to send.
-        /// </summary>
-        BlockingCollection<RnetMessage> prioritySendQueue = new BlockingCollection<RnetMessage>();
-
-        /// <summary>
-        /// Queued messages to receive.
-        /// </summary>
-        BlockingCollection<object> receiveQueue = new BlockingCollection<object>();
-
-        /// <summary>
-        /// Queued errors.
-        /// </summary>
-        BlockingCollection<object> errorQueue = new BlockingCollection<object>();
-
-        /// <summary>
-        /// Sends messages to the connection.
-        /// </summary>
-        Thread sendThread;
-
-        /// <summary>
         /// Receives messages from the connection.
         /// </summary>
-        Thread receiveThread;
-
-        /// <summary>
-        /// Dispatches received events to the application.
-        /// </summary>
-        Thread dispatchThread;
+        Task receiveTask;
 
         /// <summary>
         /// Signals the worker thread to cancel.
@@ -81,22 +51,22 @@ namespace Rnet
         /// <summary>
         /// Starts the <see cref="RnetClient"/>.
         /// </summary>
-        public void Start()
+        public async Task StartAsync()
         {
-            // already started
-            if (cts != null)
-                return;
+            using (await lck.LockAsync())
+            {
+                // already started
+                if (cts != null)
+                    return;
 
-            cts = new CancellationTokenSource();
-            sendThread = new Thread(SendThreadStart);
-            sendThread.IsBackground = true;
-            sendThread.Start();
-            receiveThread = new Thread(ReceiveThreadStart);
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
-            dispatchThread = new Thread(DispatchThreadStart);
-            dispatchThread.IsBackground = true;
-            dispatchThread.Start();
+                // already started
+                if (receiveTask != null)
+                    return;
+
+                // start up receiver using a background task
+                cts = new CancellationTokenSource();
+                receiveTask = Task.Run(async () => await ReceiveLoopAsync(cts.Token));
+            }
 
             OnStateChanged(new RnetClientStateEventArgs(State));
         }
@@ -104,22 +74,20 @@ namespace Rnet
         /// <summary>
         /// Stops the <see cref="RnetClient"/>.
         /// </summary>
-        public void Stop()
+        public async Task StopAsync()
         {
-            if (cts == null)
-                return;
+            using (await lck.LockAsync())
+            {
+                if (cts == null)
+                    return;
 
-            // signal cancel and wait for shutdown
-            cts.Cancel();
-            sendThread.Join();
-            receiveThread.Join();
-            dispatchThread.Join();
+                // signal cancel and wait for shutdown
+                cts.Cancel();
+            }
 
-            // clean up instances
-            cts = null;
-            sendThread = null;
-            receiveThread = null;
-            dispatchThread = null;
+            // wait for task to end
+            await receiveTask;
+            receiveTask = null;
 
             OnStateChanged(new RnetClientStateEventArgs(State));
         }
@@ -143,192 +111,89 @@ namespace Rnet
         /// <summary>
         /// Ensures an active connection is available
         /// </summary>
-        void EnsureConnection(CancellationToken ct)
+        async Task<bool> EnsureConnection(CancellationToken ct)
         {
-            lock (connection)
+            using (await lck.LockAsync(ct))
             {
-                // dispose of existing connection if it has been shut down
-                if (connection.State != RnetConnectionState.Open)
-                {
-                    TryRaiseConnectionStateChanged();
+                // double check
+                if (connection.State == RnetConnectionState.Open)
+                    return true;
 
-                    // wait for connection back off
-                    while (TimeSpan.FromSeconds(30) > (DateTime.UtcNow - lastConnectionAttempt))
-                        Monitor.Wait(connection, 5000);
-                    lastConnectionAttempt = DateTime.UtcNow;
+                TryRaiseConnectionStateChanged();
 
-                    // double check
-                    if (connection.State == RnetConnectionState.Open)
-                        return;
-
-                    // attempt to open connection
-                    connection.Open();
-                    TryRaiseConnectionStateChanged();
-
-                    // reset to lowest value so we'll reconnect immediately next time around
-                    lastConnectionAttempt = DateTime.MinValue;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Sends messages to the connection.
-        /// </summary>
-        void SendThreadStart()
-        {
-            // cache token
-            var ct = cts.Token;
-
-            while (!ct.IsCancellationRequested)
-            {
-                RnetMessage message = null;
-
+                // attempt to open connection
                 try
                 {
-                    EnsureConnection(ct);
-
-                    // take from any of the send queues
-                    var b = BlockingCollection<RnetMessage>.TryTakeFromAny(
-                        new[] { prioritySendQueue, sendQueue },
-                        out message, 1000);
-
-                    if (b != -1)
-                    {
-                        connection.Send(message);
-                        OnMessageSent(new RnetMessageEventArgs(message));
-                        Thread.Sleep(100);
-                    }
+                    await connection.OpenAsync();
                 }
                 catch (Exception e)
                 {
-                    try
-                    {
-                        // attempt to close the existing connection
-                        lock (connection)
-                            connection.Close();
-                    }
-                    catch (Exception e2)
-                    {
-                        errorQueue.Add(e2);
-                    }
-
-                    // add message back into queue
-                    if (message != null)
-                        sendQueue.Add(message);
-
-                    errorQueue.Add(e);
+                    OnError(new RnetClientErrorEventArgs(e));
                 }
+
+                TryRaiseConnectionStateChanged();
+
+                return connection.State == RnetConnectionState.Open;
             }
         }
 
         /// <summary>
         /// Receives messages from the connection.
         /// </summary>
-        void ReceiveThreadStart()
+        async Task ReceiveLoopAsync(CancellationToken cancellationToken)
         {
-            // cache token
-            var ct = cts.Token;
-
-            while (!ct.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                RnetConnection cnn = null;
-
                 try
                 {
-                    EnsureConnection(ct);
+                    // attempt to restablish a connection if it was lost
+                    while (!await EnsureConnection(cancellationToken) && !cancellationToken.IsCancellationRequested)
+                        continue;
 
-                    var message = connection.Receive();
+                    // read next message
+                    var message = await connection.ReceiveAsync(cancellationToken);
                     if (message != null)
-                        receiveQueue.Add(message);
+                        OnMessageReceived(new RnetMessageEventArgs(message));
                 }
                 catch (RnetConnectionException e)
                 {
                     if (ConnectionState == RnetConnectionState.Open)
-                        errorQueue.Add(e);
-                }
-                catch (Exception e)
-                {
-                    try
-                    {
-                        // attempt to close the existing connection
-                        lock (connection)
-                            cnn.Close();
-                    }
-                    catch (Exception e2)
-                    {
-                        errorQueue.Add(e2);
-                    }
-
-                    errorQueue.Add(e);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Dispatches received messages to the event handlers.
-        /// </summary>
-        void DispatchThreadStart()
-        {
-            // cache token
-            var ct = cts.Token;
-
-            while (!ct.IsCancellationRequested)
-            {
-                try
-                {
-                    object o = null;
-
-                    // wait for any new event
-                    BlockingCollection<object>.TakeFromAny(
-                        new BlockingCollection<object>[] { receiveQueue, errorQueue },
-                        out o, ct);
-
-                    var m = o as RnetMessage;
-                    if (m != null)
-                        OnMessageReceived(new RnetMessageEventArgs(m));
-
-                    var e = o as Exception;
-                    if (e != null)
                         OnError(new RnetClientErrorEventArgs(e));
                 }
                 catch (Exception e)
                 {
-                    try
-                    {
-                        OnError(new RnetClientErrorEventArgs(e));
-                    }
-                    catch (Exception)
-                    {
-                        // ignore
-                    }
+                    OnError(new RnetClientErrorEventArgs(e));
                 }
             }
         }
 
         /// <summary>
-        /// Sends the message.
+        /// Sends a message.
         /// </summary>
         /// <param name="message"></param>
-        public void SendMessage(RnetMessage message)
+        /// <returns></returns>
+        public Task SendAsync(RnetMessage message)
         {
-            SendMessage(message, RnetMessagePriority.Normal);
+            return SendAsync(message, CancellationToken.None);
         }
 
         /// <summary>
-        /// Sends the message.
+        /// Sends a message.
         /// </summary>
         /// <param name="message"></param>
-        public void SendMessage(RnetMessage message, RnetMessagePriority priority)
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task SendAsync(RnetMessage message, CancellationToken cancellationToken)
         {
-            switch (priority)
-            {
-                case RnetMessagePriority.Normal:
-                    sendQueue.Add(message);
-                    break;
-                case RnetMessagePriority.High:
-                    prioritySendQueue.Add(message);
-                    break;
-            }
+            // attempt to restablish a connection if it was lost
+            while (!await EnsureConnection(cancellationToken) && !cancellationToken.IsCancellationRequested)
+                continue;
+
+            // send message
+            await connection.SendAsync(message, cancellationToken);
+
+            // successfully sent
+            OnMessageSent(new RnetMessageEventArgs(message));
         }
 
         /// <summary>
@@ -422,7 +287,7 @@ namespace Rnet
         /// </summary>
         public void Dispose()
         {
-            Stop();
+            StopAsync().Wait();
             GC.SuppressFinalize(this);
         }
 

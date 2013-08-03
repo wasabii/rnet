@@ -29,7 +29,7 @@ namespace Rnet.Profiles
         /// target.
         /// </remarks>
         /// <returns></returns>
-        internal protected abstract IEnumerable<Task<IProfile>> GetProfilesAsync(RnetBusObject target);
+        public abstract Task<IEnumerable<IProfile>> GetProfilesAsync(RnetBusObject target);
 
     }
 

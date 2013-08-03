@@ -1,4 +1,6 @@
-﻿namespace Rnet.Profiles
+﻿using System.Threading.Tasks;
+
+namespace Rnet.Profiles
 {
 
     /// <summary>

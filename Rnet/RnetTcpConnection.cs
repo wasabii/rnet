@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -14,9 +13,9 @@ namespace Rnet
     {
 
         IPEndPoint ep;
+        string host;
+        int port;
         TcpClient tcp;
-        RnetStreamReader reader;
-        RnetStreamWriter writer;
 
         /// <summary>
         /// Initializes a new connection to an RNET device at the given endpoint.
@@ -45,16 +44,8 @@ namespace Rnet
         /// <param name="port"></param>
         public RnetTcpConnection(string hostname, int port)
         {
-            var ip = Dns.GetHostAddresses(hostname).FirstOrDefault();
-            if (ip == null)
-                throw new Exception("Could not resolve hostname.");
-
-            ep = new IPEndPoint(ip, port);
-        }
-
-        protected override void Connect()
-        {
-            ConnectAsync().Wait();
+            this.host = hostname;
+            this.port = port;
         }
 
         protected override async Task ConnectAsync()
@@ -62,16 +53,13 @@ namespace Rnet
             // initialize new TCP client and connect
             tcp = new TcpClient();
             tcp.ReceiveTimeout = 5000;
-            await tcp.ConnectAsync(ep.Address, ep.Port);
 
-            // initialize reader and writer
-            reader = new RnetStreamReader(tcp.GetStream());
-            writer = new RnetStreamWriter(tcp.GetStream());
-        }
-
-        protected override void Disconnect()
-        {
-            DisconnectAsync().Wait();
+            if (ep != null)
+                // known endpoint
+                await tcp.ConnectAsync(ep.Address, ep.Port);
+            else
+                // known host
+                await tcp.ConnectAsync(host, port);
         }
 
         protected override Task DisconnectAsync()
@@ -87,70 +75,25 @@ namespace Rnet
 
         protected override RnetStreamReader GetReader()
         {
-            return reader;
+            return new RnetStreamReader(tcp.GetStream());
         }
 
         protected override RnetStreamWriter GetWriter()
         {
-            return writer;
+            return new RnetStreamWriter(tcp.GetStream());
         }
 
         public override RnetConnectionState State
         {
-            get { return IsConnected ? RnetConnectionState.Open : RnetConnectionState.Closed; }
-        }
-
-        public override RnetMessage Receive()
-        {
-            // ignore timeout exceptions
-            while (true)
-            {
-                Exception exception = null;
-
-                try
-                {
-                    return base.Receive();
-                }
-                catch (EndOfStreamException e)
-                {
-                    exception = e;
-                }
-                catch (IOException e)
-                {
-                    exception = e.InnerException as SocketException;
-                }
-                catch (SocketException e)
-                {
-                    exception = e;
-                }
-                catch (RnetException e)
-                {
-                    ExceptionDispatchInfo.Capture(e).Throw();
-                }
-
-                // timeout exception received, ignore it and continue
-                if (exception != null)
-                {
-                    if (exception is SocketException && ((SocketException)exception).SocketErrorCode == SocketError.TimedOut)
-                        continue;
-                    if (exception is EndOfStreamException)
-                        continue;
-                }
-
-                throw new RnetConnectionException("Unable to receive message.", exception);
-            }
-        }
-
-        public override Task<RnetMessage> ReceiveAsync()
-        {
-            return ReceiveAsync(CancellationToken.None);
+            get { return Connected ? RnetConnectionState.Open : RnetConnectionState.Closed; }
         }
 
         public async override Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
         {
-            // ignore timeout exceptions
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 Exception exception = null;
 
                 try
@@ -185,17 +128,12 @@ namespace Rnet
 
                 throw new RnetConnectionException("Unable to receive message.", exception);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // unreachable
-            return null;
         }
 
         /// <summary>
         /// Determines whether or not the <see cref="TcpClient"/> is currently connected.
         /// </summary>
-        bool IsConnected
+        bool Connected
         {
             get
             {

@@ -31,7 +31,7 @@ namespace Rnet
 
             // we are our own bus
             SynchronizationContext = synchronizationContext;
-            KeypadId = KeypadId;
+            KeypadId = id;
 
             // hook ourselves up to the client
             Client = new RnetClient(connection);
@@ -122,20 +122,19 @@ namespace Rnet
                 throw new ObjectDisposedException("RnetBus");
 
             // start client
-            Client.Start();
+            await Client.StartAsync();
 
             // attempt to acquire required node until cancelled
             while (BusDevice == null && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    // initialize root controller, zone, and then our bus device
+                    // initialize root controller and zone for default bus location
                     var controller = await Controllers.GetAsync(RnetControllerId.Root);
                     var zone = await controller.Zones.GetAsync(0);
-                    var device = new RnetBusDevice(zone, KeypadId);
 
-                    // set ourselves as the bus device
-                    BusDevice = device;
+                    // insert bus into zone
+                    await zone.Devices.AddAsync(BusDevice = new RnetBusDevice(zone, KeypadId));
                 }
                 catch (OperationCanceledException)
                 {
@@ -158,20 +157,18 @@ namespace Rnet
         /// <summary>
         /// Stops the RNET bus.
         /// </summary>
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (Client == null)
                 throw new ObjectDisposedException("RnetBus");
 
-            Client.Stop();
+            await Client.StopAsync();
 
             if (cancellationTokenSource != null)
             {
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource = null;
             }
-
-            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -290,9 +287,9 @@ namespace Rnet
         /// <param name="deviceId"></param>
         /// <param name="targetPath"></param>
         /// <param name="sourcePath"></param>
-        internal void SendRequestDataMessage(RnetDeviceId deviceId, RnetPath targetPath, RnetPath sourcePath)
+        internal Task RequestDataAsync(RnetDeviceId deviceId, RnetPath targetPath, RnetPath sourcePath)
         {
-            Client.SendMessage(new RnetRequestDataMessage(
+            return Client.SendAsync(new RnetRequestDataMessage(
                 deviceId,
                 BusDevice != null ? BusDevice.DeviceId : RnetDeviceId.External,
                 targetPath,
@@ -308,7 +305,7 @@ namespace Rnet
         internal async Task<RnetDevice> RequestAsync(RnetDeviceId deviceId, CancellationToken cancellationToken)
         {
             // request device information record
-            SendRequestDataMessage(deviceId, new RnetPath(0, 0), RnetPath.Empty);
+            await RequestDataAsync(deviceId, new RnetPath(0, 0), RnetPath.Empty);
 
             // wait for controller
             var controller = await Controllers.WaitAsync(deviceId.ControllerId, cancellationToken);

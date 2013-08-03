@@ -61,9 +61,9 @@
     <Compile Include="RnetDeviceDataBuffer.cs" />
     <Compile Include="RnetDeviceDirectory.cs" />
     <Compile Include="RnetControllerCollection.cs" />
+    <Compile Include="RnetDeviceDirectoryExtensions.cs" />
     <Compile Include="RnetDeviceDirectoryRoot.cs" />
     <Compile Include="RnetExtensionsCollection.cs" />
-    <Compile Include="RnetMessagePriority.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBusDevice.cs" />
     <Compile Include="RnetClient.cs" />
