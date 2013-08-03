@@ -14,7 +14,7 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static IEnumerable<RnetProfile> GetProfiles(this RnetBusObject obj)
+        public static IEnumerable<Device> GetProfiles(this RnetBusObject obj)
         {
             yield break;
         }
@@ -26,7 +26,7 @@ namespace Rnet.Profiles
         /// <param name="obj"></param>
         /// <returns></returns>
         public static T GetProfile<T>(this RnetBusObject obj)
-            where T : RnetProfile
+            where T : Device
         {
             return null;
         }
