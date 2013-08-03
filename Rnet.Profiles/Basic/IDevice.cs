@@ -1,4 +1,4 @@
-﻿namespace Rnet.Profiles.Capabilities
+﻿namespace Rnet.Profiles.Basic
 {
 
     /// <summary>
@@ -8,9 +8,8 @@
     {
 
         /// <summary>
-        /// Obtains a copy of the basic device information.
+        /// Provides the device information.
         /// </summary>
-        /// <returns></returns>
         DeviceInfo Info { get; }
 
     }

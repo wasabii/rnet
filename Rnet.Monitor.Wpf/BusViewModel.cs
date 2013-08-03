@@ -7,8 +7,10 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Rnet.Profiles;
 
 using ReactiveUI;
+using Rnet.Profiles.Basic;
 
 namespace Rnet.Monitor.Wpf
 {
@@ -112,7 +114,11 @@ namespace Rnet.Monitor.Wpf
 
         async void DiscoverDevices()
         {
-            await Task.WhenAll(GetDevices());
+         //   await Task.WhenAll(GetDevices());
+
+            var d1 = await Bus.GetAsync(RnetDeviceId.RootController);
+            var p1 = await d1.GetProfileAsync<IDevice>();
+            var i1 = p1.Info;
         }
 
         IEnumerable<Task<RnetDevice>> GetDevices()

@@ -60,7 +60,7 @@ namespace Rnet
         /// <returns></returns>
         internal CancellationToken DefaultTimeoutToken
         {
-            get { return new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token; }
+            get { return new CancellationTokenSource(TimeSpan.FromSeconds(60)).Token; }
         }
 
         /// <summary>
@@ -246,6 +246,10 @@ namespace Rnet
             var controller = await Controllers.FindAsync(deviceId.ControllerId);
             if (controller == null)
                 await Controllers.AddAsync(controller = new RnetController(this, new RnetControllerId(deviceId.ControllerId)));
+
+            // we are a controller
+            if (deviceId.KeypadId == RnetKeypadId.Controller)
+                return controller;
 
             // find or create zone
             var zone = await controller.Zones.FindAsync(deviceId.ZoneId);

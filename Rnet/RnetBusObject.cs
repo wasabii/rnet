@@ -8,9 +8,22 @@
     {
 
         /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        protected RnetBusObject()
+        {
+            Extensions = new RnetExtensionsCollection();
+        }
+
+        /// <summary>
         /// Gets a string to describe the object.
         /// </summary>
         public abstract string Name { get; }
+
+        /// <summary>
+        /// Gets a set of extensions associated with this object.
+        /// </summary>
+        public RnetExtensionsCollection Extensions { get; private set; }
 
         /// <summary>
         /// Returns a string that represents the current object.

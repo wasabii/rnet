@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-using Rnet.Profiles.Capabilities;
+using Rnet.Profiles.Basic;
 
 namespace Rnet.Profiles.Devices
 {
@@ -11,13 +11,13 @@ namespace Rnet.Profiles.Devices
     class RussoundDeviceInfo : DeviceInfo
     {
 
-        RussoundDevice device;
+        RnetDevice device;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="device"></param>
-        internal RussoundDeviceInfo(RussoundDevice device)
+        internal RussoundDeviceInfo(RnetDevice device)
         {
             this.device = device;
         }

@@ -40,8 +40,8 @@ namespace Rnet
             Visible = false;
             RequiresHandshake = true;
             RetryDelay = TimeSpan.FromSeconds(1);
-            RequestTimeout = TimeSpan.FromSeconds(2.5);
-            SetDataTimeout = TimeSpan.FromSeconds(2.5);
+            RequestTimeout = TimeSpan.FromSeconds(60);
+            SetDataTimeout = TimeSpan.FromSeconds(60);
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace Rnet
             var data = buffers.GetOrDefault(message.SourcePath);
             if (data == null)
                 if (message.PacketNumber == 0)
-                    data = buffers[message.SourcePath] = new RnetDeviceDataBuffer();
+                    data = buffers[message.SourcePath] = new RnetDeviceDataBuffer(message.PacketCount);
 
             // no data item could be created, perhaps out of order packet
             if (data == null)

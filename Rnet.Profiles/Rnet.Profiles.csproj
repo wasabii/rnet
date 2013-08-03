@@ -41,18 +41,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Capabilities\DeviceInfo.cs" />
+    <Compile Include="Basic\DeviceInfo.cs" />
     <Compile Include="Devices\CAM66.cs" />
     <Compile Include="Devices\RussoundDevice.cs" />
     <Compile Include="Devices\RussoundDeviceInfo.cs" />
-    <Compile Include="DictionaryExtensions.cs" />
-    <Compile Include="EnumerableExtensions.cs" />
-    <Compile Include="Capabilities\IDevice.cs" />
+    <Compile Include="Basic\IDevice.cs" />
     <Compile Include="IProfile.cs" />
     <Compile Include="ModelObject.cs" />
+    <Compile Include="ProfileProviderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RnetBusObjectExtensions.cs" />
-    <Compile Include="Device.cs" />
+    <Compile Include="ProfileProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet\Rnet.csproj">

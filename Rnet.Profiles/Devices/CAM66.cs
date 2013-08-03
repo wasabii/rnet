@@ -1,10 +1,17 @@
-﻿namespace Rnet.Profiles.Devices
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Rnet.Profiles.Devices
 {
 
-    public class CAM66 : RussoundDevice
+    [ProfileProvider]
+    public class CAM66 : ProfileProvider
     {
 
-
+        protected internal override IEnumerable<Task<IProfile>> GetProfilesAsync(RnetBusObject target)
+        {
+            yield break;
+        }
 
     }
 

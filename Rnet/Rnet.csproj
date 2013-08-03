@@ -62,6 +62,7 @@
     <Compile Include="RnetDeviceDirectory.cs" />
     <Compile Include="RnetControllerCollection.cs" />
     <Compile Include="RnetDeviceDirectoryRoot.cs" />
+    <Compile Include="RnetExtensionsCollection.cs" />
     <Compile Include="RnetMessagePriority.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBusDevice.cs" />
@@ -113,6 +114,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.7\tools\Microsoft.Bcl.Build.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

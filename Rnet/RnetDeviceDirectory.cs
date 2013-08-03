@@ -281,8 +281,8 @@ namespace Rnet
         internal async Task<byte[]> WaitAsync(CancellationToken cancellationToken)
         {
             byte[] buffer = null;
-            using (await monitor.EnterAsync(cancellationToken))
-                while ((buffer = await FindAsync(cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+            while ((buffer = await FindAsync(cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+                using (await monitor.EnterAsync(cancellationToken))
                     await monitor.WaitAsync(cancellationToken);
 
             return buffer;
@@ -297,8 +297,8 @@ namespace Rnet
         internal async Task<RnetDeviceDirectory> WaitAsync(byte index, CancellationToken cancellationToken)
         {
             var directory = this;
-            using (await monitor.EnterAsync(cancellationToken))
-                while ((directory = await FindAsync(index, cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+            while ((directory = await FindAsync(index, cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
+                using (await monitor.EnterAsync(cancellationToken))
                     await monitor.WaitAsync(cancellationToken);
 
             return directory;
@@ -345,9 +345,18 @@ namespace Rnet
         /// Gets the directory data.
         /// </summary>
         /// <returns></returns>
-        public Task<byte[]> GetAsync()
+        public async Task<byte[]> GetAsync()
         {
-            return GetAsync(Device.RequestDataCancellationToken);
+            try
+            {
+                return await GetAsync(Device.RequestDataCancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -365,9 +374,18 @@ namespace Rnet
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public Task<RnetDeviceDirectory> GetAsync(byte index)
+        public async Task<RnetDeviceDirectory> GetAsync(byte index)
         {
-            return GetAsync(index, Device.RequestDataCancellationToken);
+            try
+            {
+                return await GetAsync(index, Device.RequestDataCancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -389,16 +407,34 @@ namespace Rnet
         /// Gets the directory at the specified relative path if available or requests it from the remote device.
         /// </summary>
         /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<RnetDeviceDirectory> GetAsync(params byte[] path)
+        {
+            try
+            {
+                return await GetAsync(Device.RequestDataCancellationToken, path);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the directory at the specified relative path if available or requests it from the remote device.
+        /// </summary>
+        /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task<RnetDeviceDirectory> GetAsync(CancellationToken cancellationToken, params byte[] path)
         {
-            var d = this;
-            foreach (var p in path)
-                if ((d = await d.GetAsync(p, cancellationToken)) == null || cancellationToken.IsCancellationRequested)
-                    return null;
+            var directory = await FindAsync(cancellationToken, path);
+            if (directory == null)
+                directory = await RequestAsync(cancellationToken, path);
 
-            return d;
+            return directory;
         }
 
         /// <summary>

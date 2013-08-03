@@ -2,7 +2,7 @@
 {
 
     /// <summary>
-    /// Base interface for profiles.
+    /// Describes a class that represents a profile.
     /// </summary>
     public interface IProfile
     {

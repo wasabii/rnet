@@ -11,16 +11,15 @@ namespace Rnet
 
         MemoryStream stream;
         int packetCount;
-        int packetNumber;
+        int packetNumber = -1;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetDeviceDataBuffer()
+        public RnetDeviceDataBuffer(int packetCount)
         {
-            stream = new MemoryStream();
-            packetCount = 0;
-            packetNumber = -1;
+            this.stream = new MemoryStream();
+            this.packetCount = packetCount;
         }
 
         /// <summary>
@@ -33,7 +32,7 @@ namespace Rnet
             if (this.packetNumber != packetNumber - 1)
                 return;
 
-            stream.Write(data, 0, data.Length);
+            this.stream.Write(data, 0, data.Length);
             this.packetNumber = packetNumber;
         }
 

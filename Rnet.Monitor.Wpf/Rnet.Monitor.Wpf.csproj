@@ -134,6 +134,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rnet.Profiles\Rnet.Profiles.csproj">
+      <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
+      <Name>Rnet.Profiles</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
       <Name>Rnet</Name>
@@ -141,6 +145,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.8\tools\Microsoft.Bcl.Build.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

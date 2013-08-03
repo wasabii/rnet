@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Rnet.Profiles.Capabilities
+namespace Rnet.Profiles.Basic
 {
 
     /// <summary>
