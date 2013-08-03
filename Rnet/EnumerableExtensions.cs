@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Rnet
 {
@@ -15,7 +12,7 @@ namespace Rnet
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        internal static byte Next(this IEnumerator<byte> e)
+        public static byte Next(this IEnumerator<byte> e)
         {
             if (!e.MoveNext())
                 throw new EndOfStreamException();
