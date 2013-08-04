@@ -110,11 +110,30 @@ namespace Rnet
         /// <param name="message"></param>
         internal Task ReceiveMessage(RnetMessage message)
         {
+            var hmsg = message as RnetHandshakeMessage;
+            if (hmsg != null)
+                return ReceiveHandshakeMessage(hmsg);
+
             var dmsg = message as RnetSetDataMessage;
             if (dmsg != null)
                 return ReceiveSetDataMessage(dmsg);
 
             return Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// Bus has received a handshake message from device.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        async Task ReceiveHandshakeMessage(RnetHandshakeMessage message)
+        {
+            using (await asyncMonitor.EnterAsync())
+            {
+                // notify any set data requests waiting for their handshake
+                handshake = message;
+                asyncMonitor.PulseAll();
+            }
         }
 
         /// <summary>
@@ -174,27 +193,31 @@ namespace Rnet
         {
             using (await asyncMonitor.EnterAsync())
             {
-                var c = buffer.Length / 16;
+                // number of packets to send
+                int c = buffer.Length / 16;
+                if (buffer.Length % 16 > 0)
+                    c++;
 
-                // send in 16 byte chunks
-                for (ushort n = 0; n < c / 16; n++)
+                // send until all data sent
+                for (int i = 0; i < c; i++ )
                 {
-                    // copy packet data
-                    var s = (ushort)Math.Min(16, buffer.Length % 16);
-                    var d = new byte[s];
-                    Array.Copy(buffer, d, s);
+                    // length of packet (remainder of data, max 16)
+                    var r = buffer.Length - i * 16;
+                    var l = r % 16 > 0 ? r % 16 : 16;
+                    var d = new byte[l];
+                    Array.Copy(buffer, i * 16, d, 0, l);
 
                     // clear received handshake
                     handshake = null;
 
                     // send set data packet
                     await Bus.Client.SendAsync(new RnetSetDataMessage(
-                        DeviceId, 
+                        DeviceId,
                         Bus.BusDevice.DeviceId,
                         path,
                         RnetPath.Empty,
-                        n,
-                        s,
+                        (byte)i,
+                        (byte)c,
                         new RnetData(d)));
 
                     // wait for handshake

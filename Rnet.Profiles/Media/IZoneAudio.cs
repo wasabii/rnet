@@ -17,17 +17,17 @@ namespace Rnet.Profiles.Media
         /// <summary>
         /// Volume level of the zone.
         /// </summary>
-        ushort Volume { get; set; }
+        int Volume { get; set; }
 
         /// <summary>
         /// Bass level of the zone.
         /// </summary>
-        ushort Bass { get; set; }
+        int Bass { get; set; }
 
         /// <summary>
         /// Treble level of the zone.
         /// </summary>
-        ushort Treble { get; set; }
+        int Treble { get; set; }
 
         /// <summary>
         /// Whether loudness is on or off.
@@ -37,7 +37,7 @@ namespace Rnet.Profiles.Media
         /// <summary>
         /// Balance level of the zone.
         /// </summary>
-        ushort Balance { get; set; }
+        int Balance { get; set; }
 
         /// <summary>
         /// Party mode of the zone.
@@ -60,6 +60,8 @@ namespace Rnet.Profiles.Media
         /// </summary>
         /// <returns></returns>
         Task SaveAsync();
+
+        Task SetVolume(int value);
 
     }
 

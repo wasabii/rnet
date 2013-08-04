@@ -71,7 +71,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDeviceDirectory this[byte index]
         {
-            get { return FindAsync(index).Result; }
+            get { return Find(index); }
         }
 
         /// <summary>
@@ -129,6 +129,16 @@ namespace Rnet
         /// available locally.
         /// </summary>
         /// <returns></returns>
+        public byte[] Find()
+        {
+            return buffer;
+        }
+
+        /// <summary>
+        /// Gets the data in the currently local directory structure. Returns <c>null</c> if the data is not yet
+        /// available locally.
+        /// </summary>
+        /// <returns></returns>
         public Task<byte[]> FindAsync()
         {
             return FindAsync(Device.RequestDataCancellationToken);
@@ -140,10 +150,32 @@ namespace Rnet
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> FindAsync(CancellationToken cancellationToken)
+        public Task<byte[]> FindAsync(CancellationToken cancellationToken)
         {
-            using (await monitor.EnterAsync(cancellationToken))
-                return buffer;
+            return Task.FromResult(buffer);
+        }
+
+        /// <summary>
+        /// Gets the directory at the index in the current local directory structure. Returns <c>null</c> if the
+        /// directory does not yet exist locally.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public RnetDeviceDirectory Find(byte index)
+        {
+            return directories.GetOrDefault(index);
+        }
+
+        /// <summary>
+        /// Gets the directory at the index in the current local directory structure. Returns <c>null</c> if the
+        /// directory does not yet exist locally.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public async Task<RnetDeviceDirectory> FindAsync(byte index)
+        {
+            using (await monitor.EnterAsync(Device.RequestDataCancellationToken))
+                return directories.GetOrDefault(index);
         }
 
         /// <summary>
@@ -199,7 +231,8 @@ namespace Rnet
                 if (directory == null)
                 {
                     directory = directories[index] = new RnetDeviceDirectory(Device, this, Path.Navigate(index));
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    Device.Bus.SynchronizationContext.Post(state =>
+                        RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)), null);
                     monitor.PulseAll();
                 }
 
@@ -350,9 +383,10 @@ namespace Rnet
         /// <param name="buffer"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task WriteAsync(byte[] buffer, CancellationToken cancellationToken)
+        public async Task WriteAsync(byte[] buffer, CancellationToken cancellationToken)
         {
-            return Device.WriteAsync(Path, buffer, cancellationToken);
+            await Device.WriteAsync(Path, buffer, cancellationToken);
+            await Device.RequestAsync(Path, cancellationToken);
         }
 
         /// <summary>

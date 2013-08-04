@@ -127,7 +127,7 @@ namespace Rnet.Monitor.Wpf
                 {
                     var zp = await z.GetProfileAsync<IZone>();
                     var zp2 = await z.GetProfileAsync<IZoneAudio>();
-                    
+                    await zp2.SetVolume(10);
                 }
             }
         }

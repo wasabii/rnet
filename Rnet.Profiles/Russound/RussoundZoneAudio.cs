@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Rnet.Profiles.Media;
 
 namespace Rnet.Profiles.Russound
@@ -7,13 +9,13 @@ namespace Rnet.Profiles.Russound
     class RussoundZoneAudio : ZoneProfileObject, IZoneAudio
     {
 
-        RnetDeviceDirectory directory;
+        RnetDirectoryWatcher watcher;
         Power power;
-        ushort volume;
-        ushort bass;
-        ushort treble;
+        int volume;
+        int bass;
+        int treble;
         Power loudness;
-        ushort balance;
+        int balance;
         PartyMode partyMode;
         DoNotDisturbMode doNotDisturbMode;
 
@@ -27,25 +29,93 @@ namespace Rnet.Profiles.Russound
 
         }
 
+        protected override async Task InitializeAsync()
+        {
+            await base.InitializeAsync();
+
+            // set up data path watches
+            watcher = Zone.Controller.Directory
+                .Watch(w => w
+                    .When(2, 0, Zone.Id, a => a
+
+                        .When(0, b => b
+
+                            .When(0, c => c
+                                .Then(x =>
+                                    Bass = x[0] - 10))
+
+                            .When(1, c => c
+                                .Then(x =>
+                                    Treble = x[0] - 10))
+
+                            .When(2, c => c
+                                .Then(x =>
+                                    Loudness = (Power)x[0]))
+
+                            .When(3, c => c
+                                .Then(x =>
+                                    Balance = x[0] - 10))
+
+                            .When(4, c => c
+                                .Then(x =>
+                                    Volume = x[0] * 2))
+
+                            .When(6, c => c
+                                .Then(x =>
+                                    DoNotDisturbMode = (DoNotDisturbMode)x[0]))
+
+                            .When(7, c => c
+                                .Then(x =>
+                                    PartyMode = (PartyMode)x[0])))
+
+                        .When(7, b => b
+                            .Then(x =>
+                            {
+                                Power = (Power)x[0];
+                                Volume = x[2] * 2;
+                                Bass = x[3] - 10;
+                                Treble = x[4] - 10;
+                                Loudness = (Power)x[5];
+                                Balance = x[6] - 10;
+                                PartyMode = (PartyMode)x[9];
+                                DoNotDisturbMode = (DoNotDisturbMode)x[10];
+                            }))));
+
+            await LoadAsync();
+        }
+
+        public Task LoadAsync()
+        {
+            return watcher.LoadAsync();
+        }
+
+        public Task SaveAsync()
+        {
+            return Task.FromResult(false);
+        }
+
         public Power Power
         {
             get { return power; }
             set { power = value; RaisePropertyChanged("Power"); }
         }
 
-        public ushort Volume
+        public int Volume
         {
             get { return volume; }
             set { volume = value; RaisePropertyChanged("Volume"); }
         }
 
-        public ushort Bass
+        /// <summary>
+        /// 0-20 = -10:+10
+        /// </summary>
+        public int Bass
         {
             get { return bass; }
             set { bass = value; RaisePropertyChanged("Bass"); }
         }
 
-        public ushort Treble
+        public int Treble
         {
             get { return treble; }
             set { treble = value; RaisePropertyChanged("Treble"); }
@@ -57,7 +127,7 @@ namespace Rnet.Profiles.Russound
             set { loudness = value; RaisePropertyChanged("Loudness"); }
         }
 
-        public ushort Balance
+        public int Balance
         {
             get { return balance; }
             set { balance = value; RaisePropertyChanged("Balance"); }
@@ -75,49 +145,11 @@ namespace Rnet.Profiles.Russound
             private set { doNotDisturbMode = value; RaisePropertyChanged("DoNotDisturbMode"); }
         }
 
-        public async Task LoadAsync()
+        public async Task SetVolume(int value)
         {
-            await directory.RequestAsync();
-        }
-
-        public Task SaveAsync()
-        {
-            return Task.FromResult(false);
-        }
-
-        protected override async Task InitializeAsync()
-        {
-            await base.InitializeAsync();
-
-            // subscribe to changes in the directory contents
-            directory = await Zone.Controller.Directory.GetAsync(2, 0, Zone.Id, 7);
-            directory.BufferChanged += directory_BufferChanged;
-        }
-
-        /// <summary>
-        /// Invoked when the zone audio info data changes.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        void directory_BufferChanged(object sender, ValueEventArgs<byte[]> args)
-        {
-            SetValues(args.Value);
-        }
-
-        /// <summary>
-        /// Sets the values based on the data directory contents.
-        /// </summary>
-        /// <param name="buffer"></param>
-        void SetValues(byte[] buffer)
-        {
-            Power = (Power)buffer[0];
-            Volume = buffer[2];
-            Bass = buffer[3];
-            Treble = buffer[4];
-            Loudness = (Power)buffer[5];
-            Balance = buffer[6];
-            PartyMode = (PartyMode)buffer[9];
-            DoNotDisturbMode = (DoNotDisturbMode)buffer[10];
+            var dir = await Zone.Controller.Directory.GetAsync(2, 0, 0, 0, 4);
+            if (dir != null)
+                await dir.WriteAsync(new[] { (byte)(value / 2) });
         }
 
     }

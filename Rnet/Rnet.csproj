@@ -52,6 +52,15 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.1.30214.0\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DictionaryExtensions.cs" />
@@ -63,6 +72,7 @@
     <Compile Include="RnetControllerCollection.cs" />
     <Compile Include="RnetDeviceDirectoryExtensions.cs" />
     <Compile Include="RnetDeviceDirectoryRoot.cs" />
+    <Compile Include="RnetDirectoryWatcher.cs" />
     <Compile Include="RnetExtensionsCollection.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBusDevice.cs" />
