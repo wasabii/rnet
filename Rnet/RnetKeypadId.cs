@@ -14,6 +14,8 @@ namespace Rnet
         public static readonly RnetKeypadId AllZone = 0x7d;
         public static readonly RnetKeypadId RequestId = 0x7c;
         public static readonly RnetKeypadId External = 0x70;
+        public static readonly RnetKeypadId External2 = 0x71;
+        public static readonly RnetKeypadId SourceBroadcastDisplayFeedback = 0x79;
 
         /// <summary>
         /// Implicitly converts a <see cref="RnetKeypadId"/> to a <see cref="Byte"/>.
@@ -91,6 +93,10 @@ namespace Rnet
                 return string.Format("{0} /* RequestId */", Value);
             if (this == External)
                 return string.Format("{0} /* External */", Value);
+            if (this == External2)
+                return string.Format("{0} /* External2 */", Value);
+            if (this == SourceBroadcastDisplayFeedback)
+                return string.Format("{0} /* SourceBroadcastDisplayFeedback */", Value);
 
             return Value.ToString();
         }

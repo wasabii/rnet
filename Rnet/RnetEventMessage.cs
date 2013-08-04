@@ -27,7 +27,7 @@ namespace Rnet
         /// <param name="targetPath"></param>
         /// <param name="sourcePath"></param>
         public RnetEventMessage(RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId, RnetPath targetPath,
-            RnetPath sourcePath, RnetEvents evt, ushort timestamp, ushort data, byte priority)
+            RnetPath sourcePath, RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority)
             : base(targetDeviceId, sourceDeviceId, RnetMessageType.Event)
         {
             TargetPath = targetPath;
@@ -51,7 +51,7 @@ namespace Rnet
         /// <summary>
         /// Gets the event ID.
         /// </summary>
-        public RnetEvents Event { get; set; }
+        public RnetEvent Event { get; set; }
 
         /// <summary>
         /// Gets the event timestamp.
@@ -66,7 +66,7 @@ namespace Rnet
         /// <summary>
         /// Gets the event priority.
         /// </summary>
-        public byte Priority { get; set; }
+        public RnetPriority Priority { get; set; }
 
         internal protected override void WriteBody(RnetStreamWriter writer)
         {
@@ -75,7 +75,7 @@ namespace Rnet
             writer.WriteUInt16((ushort)Event);
             writer.WriteUInt16(Timestamp);
             writer.WriteUInt16(Data);
-            writer.WriteByte(Priority);
+            writer.WriteByte((byte)Priority);
         }
 
         /// <summary>
@@ -91,10 +91,10 @@ namespace Rnet
                 targetDeviceId, sourceDeviceId,
                 RnetPath.Read(reader),
                 RnetPath.Read(reader),
-                (RnetEvents)reader.ReadUInt16(),
+                (RnetEvent)reader.ReadUInt16(),
                 reader.ReadUInt16(),
                 reader.ReadUInt16(),
-                reader.ReadByte());
+                (RnetPriority)reader.ReadByte());
         }
 
         protected override void WriteBodyDebugView(TextWriter writer)

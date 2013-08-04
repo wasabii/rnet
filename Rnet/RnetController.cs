@@ -54,18 +54,9 @@ namespace Rnet
             return await Zones.WaitAsync(id, cancellationToken);
         }
 
-        /// <summary>
-        /// Gets the display name of the controller.
-        /// </summary>
-        public override string Name
+        public override string ToString()
         {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(Model))
-                    return string.Format("Controller {0}", Id);
-                else
-                    return string.Format("{0} ({1})", Model, Id);
-            }
+            return string.Format("Controller {0}", Id);
         }
 
     }

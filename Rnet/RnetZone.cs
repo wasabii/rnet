@@ -32,12 +32,9 @@
         /// </summary>
         public RnetZoneDeviceCollection Devices { get; private set; }
 
-        /// <summary>
-        /// Gets a string to describe the object.
-        /// </summary>
-        public override string Name
+        public override string ToString()
         {
-            get { return string.Format("Zone {0}", Id); }
+            return string.Format("Zone {0}", Id);
         }
 
     }

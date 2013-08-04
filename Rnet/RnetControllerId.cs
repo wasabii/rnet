@@ -10,7 +10,9 @@ namespace Rnet
     {
 
         public static readonly RnetControllerId Root = 0x00;
-        public static readonly RnetControllerId AllDevices = 0x7f;
+        public static readonly RnetControllerId AllKeypads = 0x7f;
+        public static readonly RnetControllerId AllControllers = 0x7e;
+        public static readonly RnetControllerId AllDevices = 0x7d;
 
         /// <summary>
         /// Implicitly converts a <see cref="RnetControllerId"/> to a <see cref="Byte"/>.
@@ -78,6 +80,10 @@ namespace Rnet
 
         public override string ToString()
         {
+            if (this == AllKeypads)
+                return string.Format("{0} /* AllKeypads */", Value);
+            if (this == AllControllers)
+                return string.Format("{0} /* AllControllers */", Value);
             if (this == AllDevices)
                 return string.Format("{0} /* AllDevices */", Value);
 

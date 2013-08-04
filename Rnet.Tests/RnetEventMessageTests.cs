@@ -23,7 +23,7 @@ namespace Rnet.Protocol.Tests
                 RnetDeviceId.External,
                 new RnetPath(2, 0),
                 null,
-                RnetEvents.VolumeUp,
+                RnetEvent.VolumeUp,
                 0,
                 0,
                 1);

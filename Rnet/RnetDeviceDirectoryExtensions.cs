@@ -34,9 +34,9 @@ namespace Rnet
         /// </summary>
         /// <param name="self"></param>
         /// <returns></returns>
-        public static async Task<string> GetAsciiStringAsync(this RnetDeviceDirectory self)
+        public static async Task<string> GetAsciiStringAsync(this RnetDevicePathNode self)
         {
-            return ToAsciiString(await self.GetDataAsync());
+            return ToAsciiString(await self.GetBufferAsync());
         }
 
         /// <summary>
@@ -45,9 +45,9 @@ namespace Rnet
         /// <param name="self"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async Task<string> GetAsciiStringAsync(this RnetDeviceDirectory self, CancellationToken cancellationToken)
+        public static async Task<string> GetAsciiStringAsync(this RnetDevicePathNode self, CancellationToken cancellationToken)
         {
-            return ToAsciiString(await self.GetDataAsync(cancellationToken));
+            return ToAsciiString(await self.GetBufferAsync(cancellationToken));
         }
 
         /// <summary>
@@ -55,7 +55,27 @@ namespace Rnet
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static async Task<string> GetAsciiStringAsync(this RnetDeviceDirectory self, params byte[] path)
+        public static async Task<string> GetAsciiStringAsync(this RnetDevicePathNode self, params byte[] path)
+        {
+            return ToAsciiString(await self.GetBufferAsync(path));
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified relative path as an ASCII string if available or requests it from the remote device.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static async Task<string> GetAsciiStringAsync(this RnetDevicePathNode self, CancellationToken cancellationToken, params byte[] path)
+        {
+            return ToAsciiString(await self.GetBufferAsync(cancellationToken, path));
+        }
+
+        /// <summary>
+        /// Gets the directory data at the specified relative path as an ASCII string if available or requests it from the remote device.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static async Task<string> GetAsciiStringAsync(this RnetDevicePathRootNode self, RnetPath path)
         {
             return ToAsciiString(await self.GetDataAsync(path));
         }
@@ -65,27 +85,7 @@ namespace Rnet
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static async Task<string> GetAsciiStringAsync(this RnetDeviceDirectory self, CancellationToken cancellationToken, params byte[] path)
-        {
-            return ToAsciiString(await self.GetDataAsync(cancellationToken, path));
-        }
-
-        /// <summary>
-        /// Gets the directory data at the specified relative path as an ASCII string if available or requests it from the remote device.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static async Task<string> GetAsciiStringAsync(this RnetDeviceDirectoryRoot self, RnetPath path)
-        {
-            return ToAsciiString(await self.GetDataAsync(path));
-        }
-
-        /// <summary>
-        /// Gets the directory data at the specified relative path as an ASCII string if available or requests it from the remote device.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static async Task<string> GetAsciiStringAsync(this RnetDeviceDirectoryRoot self, RnetPath path, CancellationToken cancellationToken)
+        public static async Task<string> GetAsciiStringAsync(this RnetDevicePathRootNode self, RnetPath path, CancellationToken cancellationToken)
         {
             return ToAsciiString(await self.GetDataAsync(path, cancellationToken));
         }

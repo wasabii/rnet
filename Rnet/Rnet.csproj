@@ -63,16 +63,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetNumberSixMessage.cs" />
+    <Compile Include="RnetPriority.cs" />
+    <Compile Include="RnetUnknownMessage.cs" />
     <Compile Include="DictionaryExtensions.cs" />
+    <Compile Include="ReadWriterLockExtensions.cs" />
     <Compile Include="RnetBus.cs" />
     <Compile Include="RnetBusObject.cs" />
     <Compile Include="RnetConnectionManager.cs" />
     <Compile Include="RnetDeviceDataBuffer.cs" />
-    <Compile Include="RnetDeviceDirectory.cs" />
+    <Compile Include="RnetDevicePathNode.cs" />
     <Compile Include="RnetControllerCollection.cs" />
     <Compile Include="RnetDeviceDirectoryExtensions.cs" />
-    <Compile Include="RnetDeviceDirectoryRoot.cs" />
-    <Compile Include="RnetDirectoryWatcher.cs" />
+    <Compile Include="RnetDevicePathRootNode.cs" />
     <Compile Include="RnetExtensionsCollection.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBusDevice.cs" />
@@ -97,7 +100,7 @@
     <Compile Include="RnetSetDataMessage.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="RnetEventMessage.cs" />
-    <Compile Include="RnetEvents.cs" />
+    <Compile Include="RnetEvent.cs" />
     <Compile Include="RnetControllerId.cs" />
     <Compile Include="RnetException.cs" />
     <Compile Include="RnetHandshakeMessage.cs" />

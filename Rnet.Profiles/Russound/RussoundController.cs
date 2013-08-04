@@ -13,6 +13,9 @@ namespace Rnet.Profiles.Russound
         class ControllerProfile : ControllerProfileObject, IRussoundController
         {
 
+            string model;
+            string firmwareVersion;
+
             /// <summary>
             /// Initializes a new instance.
             /// </summary>
@@ -23,19 +26,27 @@ namespace Rnet.Profiles.Russound
 
             }
 
-            public Task<string> GetModelAsync()
+            protected override async Task InitializeAsync()
             {
-                return Device.Directory.GetAsciiStringAsync(0, 0);
+                Model = await Device.Root.GetAsciiStringAsync(0, 0);
+                FirmwareVersion = await Device.Root.GetAsciiStringAsync(0, 1);
             }
 
-            public Task<string> GetManufacturerAsync()
+            public string Manufacturer
             {
-                return Task.FromResult("Russound");
+                get { return "Russound"; }
             }
 
-            public Task<string> GetFirmwareVersionAsync()
+            public string Model
             {
-                return Device.Directory.GetAsciiStringAsync(0, 1);
+                get { return model; }
+                set { model = value; RaisePropertyChanged("Model"); }
+            }
+
+            public string FirmwareVersion
+            {
+                get { return firmwareVersion; }
+                set { firmwareVersion = value; RaisePropertyChanged("FirmwareVersion"); }
             }
 
             public int ZoneCount
@@ -73,6 +84,12 @@ namespace Rnet.Profiles.Russound
 
             }
 
+            public string Name
+            {
+                get { return null; }
+                set { }
+            }
+
         }
 
         /// <summary>
@@ -89,7 +106,7 @@ namespace Rnet.Profiles.Russound
         /// <returns></returns>
         public override async Task<IEnumerable<IProfile>> GetControllerProfilesAsync(RnetController controller)
         {
-            var model = await controller.Directory.GetAsciiStringAsync(0, 0);
+            var model = await controller.Root.GetAsciiStringAsync(0, 0);
             if (model == null)
                 return null;
 

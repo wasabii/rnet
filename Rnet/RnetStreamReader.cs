@@ -170,8 +170,10 @@ namespace Rnet
                         return RnetSetDataMessage.Read(reader, targetDeviceId, sourceDeviceId);
                     case RnetMessageType.Handshake:
                         return RnetHandshakeMessage.Read(reader, targetDeviceId, sourceDeviceId);
+                    case RnetMessageType.Number6:
+                        return RnetNumberSixMessage.Read(reader, targetDeviceId, sourceDeviceId);
                     default:
-                        throw new RnetProtocolException("Unknown RNET message type.");
+                        return RnetUnknownMessage.Read(reader, targetDeviceId, sourceDeviceId, messageType);
                 }
             }
             catch (RnetException e)

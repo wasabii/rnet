@@ -10,6 +10,7 @@ namespace Rnet
     public class RnetStreamWriter
     {
 
+        MemoryStream stm;
         int len = -1;
         int sum = -1;
 
@@ -35,6 +36,7 @@ namespace Rnet
             if (len != -1 || sum != -1)
                 throw new InvalidOperationException("A message is already in progress.");
 
+            stm = new MemoryStream();
             len = 0;
             sum = 0;
 
@@ -57,6 +59,10 @@ namespace Rnet
 
             len = -1;
             sum = -1;
+
+            // write to final output
+            stm.Position = 0;
+            stm.CopyTo(Stream);
         }
 
         /// <summary>
@@ -65,7 +71,7 @@ namespace Rnet
         /// <param name="b"></param>
         internal void WriteRaw(byte b)
         {
-            Stream.WriteByte(b);
+            stm.WriteByte(b);
         }
 
         /// <summary>

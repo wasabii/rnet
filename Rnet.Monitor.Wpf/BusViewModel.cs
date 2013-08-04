@@ -1,64 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Net;
-using System.Reactive.Linq;
 using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Threading;
-using Rnet.Profiles;
-
-using ReactiveUI;
-using Rnet.Profiles.Basic;
-using Rnet.Profiles.Media;
+using System.Windows.Input;
+using Microsoft.Practices.Prism.Commands;
+using Microsoft.Practices.Prism.ViewModel;
 
 namespace Rnet.Monitor.Wpf
 {
 
-    public class BusViewModel : ReactiveObject
+    public class BusViewModel : NotificationObject
     {
 
-        Dispatcher dispatcher;
-        RnetBusObject selectedObject;
-        RnetDeviceDirectory selectedDataItem;
+        RnetBusObject selectedBusObject;
+        BusObjectViewModel selectedBusObjectViewModel;
 
         public BusViewModel()
         {
-            dispatcher = Dispatcher.CurrentDispatcher;
+            Messages = new ObservableCollection<MessageViewModel>();
 
-            SentMessages = new ObservableCollection<RnetMessage>();
-            ReceivedMessages = new ObservableCollection<RnetMessage>();
-
-            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
             //Bus = new RnetBus(new RnetTcpConnection("tokyo.cogito.cx", 9999));
+            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
             Bus.ConnectionStateChanged += Bus_ConnectionStateChanged;
-            Bus.MessageSent += (s, a) => SentMessages.Add(a.Message);
-            Bus.MessageReceived += (s, a) => ReceivedMessages.Add(a.Message);
+            Bus.MessageSent += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Sent));
+            Bus.MessageReceived += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Received));
             Bus.Error += Bus_Error;
+        }
 
-            var canStart = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Stopped);
-            StartCommand = new ReactiveCommand(canStart);
-            StartCommand.RegisterAsyncAction(i => dispatcher.InvokeAsync(async () => await Bus.StartAsync()));
+        void Bus_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
+        {
 
-            var canStop = this.WhenAny(i => i.Client.State, i => i.Value == RnetClientState.Started);
-            StopCommand = new ReactiveCommand(canStop);
-            StopCommand.RegisterAsyncAction(i => dispatcher.InvokeAsync(async () => await Bus.StopAsync()));
-
-            var canProbeDevice = this.WhenAny(i => i.SelectedDevice, i => i.Value != null);
-            ProbeDeviceCommand = new ReactiveCommand(canProbeDevice);
-            ProbeDeviceCommand.RegisterAsyncAction(i => dispatcher.Invoke(() => DiscoverDeviceData(SelectedDevice)));
-
-            var canSetData = this.WhenAny(i => i.SelectedDataItem, i => i.Value != null);
-            SetDataCommand = new ReactiveCommand(canSetData);
-            SetDataCommand.RegisterAsyncAction(i => dispatcher.Invoke(async () => await SelectedDataItem.WriteAsync(new byte[] { 0x00 })));
-
-            // wrap devices in synchronized collection
-            Controllers = Bus.Controllers;
-
-            selectedDataItemViewModel = this.ObservableForProperty(i => i.SelectedDataItem)
-                .Select(i => i.Value != null ? new DataItemViewModel(i.Value) : null)
-                .ToProperty(this, i => i.SelectedDataItemViewModel);
         }
 
         void Bus_Error(object sender, RnetClientErrorEventArgs args)
@@ -66,119 +36,50 @@ namespace Rnet.Monitor.Wpf
             ExceptionDispatchInfo.Capture(args.Exception).Throw();
         }
 
-        void Bus_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
-        {
-            if (args.State == RnetConnectionState.Open)
-                DiscoverDevices();
-        }
-
-        public ObservableCollection<RnetMessage> SentMessages { get; private set; }
-
-        public ObservableCollection<RnetMessage> ReceivedMessages { get; private set; }
-
-        public RnetClient Client { get; private set; }
-
         public RnetBus Bus { get; private set; }
 
-        public ReactiveCommand StartCommand { get; private set; }
+        public ObservableCollection<MessageViewModel> Messages { get; private set; }
 
-        public ReactiveCommand StopCommand { get; private set; }
-
-        public ReactiveCommand ProbeDeviceCommand { get; private set; }
-
-        public ReactiveCommand SetDataCommand { get; private set; }
-
-        public IEnumerable<RnetController> Controllers { get; private set; }
-
-        public RnetBusObject SelectedObject
+        public ICommand StartCommand
         {
-            get { return selectedObject; }
-            set { this.RaiseAndSetIfChanged(ref selectedObject, value); this.RaisePropertyChanged("SelectedDevice"); }
+            get { return new DelegateCommand(Start, CanStart); }
         }
 
-        public RnetDevice SelectedDevice
+        bool CanStart()
         {
-            get { return SelectedObject as RnetDevice; }
+            return Bus.ClientState == RnetClientState.Stopped;
         }
 
-        public RnetDeviceDirectory SelectedDataItem
+        async void Start()
         {
-            get { return selectedDataItem; }
-            set { this.RaiseAndSetIfChanged(ref selectedDataItem, value); }
+            await Bus.StartAsync();
         }
 
-        ObservableAsPropertyHelper<object> selectedDataItemViewModel;
-        public object SelectedDataItemViewModel
+        public ICommand StopCommand
         {
-            get { return selectedDataItemViewModel.Value; }
+            get { return new DelegateCommand(Stop, CanStop); }
         }
 
-        async void DiscoverDevices()
+        bool CanStop()
         {
-            //   await Task.WhenAll(GetDevices());
-
-            var c = await Bus.Controllers.GetAsync(RnetControllerId.Root);
-            var p = await c.GetProfileAsync<IController>();
-
-            for (int i = 0; i < p.ZoneCount; i++)
-            {
-                var z = await c.Zones.GetAsync(i);
-                if (z != null)
-                {
-                    var zp = await z.GetProfileAsync<IZone>();
-                    var zp2 = await z.GetProfileAsync<IZoneAudio>();
-                    await zp2.SetVolume(10);
-                }
-            }
+            return Bus.ClientState == RnetClientState.Started;
         }
 
-        IEnumerable<Task<RnetDevice>> GetDevices()
+        async void Stop()
         {
-            for (int i = 0; i < 6; i++)
-                yield return GetDeviceAsync(new RnetDeviceId(i, 0, RnetKeypadId.Controller));
+            await Bus.StopAsync();
         }
 
-        async void DiscoverDeviceData(RnetDevice device)
+        public RnetBusObject SelectedBusObject
         {
-            for (byte i = 0; i < 8; i++)
-                await DiscoverDeviceData(device, new RnetPath(i));
+            get { return selectedBusObject; }
+            set { selectedBusObject = value; RaisePropertyChanged(() => SelectedBusObject); SelectedBusObjectViewModel = new BusObjectViewModel(value); }
         }
 
-        async Task DiscoverDeviceData(RnetDevice device, RnetPath path)
+        public BusObjectViewModel SelectedBusObjectViewModel
         {
-            var d = await GetDataItemAsync(device, path.ToArray());
-            if (d != null && d.Buffer != null && path.Length < 8)
-                for (byte i = 0; i < 8; i++)
-                    await DiscoverDeviceData(device, path.Navigate(i));
-        }
-
-        IEnumerable<RnetPath> GetPaths(RnetPath path, int maxDepth)
-        {
-            if (path.Length > maxDepth)
-                yield break;
-
-            yield return path;
-
-            for (byte i = 0; i < 8; i++)
-                foreach (var p in GetPaths(path.Navigate(i), maxDepth))
-                    yield return p;
-        }
-
-        async Task<RnetDevice> GetDeviceAsync(RnetDeviceId deviceId)
-        {
-            try
-            {
-                return await Bus.GetAsync(deviceId);
-            }
-            catch (OperationCanceledException e)
-            {
-                throw e;
-            }
-        }
-
-        async Task<RnetDeviceDirectory> GetDataItemAsync(RnetDevice device, params byte[] path)
-        {
-            return await device.Directory.FindAsync(path);
+            get { return selectedBusObjectViewModel; }
+            set { selectedBusObjectViewModel = value; RaisePropertyChanged(() => SelectedBusObjectViewModel); }
         }
 
     }

@@ -56,11 +56,15 @@
     <Compile Include="ControllerProfileObject.cs" />
     <Compile Include="ControllerProfileProvider.cs" />
     <Compile Include="IProfileLifecycle.cs" />
+    <Compile Include="Media\Loudness.cs" />
     <Compile Include="Media\DoNotDisturbMode.cs" />
+    <Compile Include="Media\IControllerAudio.cs" />
     <Compile Include="Media\IZoneAudio.cs" />
     <Compile Include="Media\PartyMode.cs" />
     <Compile Include="Media\Power.cs" />
     <Compile Include="ProfileObject.cs" />
+    <Compile Include="RnetDevicePathNodeExtensions.cs" />
+    <Compile Include="Russound\RussoundAudio.cs" />
     <Compile Include="Russound\RussoundZoneAudio.cs" />
     <Compile Include="ZoneProfileProvider.cs" />
     <Compile Include="DeviceProfileProvider.cs" />

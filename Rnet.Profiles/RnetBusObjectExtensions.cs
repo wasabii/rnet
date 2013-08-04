@@ -39,11 +39,24 @@ namespace Rnet.Profiles
         }
 
         /// <summary>
+        /// Gets the supported profile types.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        static IEnumerable<Type> GetProfileTypes(IProfile profile)
+        {
+            return profile.GetType().GetInterfaces()
+                .Where(i => typeof(IProfile).IsAssignableFrom(i))
+                .Where(i => i != typeof(IProfile))
+                .Distinct();
+        }
+
+        /// <summary>
         /// Gets the set of supported profiles for the target.
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static IObservable<IProfile> GetProfilesAsync(this RnetBusObject target)
+        public static IObservable<KeyValuePair<Type, IProfile>> GetProfilesAsync(this RnetBusObject target)
         {
             return target.Extensions.GetOrCreate<IObservable<IProfile>>(() =>
                 Providers.ToObservable()
@@ -57,18 +70,10 @@ namespace Rnet.Profiles
                     .Select(i =>
                         Observable.FromAsync(() =>
                             InitializeProfileAsync(i)))
-                    .Merge());
-        }
-
-        /// <summary>
-        /// Gets the set of supported profiles for the target.
-        /// </summary>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        public static IEnumerable<IProfile> GetProfiles(this RnetBusObject target)
-        {
-            return GetProfilesAsync(target)
-                .ToEnumerable();
+                    .Merge())
+                    .Select(i => new { Object = i, Profiles = GetProfileTypes(i) })
+                    .SelectMany(i => i.Profiles.Select(j => new { Profile = j, Object = i.Object }))
+                    .Select(i => new KeyValuePair<Type, IProfile>(i.Profile, i.Object));
         }
 
         /// <summary>
@@ -81,6 +86,8 @@ namespace Rnet.Profiles
         {
             return target.Extensions.GetOrCreate<Task<T>>(async () =>
                 await GetProfilesAsync(target)
+                    .Where(i => i.Key == typeof(T))
+                    .Select(i => i.Value)
                     .OfType<T>()
                     .FirstOrDefaultAsync());
         }

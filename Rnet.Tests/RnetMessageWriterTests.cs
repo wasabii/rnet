@@ -85,7 +85,7 @@ namespace Rnet.Protocol.Tests
             RnetDeviceId.RootController.Write(wrt);
             new RnetPath(2, 0).Write(wrt);
             new RnetPath().Write(wrt);
-            wrt.WriteUInt16((ushort)RnetEvents.VolumeUp); // VOLUME UP
+            wrt.WriteUInt16((ushort)RnetEvent.VolumeUp); // VOLUME UP
             wrt.WriteUInt16(0);
             wrt.WriteUInt16(0);
             wrt.WriteByte(1);

@@ -11,6 +11,7 @@
         RequestData = 0x01,
         Handshake = 0x02,
         Event = 0x05,
+        Number6 = 0x06,
 
     }
 

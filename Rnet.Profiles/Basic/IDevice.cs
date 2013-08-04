@@ -10,22 +10,22 @@ namespace Rnet.Profiles.Basic
     {
 
         /// <summary>
-        /// Gets the model of the device.
-        /// </summary>
-        /// <returns></returns>
-        Task<string> GetModelAsync();
-
-        /// <summary>
         /// Gets the manufacturer of the device.
         /// </summary>
         /// <returns></returns>
-        Task<string> GetManufacturerAsync();
+        string Manufacturer { get; }
+
+        /// <summary>
+        /// Gets the model of the device.
+        /// </summary>
+        /// <returns></returns>
+        string Model { get; }
 
         /// <summary>
         /// Gets the firmware version of the device.
         /// </summary>
         /// <returns></returns>
-        Task<string> GetFirmwareVersionAsync();
+        string FirmwareVersion { get; }
 
     }
 

@@ -19,6 +19,11 @@ namespace Rnet.Monitor.Wpf
             LayoutRoot.DataContext = new BusViewModel();
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
     }
 
 }
