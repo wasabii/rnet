@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Reactive;
-using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -16,14 +13,22 @@ namespace Rnet
     {
 
         /// <summary>
+        /// Initializes the static instance.
+        /// </summary>
+        static RnetBus()
+        {
+            RnetUriParser.RegisterParsers();
+        }
+
+        /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="connection"></param>
+        /// <param name="uri"></param>
         /// <param name="synchronizationContext"></param>
-        public RnetBus(RnetConnection connection, SynchronizationContext synchronizationContext)
+        public RnetBus(Uri uri, SynchronizationContext synchronizationContext)
         {
-            if (connection == null)
-                throw new ArgumentNullException("client");
+            if (uri == null)
+                throw new ArgumentNullException("uri");
             if (synchronizationContext == null)
                 throw new ArgumentNullException("synchronizationContext");
 
@@ -31,7 +36,7 @@ namespace Rnet
             SynchronizationContext = synchronizationContext;
 
             // hook ourselves up to the client
-            Client = new RnetClient(connection);
+            Client = new RnetClient(uri);
             Client.StateChanged += Client_StateChanged;
             Client.ConnectionStateChanged += Client_ConnectionStateChanged;
             Client.MessageReceived += Client_MessageReceived;
@@ -45,9 +50,19 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="connection"></param>
-        public RnetBus(RnetConnection connection)
-            : this(connection, SynchronizationContext.Current)
+        /// <param name="uri"></param>
+        public RnetBus(Uri uri)
+            : this(uri, SynchronizationContext.Current)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="uri"></param>
+        public RnetBus(string uri)
+            : this(new Uri(uri))
         {
 
         }
@@ -393,14 +408,21 @@ namespace Rnet
         {
             if (Client != null)
             {
-                StopAsync().Wait();
-                Client.StateChanged -= Client_StateChanged;
-                Client.ConnectionStateChanged -= Client_ConnectionStateChanged;
-                Client.MessageReceived -= Client_MessageReceived;
-                Client.MessageSent -= Client_MessageSent;
-                Client.Error -= Client_Error;
-                Client.Dispose();
-                Client = null;
+                try
+                {
+                    StopAsync().Wait();
+                    Client.StateChanged -= Client_StateChanged;
+                    Client.ConnectionStateChanged -= Client_ConnectionStateChanged;
+                    Client.MessageReceived -= Client_MessageReceived;
+                    Client.MessageSent -= Client_MessageSent;
+                    Client.Error -= Client_Error;
+                    Client.Dispose();
+                    Client = null;
+                }
+                catch (Exception)
+                {
+
+                }
             }
 
             GC.SuppressFinalize(this);

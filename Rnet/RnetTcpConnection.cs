@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 namespace Rnet
 {
 
+    /// <summary>
+    /// Provides a connection to an RNET device operating over TCP.
+    /// </summary>
     public sealed class RnetTcpConnection : RnetConnection
     {
 
@@ -16,6 +19,25 @@ namespace Rnet
         string host;
         int port;
         TcpClient tcp;
+
+        /// <summary>
+        /// Initializes a new connection to an RNET device.
+        /// </summary>
+        /// <param name="uri"></param>
+        public RnetTcpConnection(Uri uri)
+        {
+            if (uri.Scheme != "rnet.tcp")
+                throw new UriFormatException("Schema of URI must be 'rnet.tcp'.");
+
+            if (uri.HostNameType == UriHostNameType.Dns)
+            {
+                this.host = uri.DnsSafeHost;
+                this.port = uri.Port;
+            }
+
+            if (uri.HostNameType == UriHostNameType.IPv4)
+                this.ep = new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port);
+        }
 
         /// <summary>
         /// Initializes a new connection to an RNET device at the given endpoint.

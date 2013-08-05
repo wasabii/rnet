@@ -13,6 +13,27 @@ namespace Rnet
     public class RnetClient : RnetModelObject, IDisposable
     {
 
+        /// <summary>
+        /// Initializes the static instance.
+        /// </summary>
+        static RnetClient()
+        {
+            RnetTcpUriParser.RegisterParser();
+        }
+
+        /// <summary>
+        /// Obtains a <see cref="RnetConnection"/> from the given URI.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        static RnetConnection CreateConnection(Uri uri)
+        {
+            if (uri.Scheme == "rnet.tcp")
+                return new RnetTcpConnection(uri);
+
+            return null;
+        }
+
         AsyncLock lck = new AsyncLock();
         RnetConnection connection;
 
@@ -46,6 +67,16 @@ namespace Rnet
                 throw new ArgumentNullException("connection");
 
             this.connection = connection;
+        }
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="uri"></param>
+        public RnetClient(Uri uri)
+            :this(CreateConnection(uri))
+        {
+
         }
 
         /// <summary>

@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="RnetNumberSixMessage.cs" />
     <Compile Include="RnetPriority.cs" />
+    <Compile Include="RnetTcpUriParser.cs" />
     <Compile Include="RnetUnknownMessage.cs" />
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="RnetBus.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="RnetRequestMessageType.cs" />
     <Compile Include="RnetTextAlignment.cs" />
     <Compile Include="RnetTimeoutException.cs" />
+    <Compile Include="RnetUriParser.cs" />
     <Compile Include="RnetUtil.cs" />
     <Compile Include="RnetMessageBodyReader.cs" />
     <Compile Include="RnetProtocolException.cs" />

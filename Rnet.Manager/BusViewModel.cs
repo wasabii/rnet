@@ -1,14 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Net;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.ViewModel;
-
 using OLinq;
-using System.Reactive.Linq;
 
 namespace Rnet.Manager
 {
@@ -19,6 +17,10 @@ namespace Rnet.Manager
     public class BusViewModel : NotificationObject
     {
 
+        Uri uri;
+        RnetBus bus;
+        IEnumerable<ControllerViewModel> controllers;
+        ObservableCollection<MessageViewModel> messages;
         BusObjectViewModel selectedObject;
 
         /// <summary>
@@ -26,41 +28,44 @@ namespace Rnet.Manager
         /// </summary>
         public BusViewModel()
         {
-            //Bus = new RnetBus(new RnetTcpConnection("tokyo.cogito.cx", 9999));
-            Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
-            Bus.MessageSent += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Sent));
-            Bus.MessageReceived += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Received));
-            Bus.Error += Bus_Error;
-
-            // wrap controllers in view model
-            Controllers = Bus.Controllers.AsObservableQuery()
-                .Select(i => new ControllerViewModel(i))
-                .AsObservableQuery()
-                .ToObservableView();
-
-            // wrap messages in view model
-            Messages = new ObservableCollection<MessageViewModel>();
+            Uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
         }
 
-        void Bus_Error(object sender, RnetClientErrorEventArgs args)
+        /// <summary>
+        /// Endpoint to connect bus to.
+        /// </summary>
+        public Uri Uri
         {
-            ExceptionDispatchInfo.Capture(args.Exception).Throw();
+            get { return uri; }
+            set { uri = value; RaisePropertyChanged(() => Uri); }
         }
 
         /// <summary>
         /// Bus being managed.
         /// </summary>
-        public RnetBus Bus { get; private set; }
+        public RnetBus Bus
+        {
+            get { return bus; }
+            set { bus = value; RaisePropertyChanged(() => Bus); }
+        }
 
         /// <summary>
-        /// Available bus objects.
+        /// Available controllers.
         /// </summary>
-        public IEnumerable<ControllerViewModel> Controllers { get; private set; }
+        public IEnumerable<ControllerViewModel> Controllers
+        {
+            get { return controllers; }
+            set { controllers = value; RaisePropertyChanged(() => Controllers); }
+        }
 
         /// <summary>
         /// Series of messages arriving on the bus.
         /// </summary>
-        public ObservableCollection<MessageViewModel> Messages { get; private set; }
+        public ObservableCollection<MessageViewModel> Messages
+        {
+            get { return messages; }
+            set { messages = value; RaisePropertyChanged(() => Messages); }
+        }
 
         /// <summary>
         /// Gets or sets the currently selected bus object.
@@ -76,7 +81,27 @@ namespace Rnet.Manager
         /// </summary>
         public ICommand StartCommand
         {
-            get { return new DelegateCommand(async () => await Bus.StartAsync(), () => Bus.ClientState == RnetClientState.Stopped); }
+            get { return new DelegateCommand(Start, () => Bus == null); }
+        }
+
+        async void Start()
+        {
+            Bus = new RnetBus(uri);
+            Bus.MessageSent += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Sent));
+            Bus.MessageReceived += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Received));
+            Bus.Error += Bus_Error;
+
+            // wrap controllers in view model
+            Controllers = Bus.Controllers.AsObservableQuery()
+                .Select(i => new ControllerViewModel(i))
+                .AsObservableQuery()
+                .ToObservableView();
+
+            // wrap messages in view model
+            Messages = new ObservableCollection<MessageViewModel>();
+
+            // start the bus
+            await Bus.StartAsync();
         }
 
         /// <summary>
@@ -84,7 +109,18 @@ namespace Rnet.Manager
         /// </summary>
         public ICommand StopCommand
         {
-            get { return new DelegateCommand(async () => await Bus.StopAsync(), () => Bus.ClientState == RnetClientState.Started); }
+            get { return new DelegateCommand(Stop, () => Bus != null); }
+        }
+
+        async void Stop()
+        {
+            await Bus.StopAsync();
+            Bus = null;
+        }
+
+        void Bus_Error(object sender, RnetClientErrorEventArgs args)
+        {
+            ExceptionDispatchInfo.Capture(args.Exception).Throw();
         }
 
     }
