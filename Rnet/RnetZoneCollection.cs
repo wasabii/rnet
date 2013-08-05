@@ -150,7 +150,7 @@ namespace Rnet
         /// <param name="cancellationToken"></param>
         public async Task<RnetZone> RequestAsync(RnetZoneId id, CancellationToken cancellationToken)
         {
-            return await Controller.RequestAsync(id, cancellationToken);
+            return await Controller.GetZone(id, cancellationToken);
         }
 
         public IEnumerator<RnetZone> GetEnumerator()

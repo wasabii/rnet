@@ -1,14 +1,20 @@
-﻿using System.Windows.Data;
+﻿using System;
+using System.Globalization;
 using System.Linq;
-using Microsoft.Practices.Prism.Commands;
-using System.Linq.Expressions;
+using System.Windows.Data;
 
-namespace Rnet.Monitor.Wpf
+using Microsoft.Practices.Prism.Commands;
+
+namespace Rnet.Manager
 {
 
+    /// <summary>
+    /// Searches for a method with name specified through the parameter and converts it to a command.
+    /// </summary>
     public class MethodNameToCommandConverter : IValueConverter
     {
-        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null)
                 return null;
@@ -24,15 +30,12 @@ namespace Rnet.Monitor.Wpf
             if (method == null)
                 return null;
 
-            return new DelegateCommand(() =>
-            {
-                method.Invoke(value, null);
-            });
+            return new DelegateCommand(() => method.Invoke(value, null));
         }
 
-        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
     }

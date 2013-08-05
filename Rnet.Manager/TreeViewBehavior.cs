@@ -2,9 +2,12 @@
 using System.Windows.Controls;
 using System.Windows.Interactivity;
 
-namespace Rnet.Monitor.Wpf
+namespace Rnet.Manager
 {
 
+    /// <summary>
+    /// Provides a bindable SelectedItem property for a TreeView.
+    /// </summary>
     public class TreeViewBehavior : Behavior<TreeView>
     {
 

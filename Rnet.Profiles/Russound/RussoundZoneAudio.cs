@@ -8,28 +8,28 @@ namespace Rnet.Profiles.Russound
     class RussoundZoneAudio : ZoneProfileObject, IZoneAudio
     {
 
-        RnetDevicePathNode runNode;
-        RnetDevicePathNode zoneNode;
+        RnetDataHandle runHandle;
+        RnetDataHandle zoneHandle;
 
-        RnetDevicePathNode powerNode;
+        RnetDataHandle powerHandle;
         Power power;
 
-        RnetDevicePathNode volumeNode;
+        RnetDataHandle volumeHandle;
         int volume;
 
-        RnetDevicePathNode bassNode;
+        RnetDataHandle bassHandle;
         int bass;
 
-        RnetDevicePathNode trebleNode;
+        RnetDataHandle trebleHandle;
         int treble;
 
-        RnetDevicePathNode loudnessNode;
+        RnetDataHandle loudnessHandle;
         Loudness loudness;
 
-        RnetDevicePathNode balanceNode;
+        RnetDataHandle balanceHandle;
         int balance;
 
-        RnetDevicePathNode partyModeNode;
+        RnetDataHandle partyModeHandle;
         PartyMode partyMode;
 
         /// <summary>
@@ -39,43 +39,42 @@ namespace Rnet.Profiles.Russound
         public RussoundZoneAudio(RnetZone zone)
             : base(zone)
         {
-
+            runHandle =
+                Zone.Controller[2, 0];
+            zoneHandle =
+                Zone.Controller[2, 0, Zone.Id, 7];
+            powerHandle =
+                Zone.Controller[2, 0, Zone.Id, 6];
+            volumeHandle =
+                Zone.Controller[2, 0, Zone.Id, 1];
+            bassHandle =
+                Zone.Controller[2, 0, Zone.Id, 0, 0];
+            trebleHandle =
+                Zone.Controller[2, 0, Zone.Id, 0, 1];
+            loudnessHandle =
+                Zone.Controller[2, 0, Zone.Id, 0, 2];
+            balanceHandle =
+                Zone.Controller[2, 0, Zone.Id, 0, 3];
         }
 
         protected override async Task InitializeAsync()
         {
             await base.InitializeAsync();
 
-            runNode = await Zone.Controller.Root.GetAsync(
-                new RnetPath(2, 0));
-
-            zoneNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 7), d =>
-                    ReceiveZone(d));
-
-            powerNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 6), d =>
-                    ReceivePower(d[0]));
-
-            volumeNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 1), d =>
-                    ReceiveVolume(d[0]));
-
-            bassNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 0, 0), d =>
-                    ReceiveBass(d[0]));
-
-            trebleNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 0, 1), d =>
-                    ReceiveTreble(d[0]));
-
-            loudnessNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 0, 2), d =>
-                    ReceiveLoudness(d[0]));
-
-            balanceNode = await Zone.Controller.Subscribe(
-                new RnetPath(2, 0, Zone.Id, 0, 3), d =>
-                    ReceiveBalance(d[0]));
+            await zoneHandle.Subscribe(d =>
+                ReceiveZone(d));
+            await powerHandle.Subscribe(d =>
+                ReceivePower(d[0]));
+            await volumeHandle.Subscribe(d =>
+                ReceiveVolume(d[0]));
+            await bassHandle.Subscribe(d =>
+                ReceiveBass(d[0]));
+            await trebleHandle.Subscribe(d =>
+                ReceiveTreble(d[0]));
+            await loudnessHandle.Subscribe(d =>
+                ReceiveLoudness(d[0]));
+            await balanceHandle.Subscribe(d =>
+                ReceiveBalance(d[0]));
         }
 
         /// <summary>
@@ -110,7 +109,7 @@ namespace Rnet.Profiles.Russound
         /// </summary>
         async void ChangePower()
         {
-            await powerNode.RaiseEvent(RnetEvent.ZoneOnOff, (ushort)power, Zone.Id);
+            await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)power, Zone.Id);
         }
 
         public int Volume
@@ -125,23 +124,20 @@ namespace Rnet.Profiles.Russound
             RaisePropertyChanged("Volume");
         }
 
-        /// <summary>
-        /// Sends a local change in volume to the controller.
-        /// </summary>
         async void ChangeVolume()
         {
-            await runNode.RaiseEvent(RnetEvent.SetZoneVolume, (ushort)(volume / 2), Zone.Id);
-            await volumeNode.RequestBufferAsync();
+            await runHandle.SendEvent(RnetEvent.SetZoneVolume, volume / 2, Zone.Id);
+            await volumeHandle.Refresh();
         }
 
         public async void VolumeUp()
         {
-            await volumeNode.RaiseEvent(RnetEvent.Plus);
+            await volumeHandle.SendEvent(RnetEvent.Plus);
         }
 
         public async void VolumeDown()
         {
-            await volumeNode.RaiseEvent(RnetEvent.Minus);
+            await volumeHandle.SendEvent(RnetEvent.Minus);
         }
 
         public int Bass
@@ -158,17 +154,17 @@ namespace Rnet.Profiles.Russound
 
         async void ChangeBass()
         {
-            await bassNode.WriteAsync((byte)(bass + 10));
+            await bassHandle.Write((byte)(bass + 10));
         }
 
         public async void BassUp()
         {
-            await bassNode.RaiseEvent(RnetEvent.Plus);
+            await bassHandle.SendEvent(RnetEvent.Plus);
         }
 
         public async void BassDown()
         {
-            await bassNode.RaiseEvent(RnetEvent.Minus);
+            await bassHandle.SendEvent(RnetEvent.Minus);
         }
 
         public int Treble
@@ -185,17 +181,17 @@ namespace Rnet.Profiles.Russound
 
         async void ChangeTreble()
         {
-            await trebleNode.WriteAsync((byte)(treble + 10));
+            await trebleHandle.Write((byte)(treble + 10));
         }
 
         public async void TrebleUp()
         {
-            await trebleNode.RaiseEvent(RnetEvent.Plus);
+            await trebleHandle.SendEvent(RnetEvent.Plus);
         }
 
         public async void TrebleDown()
         {
-            await trebleNode.RaiseEvent(RnetEvent.Minus);
+            await trebleHandle.SendEvent(RnetEvent.Minus);
         }
 
         public Loudness Loudness
@@ -212,7 +208,7 @@ namespace Rnet.Profiles.Russound
 
         async void ChangeLoudness()
         {
-            await loudnessNode.WriteAsync((byte)loudness);
+            await loudnessHandle.Write((byte)loudness);
         }
 
         public int Balance
@@ -229,17 +225,17 @@ namespace Rnet.Profiles.Russound
 
         async void ChangeBalance()
         {
-            await balanceNode.WriteAsync((byte)(balance + 10));
+            await balanceHandle.Write((byte)(balance + 10));
         }
 
         public async void BalanceLeft()
         {
-            await balanceNode.RaiseEvent(RnetEvent.Minus);
+            await balanceHandle.SendEvent(RnetEvent.Minus);
         }
 
         public async void BalanceRight()
         {
-            await balanceNode.RaiseEvent(RnetEvent.Plus);
+            await balanceHandle.SendEvent(RnetEvent.Plus);
         }
 
         public PartyMode PartyMode
@@ -256,7 +252,7 @@ namespace Rnet.Profiles.Russound
 
         async void ChangePartyMode()
         {
-            await partyModeNode.WriteAsync((byte)partyMode);
+            await partyModeHandle.Write((byte)partyMode);
         }
 
     }

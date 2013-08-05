@@ -1,19 +1,18 @@
 ﻿<Window
-    xmlns:views="http://schemas.actiprosoftware.com/winfx/xaml/views"
-    x:Class="Rnet.Monitor.Wpf.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:e="http://schemas.microsoft.com/expression/2010/interactivity"
-    xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:wpftk="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Layout.Toolkit"
-    xmlns:local="clr-namespace:Rnet.Monitor.Wpf"
     xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+    xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
+    xmlns:local="clr-namespace:Rnet.Manager"
     mc:Ignorable="d"
-    Title="MainWindow"
-    Height="350"
-    Width="525">
+    x:Class="Rnet.Manager.BusWindow"
+    Title="RNET Bus Manager"
+    Width="800"
+    Height="600">
+    
     <TabControl
         x:Name="LayoutRoot"
         Margin="8"

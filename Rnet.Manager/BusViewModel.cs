@@ -5,30 +5,30 @@ using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.ViewModel;
 
-namespace Rnet.Monitor.Wpf
+namespace Rnet.Manager
 {
 
+    /// <summary>
+    /// Provides a view to interact with a bus.
+    /// </summary>
     public class BusViewModel : NotificationObject
     {
 
         RnetBusObject selectedBusObject;
         BusObjectViewModel selectedBusObjectViewModel;
 
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
         public BusViewModel()
         {
             Messages = new ObservableCollection<MessageViewModel>();
 
             //Bus = new RnetBus(new RnetTcpConnection("tokyo.cogito.cx", 9999));
             Bus = new RnetBus(new RnetTcpConnection(IPAddress.Parse("192.168.175.1"), 9999));
-            Bus.ConnectionStateChanged += Bus_ConnectionStateChanged;
             Bus.MessageSent += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Sent));
             Bus.MessageReceived += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Received));
             Bus.Error += Bus_Error;
-        }
-
-        void Bus_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
-        {
-
         }
 
         void Bus_Error(object sender, RnetClientErrorEventArgs args)
@@ -36,46 +36,44 @@ namespace Rnet.Monitor.Wpf
             ExceptionDispatchInfo.Capture(args.Exception).Throw();
         }
 
+        /// <summary>
+        /// Bus being managed.
+        /// </summary>
         public RnetBus Bus { get; private set; }
 
-        public ObservableCollection<MessageViewModel> Messages { get; private set; }
-
+        /// <summary>
+        /// Starts the bus.
+        /// </summary>
         public ICommand StartCommand
         {
-            get { return new DelegateCommand(Start, CanStart); }
+            get { return new DelegateCommand(async () => await Bus.StartAsync(), () => Bus.ClientState == RnetClientState.Stopped); }
         }
 
-        bool CanStart()
-        {
-            return Bus.ClientState == RnetClientState.Stopped;
-        }
-
-        async void Start()
-        {
-            await Bus.StartAsync();
-        }
-
+        /// <summary>
+        /// Stops the bus.
+        /// </summary>
         public ICommand StopCommand
         {
-            get { return new DelegateCommand(Stop, CanStop); }
+            get { return new DelegateCommand(async () => await Bus.StopAsync(), () => Bus.ClientState == RnetClientState.Started); }
         }
 
-        bool CanStop()
-        {
-            return Bus.ClientState == RnetClientState.Started;
-        }
+        /// <summary>
+        /// Series of messages arriving on the bus.
+        /// </summary>
+        public ObservableCollection<MessageViewModel> Messages { get; private set; }
 
-        async void Stop()
-        {
-            await Bus.StopAsync();
-        }
-
+        /// <summary>
+        /// Gets or sets the currently selected bus objects.
+        /// </summary>
         public RnetBusObject SelectedBusObject
         {
             get { return selectedBusObject; }
             set { selectedBusObject = value; RaisePropertyChanged(() => SelectedBusObject); SelectedBusObjectViewModel = new BusObjectViewModel(value); }
         }
 
+        /// <summary>
+        /// Gets the view model for the selected view model.
+        /// </summary>
         public BusObjectViewModel SelectedBusObjectViewModel
         {
             get { return selectedBusObjectViewModel; }

@@ -4,7 +4,7 @@
     /// <summary>
     /// Whether a component is on or off.
     /// </summary>
-    public enum Power : byte
+    public enum Power
     {
 
         Off = 0,

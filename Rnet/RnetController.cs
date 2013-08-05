@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -43,7 +41,7 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        internal async Task<RnetZone> RequestAsync(RnetZoneId id, CancellationToken cancellationToken)
+        internal async Task<RnetZone> GetZone(RnetZoneId id, CancellationToken cancellationToken)
         {
             // TODO replace with actual request to gather basic zone existence data
             Bus.SynchronizationContext.Post(async state =>

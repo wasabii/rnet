@@ -67,16 +67,14 @@
     <Compile Include="RnetPriority.cs" />
     <Compile Include="RnetUnknownMessage.cs" />
     <Compile Include="DictionaryExtensions.cs" />
-    <Compile Include="ReadWriterLockExtensions.cs" />
     <Compile Include="RnetBus.cs" />
     <Compile Include="RnetBusObject.cs" />
     <Compile Include="RnetConnectionManager.cs" />
-    <Compile Include="RnetDeviceDataBuffer.cs" />
-    <Compile Include="RnetDevicePathNode.cs" />
+    <Compile Include="RnetDataHandleWriter.cs" />
+    <Compile Include="RnetDataHandle.cs" />
     <Compile Include="RnetControllerCollection.cs" />
-    <Compile Include="RnetDeviceDirectoryExtensions.cs" />
-    <Compile Include="RnetDevicePathRootNode.cs" />
-    <Compile Include="RnetExtensionsCollection.cs" />
+    <Compile Include="RnetDataUtil.cs" />
+    <Compile Include="RnetContext.cs" />
     <Compile Include="RnetModelObject.cs" />
     <Compile Include="RnetBusDevice.cs" />
     <Compile Include="RnetClient.cs" />
@@ -93,7 +91,7 @@
     <Compile Include="RnetRequestMessageType.cs" />
     <Compile Include="RnetTextAlignment.cs" />
     <Compile Include="RnetTimeoutException.cs" />
-    <Compile Include="RnetUtils.cs" />
+    <Compile Include="RnetUtil.cs" />
     <Compile Include="RnetMessageBodyReader.cs" />
     <Compile Include="RnetProtocolException.cs" />
     <Compile Include="RnetRequestDataMessage.cs" />
@@ -121,7 +119,8 @@
     <Compile Include="RnetSpecialMessageChars.cs" />
     <Compile Include="RnetConnection.cs" />
     <Compile Include="RnetTcpConnection.cs" />
-    <Compile Include="ValueEventArgs.cs" />
+    <Compile Include="RnetDataAvailableEventArgs.cs" />
+    <Compile Include="WeakReferenceExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,4 +1,4 @@
-﻿namespace Rnet.Monitor.Wpf
+﻿namespace Rnet.Manager
 {
 
     public enum MessageDirection

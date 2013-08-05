@@ -131,7 +131,7 @@ namespace Rnet
         public void WriteDebugView(TextWriter writer)
         {
             writer.WriteLine("{");
-            using (var wrt = RnetUtils.CreateIndentedTextWriter(writer))
+            using (var wrt = RnetUtil.CreateIndentedTextWriter(writer))
             {
                 wrt.WriteLine("ControllerId = {0},", ControllerId);
                 wrt.WriteLine("ZoneId = {0},", ZoneId);

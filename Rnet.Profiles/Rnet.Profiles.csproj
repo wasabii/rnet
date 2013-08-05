@@ -43,10 +43,9 @@
     <Reference Include="System.Reactive.Linq">
       <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
     </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -63,8 +62,8 @@
     <Compile Include="Media\PartyMode.cs" />
     <Compile Include="Media\Power.cs" />
     <Compile Include="ProfileObject.cs" />
-    <Compile Include="RnetDevicePathNodeExtensions.cs" />
-    <Compile Include="Russound\RussoundAudio.cs" />
+    <Compile Include="RnetDataHandleExtensions.cs" />
+    <Compile Include="Russound\RussoundControllerAudio.cs" />
     <Compile Include="Russound\RussoundZoneAudio.cs" />
     <Compile Include="ZoneProfileProvider.cs" />
     <Compile Include="DeviceProfileProvider.cs" />
@@ -80,7 +79,7 @@
     <Compile Include="DeviceProfileObject.cs" />
     <Compile Include="ProfileProviderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RnetBusObjectExtensions.cs" />
+    <Compile Include="ProfileProviderUtil.cs" />
     <Compile Include="ProfileProvider.cs" />
     <Compile Include="Russound\IRussoundZone.cs" />
     <Compile Include="Russound\RussoundZone.cs" />

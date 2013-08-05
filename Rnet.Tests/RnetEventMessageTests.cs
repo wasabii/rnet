@@ -26,7 +26,7 @@ namespace Rnet.Protocol.Tests
                 RnetEvent.VolumeUp,
                 0,
                 0,
-                1);
+                RnetPriority.Low);
 
             msg.Write(wrt);
 

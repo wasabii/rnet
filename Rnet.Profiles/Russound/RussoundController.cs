@@ -13,7 +13,10 @@ namespace Rnet.Profiles.Russound
         class ControllerProfile : ControllerProfileObject, IRussoundController
         {
 
+            RnetDataHandle modelHandle;
             string model;
+
+            RnetDataHandle firmwareVersionHandle;
             string firmwareVersion;
 
             /// <summary>
@@ -23,13 +26,16 @@ namespace Rnet.Profiles.Russound
             public ControllerProfile(RnetController controller)
                 : base(controller)
             {
-
+                modelHandle = controller[0, 0];
+                firmwareVersionHandle = controller[0, 1];
             }
 
             protected override async Task InitializeAsync()
             {
-                Model = await Device.Root.GetAsciiStringAsync(0, 0);
-                FirmwareVersion = await Device.Root.GetAsciiStringAsync(0, 1);
+                await modelHandle.Subscribe(d =>
+                    Model = d);
+                await firmwareVersionHandle.Subscribe(d =>
+                    FirmwareVersion = d);
             }
 
             public string Manufacturer
@@ -106,7 +112,7 @@ namespace Rnet.Profiles.Russound
         /// <returns></returns>
         public override async Task<IEnumerable<IProfile>> GetControllerProfilesAsync(RnetController controller)
         {
-            var model = await controller.Root.GetAsciiStringAsync(0, 0);
+            var model = await controller[0, 0].ReadAsciiString();
             if (model == null)
                 return null;
 

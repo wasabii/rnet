@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,36 +14,31 @@ namespace Rnet
     public abstract class RnetDevice : RnetBusObject
     {
 
-        AsyncLock write = new AsyncLock();
-        AsyncLock request = new AsyncLock();
+        const double DEFAULT_RETRY_DELAY_SECONDS = 1;
+        const double DEFAULT_TIMEOUT_SECONDS = 60;
 
+        AsyncLock send = new AsyncLock();
+        AsyncLock receive = new AsyncLock();
         AsyncMonitor handshake = new AsyncMonitor();
         RnetHandshakeMessage handshakeMessage;
 
-        RnetDevicePathRootNode root;
-        Dictionary<RnetPath, RnetDeviceDataBuffer> buffers;
-
-        /// <summary>
-        /// Initializes a new instance.
-        /// </summary>
-        RnetDevice()
-        {
-            buffers = new Dictionary<RnetPath, RnetDeviceDataBuffer>();
-            root = new RnetDevicePathRootNode(this);
-        }
+        ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandle>> handles =
+            new ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandle>>();
+        ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandleWriter>> writers =
+            new ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandleWriter>>();
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         protected RnetDevice(RnetBus bus)
-            : this()
         {
             Bus = bus;
             Visible = false;
             RequiresHandshake = true;
-            RetryDelay = TimeSpan.FromSeconds(1);
-            RequestTimeout = TimeSpan.FromSeconds(60);
-            SetDataTimeout = TimeSpan.FromSeconds(60);
+            RetryDelay = TimeSpan.FromSeconds(DEFAULT_RETRY_DELAY_SECONDS);
+            RequestTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
+            SetDataTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
+            EventTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
         }
 
         /// <summary>
@@ -82,9 +77,14 @@ namespace Rnet
         public TimeSpan SetDataTimeout { get; set; }
 
         /// <summary>
-        /// Gets the default <see cref="CancellationToken"/> for a data request.
+        /// Gets or sets the amount of time to wait for a handshake for a set data message.
         /// </summary>
-        public CancellationToken RequestDataCancellationToken
+        public TimeSpan EventTimeout { get; set; }
+
+        /// <summary>
+        /// Gets the default <see cref="CancellationToken"/> for a request data message.
+        /// </summary>
+        internal CancellationToken RequestDataTimeoutCancellationToken
         {
             get { return new CancellationTokenSource(RequestTimeout).Token; }
         }
@@ -92,42 +92,43 @@ namespace Rnet
         /// <summary>
         /// Gets the default <see cref="CancellationToken"/> for a set data message.
         /// </summary>
-        public CancellationToken SetDataCancellationToken
+        internal CancellationToken SetDataTimeoutCancellationToken
         {
             get { return new CancellationTokenSource(SetDataTimeout).Token; }
         }
 
         /// <summary>
-        /// Gets the root of the device data node tree.
+        /// Gets the default <see cref="CancellationToken"/> for an event message.
         /// </summary>
-        public RnetDevicePathRootNode Root
+        internal CancellationToken EventTimeoutCancellationToken
         {
-            get { return root; }
+            get { return new CancellationTokenSource(EventTimeout).Token; }
         }
 
         /// <summary>
         /// Bus has received a message from the device.
         /// </summary>
         /// <param name="message"></param>
-        internal Task ReceiveMessage(RnetMessage message)
+        internal async Task ReceiveMessage(RnetMessage message)
         {
-            var hmsg = message as RnetHandshakeMessage;
-            if (hmsg != null)
-                return ReceiveHandshakeMessage(hmsg);
+            using (await receive.LockAsync())
+            {
+                var hmsg = message as RnetHandshakeMessage;
+                if (hmsg != null)
+                    await ReceiveHandshakeMessage(hmsg);
 
-            var dmsg = message as RnetSetDataMessage;
-            if (dmsg != null)
-                return ReceiveSetDataMessage(dmsg);
+                var dmsg = message as RnetSetDataMessage;
+                if (dmsg != null)
+                    await ReceiveSetDataMessage(dmsg);
 
-            var emsg = message as RnetEventMessage;
-            if (emsg != null)
-                return ReceiveEventMessage(emsg);
-
-            return Task.FromResult(true);
+                var emsg = message as RnetEventMessage;
+                if (emsg != null)
+                    await ReceiveEventMessage(emsg);
+            }
         }
 
         /// <summary>
-        /// Bus has received a handshake message from device.
+        /// Device has sent us a handshake message.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -141,7 +142,7 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Bus has received a set data message from device. Integrates into local data structure.
+        /// Device has sent us a set data message.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -156,23 +157,21 @@ namespace Rnet
 
             // create new data buffer if packet is first in set
             if (message.PacketNumber == 0)
-                buffers[message.SourcePath] = new RnetDeviceDataBuffer(message.PacketCount);
+                writers.Remove(message.SourcePath);
 
-            // get obtain buffer, might fail if packet is out of order
-            var data = buffers.GetOrDefault(message.SourcePath);
-            if (data == null)
-                return;
+            // obtain data writer
+            var writer = GetPathDataWriter(message.SourcePath, message.PacketCount);
 
-            // receive data
-            data.Write(message.Data.ToArray(), message.PacketNumber);
+            // write message to writer
+            writer.Write(message.Data.ToArray(), message.PacketNumber);
 
-            // end of packet stream
-            if (data.IsComplete)
-                await root.SetAsync(message.SourcePath, data.ToArray());
+            // end of message stream, receive incoming data
+            if (writer.IsComplete)
+                await ReceiveData(message.SourcePath, writer.ToArray());
         }
 
         /// <summary>
-        /// Bus has received an event message from device.
+        /// Device has sent us an event message.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -186,50 +185,62 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Reads the data from the device at the specified path.
+        /// Invoked when a set data message arrives with data from this device. Integrates the data into the path
+        /// handle.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        async Task ReceiveData(RnetPath path, byte[] data)
+        {
+            await GetPathHandle(path).Receive(data);
+        }
+
+        /// <summary>
+        /// Issues a request data message to the device.
         /// </summary>
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        internal async Task<RnetDevicePathNode> RequestAsync(RnetPath path, CancellationToken cancellationToken)
+        internal async Task SendRequestData(RnetPath path, CancellationToken cancellationToken)
         {
             // only one request at a time
-            using (await request.LockAsync(cancellationToken))
-            {
-                await Bus.RequestDataAsync(DeviceId, path);
-
-                // wait for node to appear in structure
-                return await root.WaitAsync(path, cancellationToken);
-            }
+            using (await send.LockAsync(cancellationToken))
+                await Bus.Client.SendAsync(new RnetRequestDataMessage(
+                    DeviceId,
+                    Bus.Device != null ? Bus.Device.DeviceId : RnetDeviceId.External,
+                    path,
+                    RnetPath.Empty,
+                    RnetRequestMessageType.Data));
         }
 
         /// <summary>
-        /// Writes the data to the device at the specified path.
+        /// Issues a set data message to the device.
         /// </summary>
         /// <param name="data"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        internal async Task WriteAsync(RnetPath path, byte[] buffer, CancellationToken cancellationToken)
+        internal async Task SendSetData(RnetPath path, byte[] data, CancellationToken cancellationToken)
         {
             // only one writer at a time
-            using (await write.LockAsync())
+            using (await send.LockAsync(cancellationToken))
             {
                 // number of packets to send
-                int c = buffer.Length / 16;
-                if (buffer.Length % 16 > 0)
+                int c = data.Length / 16;
+                if (data.Length % 16 > 0)
                     c++;
 
                 // send until all data sent
                 for (int i = 0; i < c; i++)
                 {
                     // length of packet (remainder of data, max 16)
-                    var r = buffer.Length - i * 16;
+                    var r = data.Length - i * 16;
                     var l = r % 16 > 0 ? r % 16 : 16;
                     var d = new byte[l];
-                    Array.Copy(buffer, i * 16, d, 0, l);
+                    Array.Copy(data, i * 16, d, 0, l);
 
                     // set data must wait for a handshake
-                    using (await handshake.EnterAsync())
+                    using (await handshake.EnterAsync(cancellationToken))
                     {
                         handshakeMessage = null;
 
@@ -252,17 +263,17 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Raises an event at the specified path in the device.
+        /// Issues an event message to the device.
         /// </summary>
         /// <param name="path"></param>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        internal async Task RaiseEvent(RnetPath path, RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority)
+        internal async Task SendEvent(RnetPath path, RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority, CancellationToken cancellationToken)
         {
-            using (await write.LockAsync())
-            using (await handshake.EnterAsync())
+            using (await send.LockAsync(cancellationToken))
+            using (await handshake.EnterAsync(cancellationToken))
             {
                 handshakeMessage = null;
 
@@ -280,8 +291,123 @@ namespace Rnet
                 // wait for handshake
                 if (priority == RnetPriority.High)
                     while (handshakeMessage == null)
-                        await handshake.WaitAsync();
+                        await handshake.WaitAsync(cancellationToken);
             }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[RnetPath path]
+        {
+            get { return GetPathHandle(path); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a]
+        {
+            get { return GetPathHandle(new RnetPath(a)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b]
+        {
+            get { return GetPathHandle(new RnetPath(a, b)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b, byte c]
+        {
+            get { return GetPathHandle(new RnetPath(a, b, c)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b, byte c, byte d]
+        {
+            get { return GetPathHandle(new RnetPath(a, b, c, d)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e]
+        {
+            get { return GetPathHandle(new RnetPath(a, b, c, d, e)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f]
+        {
+            get { return GetPathHandle(new RnetPath(a, b, c, d, e, f)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f, byte g]
+        {
+            get { return GetPathHandle(new RnetPath(a, b, c, d, e, f, g)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f, byte g, byte h]
+        {
+            get { return GetPathHandle(new RnetPath(a, b, c, d, e, f, g, h)); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        RnetDataHandle GetPathHandle(RnetPath path)
+        {
+            return handles
+                .GetOrAdd(path, i => new WeakReference<RnetDataHandle>(new RnetDataHandle(this, i)))
+                .GetTargetOrDefault();
+        }
+
+        /// <summary>
+        /// Gets a handle to the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="packetCount"></param>
+        /// <returns></returns>
+        RnetDataHandleWriter GetPathDataWriter(RnetPath path, int packetCount)
+        {
+            return writers
+                .GetOrAdd(path, i => new WeakReference<RnetDataHandleWriter>(new RnetDataHandleWriter(packetCount)))
+                .GetTargetOrDefault();
         }
 
     }

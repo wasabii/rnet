@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Rnet
@@ -17,6 +18,12 @@ namespace Rnet
         {
             TValue value;
             return self.TryGetValue(key, out value) ? value : self[key] = create(key);
+        }
+
+        public static bool Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> self, TKey key)
+        {
+            TValue value;
+            return self.TryRemove(key, out value);
         }
 
     }

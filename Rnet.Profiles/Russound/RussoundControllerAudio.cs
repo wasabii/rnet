@@ -5,27 +5,26 @@ using Rnet.Profiles.Media;
 namespace Rnet.Profiles.Russound
 {
 
-    class RussoundAudio : ControllerProfileObject, IControllerAudio
+    class RussoundControllerAudio : ControllerProfileObject, IControllerAudio
     {
 
+        RnetDataHandle powerHandle;
         Power power;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="controller"></param>
-        public RussoundAudio(RnetController controller)
+        public RussoundControllerAudio(RnetController controller)
             : base(controller)
         {
-
+            powerHandle = controller[2, 0, 0, 7];
         }
 
         protected override async Task InitializeAsync()
         {
-            await base.InitializeAsync();
-
-            // subscribe to sys power status from first zone
-            await Controller.Subscribe(new RnetPath(2, 0, 0, 7), d =>
+            // first zone provides a full system power variable
+            await powerHandle.Subscribe(d =>
                 ReceivePower(d[7]));
         }
 
@@ -46,9 +45,7 @@ namespace Rnet.Profiles.Russound
         /// </summary>
         async void ChangePower()
         {
-            var d = await Controller.Root.GetAsync(2, 0);
-            if (d != null)
-                await d.RaiseEvent(RnetEvent.AllZonesOnOff, (ushort)power, 0);
+            await powerHandle.SendEvent(RnetEvent.AllZonesOnOff, (int)power);
         }
 
     }

@@ -12,13 +12,13 @@
         /// </summary>
         protected RnetBusObject()
         {
-            Extensions = new RnetExtensionsCollection();
+            Context = new RnetContext();
         }
 
         /// <summary>
-        /// Gets a set of extensions associated with this object.
+        /// Gets a set of items associated with this object.
         /// </summary>
-        public RnetExtensionsCollection Extensions { get; private set; }
+        public RnetContext Context { get; private set; }
 
     }
 

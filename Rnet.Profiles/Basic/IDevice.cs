@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ServiceModel;
+using System.Threading.Tasks;
 
 namespace Rnet.Profiles.Basic
 {
@@ -6,6 +7,7 @@ namespace Rnet.Profiles.Basic
     /// <summary>
     /// Provides basic device information.
     /// </summary>
+    [ServiceContract]
     public interface IDevice : IProfile
     {
 
