@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Threading;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Nito.AsyncEx;
 
 namespace Rnet
 {
@@ -16,9 +17,8 @@ namespace Rnet
     public class RnetControllerCollection : IEnumerable<RnetController>, INotifyCollectionChanged
     {
 
-        AsyncMonitor monitor = new AsyncMonitor();
-        SortedDictionary<RnetControllerId, RnetController> controllers =
-            new SortedDictionary<RnetControllerId, RnetController>(Comparer<RnetControllerId>.Default);
+        ConcurrentDictionary<RnetControllerId, WeakReference<RnetController>> controllers =
+            new ConcurrentDictionary<RnetControllerId, WeakReference<RnetController>>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -34,157 +34,109 @@ namespace Rnet
         RnetBus Bus { get; set; }
 
         /// <summary>
-        /// Adds the given controller to the collection.
+        /// Clears the collection.
         /// </summary>
-        /// <param name="controller"></param>
-        internal async Task AddAsync(RnetController controller)
+        internal void Clear()
         {
-            using (await monitor.EnterAsync())
-            {
-                controllers[controller.Id] = controller;
-                RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, controller));
-                monitor.PulseAll();
-            }
+            controllers.Clear();
+
+            // notify users of change
+            RaiseCollectionChanged();
         }
 
         /// <summary>
-        /// Remvoes the given controller from the collection.
-        /// </summary>
-        /// <param name="controller"></param>
-        internal async Task RemoveAsync(RnetController controller)
-        {
-            using (await monitor.EnterAsync())
-            {
-                var item = controllers.Values
-                    .Select((i, j) => new { Controller = i, Index = j })
-                    .FirstOrDefault(i => i.Controller == controller);
-                if (item != null)
-                {
-                    controllers.Remove(controller.Id);
-                    RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, controller, item.Index));
-                    monitor.PulseAll();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the controller if it exists.
+        /// Gets a controller with the given identifier.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         public RnetController this[RnetControllerId id]
         {
-            get { return FindAsync(id).Result; }
+            get { return GetOrCreate(id); }
         }
 
         /// <summary>
-        /// Gets the controller with the given ID if it is already known.
+        /// Gets or creates a new controller object for the given id.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Task<RnetController> FindAsync(RnetControllerId id)
+        RnetController GetOrCreate(RnetControllerId id)
         {
-            return FindAsync(id, Bus.DefaultTimeoutToken);
+            if (RnetControllerId.IsReserved(id))
+                return null;
+
+            return controllers
+                .GetOrAdd(id, i => new WeakReference<RnetController>(new RnetController(Bus, id)))
+                .GetTargetOrDefault();
         }
 
         /// <summary>
-        /// Gets the controller with the given ID if it is already known.
+        /// Scans for any controllers.
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<RnetController> FindAsync(RnetControllerId id, CancellationToken cancellationToken)
+        public IObservable<RnetController> Scan()
         {
-            using (await monitor.EnterAsync(cancellationToken))
-                return controllers.GetOrDefault(id);
+            // active
+            var l1 = controllers.Values
+                .Select(i => i.GetTargetOrDefault())
+                .Where(i => i != null)
+                .Where(i => i.IsActive)
+                .OrderBy(i => i.Id)
+                .Select(i => i.Id)
+                .ToList();
+
+            // inactive
+            var l2 = controllers.Values
+                .Select(i => i.GetTargetOrDefault())
+                .Where(i => i != null)
+                .Where(i => !i.IsActive)
+                .OrderBy(i => i.Id)
+                .Select(i => i.Id)
+                .ToList();
+
+            // unknown
+            var l3 = Enumerable.Range(0, 32)
+                .Select(i => new RnetControllerId((byte)i))
+                .Except(l1)
+                .Except(l2)
+                .OrderBy(i => i)
+                .ToList();
+
+            // query for a random bit of data for each
+            return Enumerable.Empty<RnetControllerId>()
+                .Concat(l1)
+                .Concat(l2)
+                .Concat(l3)
+                .ToObservable()
+                .Select(i =>
+                    Observable.FromAsync(async () =>
+                        new { Data = await this[i][0, 0].Refresh(), Id = i }))
+                .Merge()
+                .Where(i => i.Data != null)
+                .Select(i => this[i.Id]);
         }
 
         /// <summary>
-        /// Waits for the specified controller to become available.
+        /// Returns an enumerator that iterates through the known controllers.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        internal async Task<RnetController> WaitAsync(RnetControllerId id, CancellationToken cancellationToken)
-        {
-            RnetController controller = null;
-            while ((controller = await FindAsync(id, cancellationToken)) == null && !cancellationToken.IsCancellationRequested)
-                using (await monitor.EnterAsync(cancellationToken))
-                    await monitor.WaitAsync(cancellationToken);
-
-            return controller;
-        }
-
-        /// <summary>
-        /// Gets the device given by the specified <see cref="RnetControllerId"/>.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<RnetController> GetAsync(RnetControllerId id)
-        {
-            try
-            {
-                return await GetAsync(id, Bus.DefaultTimeoutToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignore
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Gets the controller given by the specified <see cref="RnetControllerId"/>.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<RnetController> GetAsync(RnetControllerId id, CancellationToken cancellationToken)
-        {
-            var controller = await FindAsync(id, cancellationToken);
-            if (controller == null)
-                controller = await RequestAsync(id, cancellationToken);
-
-            return controller;
-        }
-
-        /// <summary>
-        /// Requests the controller device from the bus.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<RnetController> RequestAsync(RnetControllerId id)
-        {
-            try
-            {
-                return await RequestAsync(id, Bus.DefaultTimeoutToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignore
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Initiates a device request.
-        /// </summary>
-        /// <param name="controllerId"></param>
-        /// <param name="cancellationToken"></param>
-        public async Task<RnetController> RequestAsync(RnetControllerId controllerId, CancellationToken cancellationToken)
-        {
-            return (RnetController)await Bus.RequestAsync(new RnetDeviceId(controllerId, 0, RnetKeypadId.Controller), cancellationToken);
-        }
-
         public IEnumerator<RnetController> GetEnumerator()
         {
-            return controllers.Values.ToList().GetEnumerator();
+            return controllers.Values
+                .Select(i => i.GetTargetOrDefault())
+                .Where(i => i != null)
+                .Where(i => i.IsActive)
+                .OrderBy(i => i.Id)
+                .ToList()
+                .GetEnumerator();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        /// <summary>
+        /// Invoked when a controller becomes active.
+        /// </summary>
+        /// <param name="controller"></param>
+        internal void OnControllerActive(RnetController controller)
         {
-            return GetEnumerator();
+            RaiseCollectionChanged();
         }
 
         /// <summary>
@@ -196,10 +148,15 @@ namespace Rnet
         /// Raises the CollectionChanged event.
         /// </summary>
         /// <param name="args"></param>
-        void RaiseCollectionChanged(NotifyCollectionChangedEventArgs args)
+        void RaiseCollectionChanged()
         {
             if (CollectionChanged != null)
-                CollectionChanged(this, args);
+                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
     }

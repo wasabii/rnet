@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Rnet
+﻿namespace Rnet
 {
 
     /// <summary>
@@ -37,19 +34,15 @@ namespace Rnet
         public RnetZoneCollection Zones { get; private set; }
 
         /// <summary>
-        /// Requests a zone from the controller.
+        /// Marks the object as active.
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
-        internal async Task<RnetZone> GetZone(RnetZoneId id, CancellationToken cancellationToken)
+        internal override void Touch()
         {
-            // TODO replace with actual request to gather basic zone existence data
-            Bus.SynchronizationContext.Post(async state =>
-            {
-                await Zones.AddAsync(new RnetZone(this, id));
-            }, null);
-
-            return await Zones.WaitAsync(id, cancellationToken);
+            var a = !IsActive;
+            base.Touch();
+            if (a)
+                Bus.Controllers.OnControllerActive(this);
         }
 
         public override string ToString()

@@ -32,6 +32,18 @@
         public RnetZone Zone { get; private set; }
 
         /// <summary>
+        /// Marks the object as active.
+        /// </summary>
+        /// <returns></returns>
+        internal override void Touch()
+        {
+            var a = !IsActive;
+            base.Touch();
+            if (a)
+                Zone.Devices.OnDeviceActive(this);
+        }
+
+        /// <summary>
         /// Get the keypad idea of the device.
         /// </summary>
         public RnetKeypadId Id { get; private set; }

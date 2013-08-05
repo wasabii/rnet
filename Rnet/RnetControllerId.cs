@@ -15,6 +15,21 @@ namespace Rnet
         public static readonly RnetControllerId AllDevices = 0x7d;
 
         /// <summary>
+        /// Returns <c>true</c> if the controller id is reserved.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static bool IsReserved(RnetControllerId id)
+        {
+            if (id == AllKeypads ||
+                id == AllControllers ||
+                id == AllDevices)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
         /// Implicitly converts a <see cref="RnetControllerId"/> to a <see cref="Byte"/>.
         /// </summary>
         /// <param name="id"></param>

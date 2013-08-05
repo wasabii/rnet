@@ -9,14 +9,13 @@ namespace Rnet.Profiles.Basic
     /// Describes basic capabilities of controllers.
     /// </summary>
     [ServiceContract]
-    public interface IController : IDevice
+    public interface IController : IProfile
     {
 
         /// <summary>
-        /// Returns the total number of zones on the controller.
+        /// Gets the zones supported by the controller.
         /// </summary>
-        /// <returns></returns>
-        int ZoneCount { [OperationContract] get; }
+        RnetZone[] Zones { get; }
 
         /// <summary>
         /// Obtains the set of applicable profiles for the given zone.

@@ -32,6 +32,18 @@
         /// </summary>
         public RnetZoneDeviceCollection Devices { get; private set; }
 
+        /// <summary>
+        /// Marks the object as active.
+        /// </summary>
+        /// <returns></returns>
+        internal override void Touch()
+        {
+            var a = !IsActive;
+            base.Touch();
+            if (a)
+                Controller.Zones.OnZoneActive(this);
+        }
+
         public override string ToString()
         {
             return string.Format("Zone {0}", Id);

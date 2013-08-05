@@ -4,14 +4,14 @@
     /// <summary>
     /// Serves as a simple profile implementation base for a device..
     /// </summary>
-    public abstract class ZoneProfileObject : ProfileObject
+    public abstract class ZoneProfileBase : Profile
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="zone"></param>
-        protected ZoneProfileObject(RnetZone zone)
+        protected ZoneProfileBase(RnetZone zone)
             : base(zone)
         {
 

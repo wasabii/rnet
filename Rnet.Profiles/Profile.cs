@@ -6,14 +6,14 @@ namespace Rnet.Profiles
     /// <summary>
     /// Serves as a simple profile implementation base for a device.
     /// </summary>
-    public abstract class ProfileObject : ModelObject, IProfile, IProfileLifecycle
+    public abstract class Profile : ModelObject, IProfile, IProfileLifecycle
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="device"></param>
-        protected internal ProfileObject(RnetBusObject target)
+        protected internal Profile(RnetBusObject target)
         {
             Target = target;
         }

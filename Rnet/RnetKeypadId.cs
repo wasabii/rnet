@@ -8,7 +8,6 @@ namespace Rnet
     /// </summary>
     public struct RnetKeypadId : IComparable<RnetKeypadId>, IComparable
     {
-
         public static readonly RnetKeypadId Controller = 0x7f;
         public static readonly RnetKeypadId Reserved = 0x7e;
         public static readonly RnetKeypadId AllZone = 0x7d;
@@ -16,6 +15,25 @@ namespace Rnet
         public static readonly RnetKeypadId External = 0x70;
         public static readonly RnetKeypadId External2 = 0x71;
         public static readonly RnetKeypadId SourceBroadcastDisplayFeedback = 0x79;
+
+        /// <summary>
+        /// Returns <c>true</c> if the keypad id is reserved.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static bool IsReserved(RnetKeypadId id)
+        {
+            if (id == Controller ||
+                id == Reserved ||
+                id == AllZone ||
+                id == RequestId ||
+                id == External ||
+                id == External2 ||
+                id == SourceBroadcastDisplayFeedback)
+                return true;
+
+            return false;
+        }
 
         /// <summary>
         /// Implicitly converts a <see cref="RnetKeypadId"/> to a <see cref="Byte"/>.

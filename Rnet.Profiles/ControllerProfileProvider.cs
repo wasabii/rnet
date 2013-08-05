@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rnet.Profiles
@@ -12,7 +13,7 @@ namespace Rnet.Profiles
 
         public override sealed Task<IEnumerable<IProfile>> GetDeviceProfilesAsync(RnetDevice target)
         {
-            return target is RnetController ? GetControllerProfilesAsync((RnetController)target) : null;
+            return target is RnetController ? GetControllerProfilesAsync((RnetController)target) : Task.FromResult(Enumerable.Empty<IProfile>());
         }
 
         /// <summary>
@@ -20,7 +21,10 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public abstract Task<IEnumerable<IProfile>> GetControllerProfilesAsync(RnetController target);
+        public virtual Task<IEnumerable<IProfile>> GetControllerProfilesAsync(RnetController target)
+        {
+            return Task.FromResult(Enumerable.Empty<IProfile>());
+        }
 
     }
 

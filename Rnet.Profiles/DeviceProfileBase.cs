@@ -4,14 +4,14 @@
     /// <summary>
     /// Serves as a simple profile implementation base for a device.
     /// </summary>
-    public abstract class DeviceProfileObject : ProfileObject
+    public abstract class DeviceProfileBase : Profile
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="device"></param>
-        protected DeviceProfileObject(RnetDevice device)
+        protected DeviceProfileBase(RnetDevice device)
             : base(device)
         {
 

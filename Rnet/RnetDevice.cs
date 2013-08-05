@@ -125,6 +125,9 @@ namespace Rnet
                 if (emsg != null)
                     await ReceiveEventMessage(emsg);
             }
+
+            // activity detected
+            Touch();
         }
 
         /// <summary>
@@ -152,7 +155,7 @@ namespace Rnet
             if (RequiresHandshake)
                 await Bus.Client.SendAsync(new RnetHandshakeMessage(
                     message.SourceDeviceId,
-                    Bus.Device != null ? Bus.Device.DeviceId : RnetDeviceId.External,
+                    Bus.Device.DeviceId,
                     RnetHandshakeType.Data));
 
             // create new data buffer if packet is first in set
@@ -160,7 +163,7 @@ namespace Rnet
                 writers.Remove(message.SourcePath);
 
             // obtain data writer
-            var writer = GetPathDataWriter(message.SourcePath, message.PacketCount);
+            var writer = GetOrCreateDataHandleWriter(message.SourcePath, message.PacketCount);
 
             // write message to writer
             writer.Write(message.Data.ToArray(), message.PacketNumber);
@@ -180,7 +183,7 @@ namespace Rnet
             if (message.Priority == RnetPriority.High)
                 await Bus.Client.SendAsync(new RnetHandshakeMessage(
                     message.SourceDeviceId,
-                    Bus.Device != null ? Bus.Device.DeviceId : RnetDeviceId.External,
+                    Bus.Device.DeviceId,
                     RnetHandshakeType.Event));
         }
 
@@ -193,7 +196,7 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveData(RnetPath path, byte[] data)
         {
-            await GetPathHandle(path).Receive(data);
+            await GetOrCreateDataHandle(path).Receive(data);
         }
 
         /// <summary>
@@ -208,7 +211,7 @@ namespace Rnet
             using (await send.LockAsync(cancellationToken))
                 await Bus.Client.SendAsync(new RnetRequestDataMessage(
                     DeviceId,
-                    Bus.Device != null ? Bus.Device.DeviceId : RnetDeviceId.External,
+                    Bus.Device.DeviceId,
                     path,
                     RnetPath.Empty,
                     RnetRequestMessageType.Data));
@@ -302,7 +305,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[RnetPath path]
         {
-            get { return GetPathHandle(path); }
+            get { return GetOrCreateDataHandle(path); }
         }
 
         /// <summary>
@@ -312,7 +315,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a]
         {
-            get { return GetPathHandle(new RnetPath(a)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a)); }
         }
 
         /// <summary>
@@ -322,7 +325,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b]
         {
-            get { return GetPathHandle(new RnetPath(a, b)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b)); }
         }
 
         /// <summary>
@@ -332,7 +335,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b, byte c]
         {
-            get { return GetPathHandle(new RnetPath(a, b, c)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b, c)); }
         }
 
         /// <summary>
@@ -342,7 +345,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b, byte c, byte d]
         {
-            get { return GetPathHandle(new RnetPath(a, b, c, d)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b, c, d)); }
         }
 
         /// <summary>
@@ -352,7 +355,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e]
         {
-            get { return GetPathHandle(new RnetPath(a, b, c, d, e)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b, c, d, e)); }
         }
 
         /// <summary>
@@ -362,7 +365,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f]
         {
-            get { return GetPathHandle(new RnetPath(a, b, c, d, e, f)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b, c, d, e, f)); }
         }
 
         /// <summary>
@@ -372,7 +375,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f, byte g]
         {
-            get { return GetPathHandle(new RnetPath(a, b, c, d, e, f, g)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b, c, d, e, f, g)); }
         }
 
         /// <summary>
@@ -382,7 +385,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f, byte g, byte h]
         {
-            get { return GetPathHandle(new RnetPath(a, b, c, d, e, f, g, h)); }
+            get { return GetOrCreateDataHandle(new RnetPath(a, b, c, d, e, f, g, h)); }
         }
 
         /// <summary>
@@ -390,7 +393,7 @@ namespace Rnet
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        RnetDataHandle GetPathHandle(RnetPath path)
+        RnetDataHandle GetOrCreateDataHandle(RnetPath path)
         {
             return handles
                 .GetOrAdd(path, i => new WeakReference<RnetDataHandle>(new RnetDataHandle(this, i)))
@@ -403,7 +406,7 @@ namespace Rnet
         /// <param name="path"></param>
         /// <param name="packetCount"></param>
         /// <returns></returns>
-        RnetDataHandleWriter GetPathDataWriter(RnetPath path, int packetCount)
+        RnetDataHandleWriter GetOrCreateDataHandleWriter(RnetPath path, int packetCount)
         {
             return writers
                 .GetOrAdd(path, i => new WeakReference<RnetDataHandleWriter>(new RnetDataHandleWriter(packetCount)))

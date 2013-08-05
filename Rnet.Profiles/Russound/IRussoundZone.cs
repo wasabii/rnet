@@ -1,9 +1,7 @@
-﻿using Rnet.Profiles.Basic;
-
-namespace Rnet.Profiles.Russound
+﻿namespace Rnet.Profiles.Russound
 {
 
-    public interface IRussoundZone : IZone
+    public interface IRussoundZone : IProfile
     {
 
 

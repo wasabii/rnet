@@ -5,7 +5,7 @@ using Rnet.Profiles.Media;
 namespace Rnet.Profiles.Russound
 {
 
-    class RussoundZoneAudio : ZoneProfileObject, IZoneAudio
+    class RussoundZoneAudioProfile : ZoneProfileBase, IZoneAudio
     {
 
         RnetDataHandle runHandle;
@@ -36,7 +36,7 @@ namespace Rnet.Profiles.Russound
         /// Initializes a new instance.
         /// </summary>
         /// <param name="zone"></param>
-        public RussoundZoneAudio(RnetZone zone)
+        public RussoundZoneAudioProfile(RnetZone zone)
             : base(zone)
         {
             runHandle =
@@ -104,12 +104,24 @@ namespace Rnet.Profiles.Russound
             RaisePropertyChanged("Power");
         }
 
-        /// <summary>
-        /// Sends a local change in power to the controller.
-        /// </summary>
-        async void ChangePower()
+        public async void ChangePower()
         {
             await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)power, Zone.Id);
+        }
+
+        public async void PowerToggle()
+        {
+            await powerHandle.SendEvent(RnetEvent.AllZonesOnOff, (int)(power == Power.On ? Power.Off : Power.On));
+        }
+
+        public async void PowerOn()
+        {
+            await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)Power.On, Zone.Id);
+        }
+
+        public async void PowerOff()
+        {
+            await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)Power.On, Zone.Id);
         }
 
         public int Volume

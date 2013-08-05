@@ -15,18 +15,18 @@ namespace Rnet.Profiles
 
         public override sealed Task<IEnumerable<IProfile>> GetProfilesAsync(RnetBusObject target)
         {
-            return target is RnetZone ? GetControllerZoneProfilesAsync((RnetZone)target) : null;
+            return target is RnetZone ? GetControllerZoneProfilesAsync((RnetZone)target) : Task.FromResult(Enumerable.Empty<IProfile>());
         }
 
         /// <summary>
-        /// Override this method to return applicable profiles for the target zone.
+        /// Obtains profiles by asking the controller if the controller supports <see cref="IController"/>.
         /// </summary>
-        /// <param name="target"></param>
+        /// <param name="zone"></param>
         /// <returns></returns>
         async Task<IEnumerable<IProfile>> GetControllerZoneProfilesAsync(RnetZone zone)
         {
             // controller will provide profiles if possible
-            var c = await zone.Controller.GetProfileAsync<IController>();
+            var c = await zone.Controller.GetProfile<IController>();
 
             // allow the controller to decide what profiles I support
             var e1 = c != null ? c.GetZoneProfilesAsync(zone) : Task.FromResult(Enumerable.Empty<IProfile>());

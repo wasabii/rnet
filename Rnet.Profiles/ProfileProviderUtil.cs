@@ -56,7 +56,7 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static IObservable<KeyValuePair<Type, IProfile>> GetProfilesAsync(this RnetBusObject target)
+        public static IObservable<KeyValuePair<Type, IProfile>> GetProfiles(this RnetBusObject target)
         {
             return target.Context.GetOrCreate<IObservable<IProfile>>(() =>
                 Providers.ToObservable()
@@ -81,27 +81,15 @@ namespace Rnet.Profiles
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static Task<T> GetProfileAsync<T>(this RnetBusObject target)
+        public static Task<T> GetProfile<T>(this RnetBusObject target)
             where T : class, IProfile
         {
             return target.Context.GetOrCreate<Task<T>>(async () =>
-                await GetProfilesAsync(target)
+                await GetProfiles(target)
                     .Where(i => i.Key == typeof(T))
                     .Select(i => i.Value)
                     .OfType<T>()
                     .FirstOrDefaultAsync());
-        }
-
-        /// <summary>
-        /// Gets the supported profile implementation for the target of the given type.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        public static T GetProfile<T>(this RnetBusObject target)
-            where T : class, IProfile
-        {
-            return GetProfileAsync<T>(target).Result;
         }
 
     }

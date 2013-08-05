@@ -6,13 +6,14 @@
     xmlns:e="http://schemas.microsoft.com/expression/2010/interactivity"
     xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
+    xmlns:rnetpm="clr-namespace:Rnet.Profiles.Media;assembly=Rnet.Profiles"
     xmlns:local="clr-namespace:Rnet.Manager"
     mc:Ignorable="d"
     x:Class="Rnet.Manager.BusWindow"
     Title="RNET Bus Manager"
     Width="800"
     Height="600">
-    
+
     <TabControl
         x:Name="LayoutRoot"
         Margin="8"
@@ -22,16 +23,6 @@
 
             <local:MethodNameToCommandConverter
                 x:Key="MethodNameToCommandConverter" />
-
-            <CollectionViewSource
-                x:Key="MessagesSource"
-                Source="{Binding Messages}">
-                <CollectionViewSource.SortDescriptions>
-                    <scm:SortDescription
-                        PropertyName="Message.MessageTimestamp"
-                        Direction="Descending" />
-                </CollectionViewSource.SortDescriptions>
-            </CollectionViewSource>
 
             <DataTemplate
                 DataType="{x:Type local:MessageViewModel}">
@@ -62,32 +53,63 @@
             </DataTemplate>
 
             <DataTemplate
+                x:Key="Rnet.Profiles.Basic.IObject">
+                <StackPanel
+                    Orientation="Vertical">
+                    <TextBlock
+                        Margin="4"
+                        Text="{Binding Name, StringFormat='Name: {0}'}" />
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate
                 x:Key="Rnet.Profiles.Basic.IDevice">
                 <StackPanel
-                    Orientation="Horizontal">
+                    Orientation="Vertical">
                     <TextBlock
-                        Text="Manufacturer: " />
+                        Margin="4"
+                        Text="{Binding Manufacturer, StringFormat='Manufacturer: {0}'}" />
                     <TextBlock
-                        Margin="0,0,4,0"
-                        Text="{Binding Manufacturer}" />
+                        Margin="4"
+                        Text="{Binding Model, StringFormat='Model: {0}'}" />
                     <TextBlock
-                        Text="Model: " />
-                    <TextBlock
-                        Margin="0,0,4,0"
-                        Text="{Binding Model}" />
+                        Margin="4"
+                        Text="{Binding FirmwareVersion, StringFormat='Firmware Version: {0}'}" />
                 </StackPanel>
             </DataTemplate>
 
             <DataTemplate
                 x:Key="Rnet.Profiles.Basic.IController">
                 <StackPanel
-                    Orientation="Horizontal">
-                    <TextBlock
-                        Text="Zones: " />
-                    <TextBlock
-                        Margin="0,0,4,0"
-                        Text="{Binding ZoneCount}" />
+                    Orientation="Vertical">
+                    <ItemsControl
+                        ItemsSource="{Binding Zones}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Text="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate
+                x:Key="Rnet.Profiles.Basic.IZone">
+                <StackPanel
+                    Orientation="Vertical">
+                    <TextBlock
+                        Margin="4"
+                        Text="{Binding Name, StringFormat='Name: {0}'}" />
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate
+                x:Key="Rnet.Profiles.Media.IControllerAudio">
+                <Grid>
+                    <Button
+                        Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='PowerToggle'}" />
+                </Grid>
             </DataTemplate>
 
             <DataTemplate
@@ -111,25 +133,55 @@
                             Height="Auto" />
                         <RowDefinition
                             Height="Auto" />
+                        <RowDefinition
+                            Height="Auto" />
                     </Grid.RowDefinitions>
+
+                    <Button
+                        Grid.Column="0"
+                        Grid.Row="0"
+                        Grid.ColumnSpan="3"
+                        Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='PowerToggle'}">
+                        <Button.Style>
+                            <Style
+                                TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger
+                                        Binding="{Binding Power}"
+                                        Value="{x:Static rnetpm:Power.On}">
+                                        <Setter
+                                            Property="Content"
+                                            Value="Power Off" />
+                                    </DataTrigger>
+                                    <DataTrigger
+                                        Binding="{Binding Power}"
+                                        Value="{x:Static rnetpm:Power.Off}">
+                                        <Setter
+                                            Property="Content"
+                                            Value="Power On" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <Slider
                         Grid.Column="0"
-                        Grid.Row="0"
+                        Grid.Row="1"
                         Orientation="Horizontal"
                         Minimum="0"
                         Maximum="100"
                         Value="{Binding Volume, Mode=TwoWay, Delay=500}" />
                     <Button
                         Grid.Column="2"
-                        Grid.Row="0"
+                        Grid.Row="1"
                         MinWidth="25"
                         MinHeight="25"
                         Content="-"
                         Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='VolumeDown'}" />
                     <Button
                         Grid.Column="1"
-                        Grid.Row="0"
+                        Grid.Row="1"
                         MinWidth="25"
                         MinHeight="25"
                         Content="+"
@@ -137,21 +189,21 @@
 
                     <Slider
                         Grid.Column="0"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         Orientation="Horizontal"
                         Minimum="-10"
                         Maximum="10"
                         Value="{Binding Bass, Mode=TwoWay, Delay=500}" />
                     <Button
                         Grid.Column="2"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         MinWidth="25"
                         MinHeight="25"
                         Content="-"
                         Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='BassDown'}" />
                     <Button
                         Grid.Column="1"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         MinWidth="25"
                         MinHeight="25"
                         Content="+"
@@ -159,21 +211,21 @@
 
                     <Slider
                         Grid.Column="0"
-                        Grid.Row="2"
+                        Grid.Row="3"
                         Orientation="Horizontal"
                         Minimum="-10"
                         Maximum="10"
                         Value="{Binding Treble, Mode=TwoWay, Delay=500}" />
                     <Button
                         Grid.Column="2"
-                        Grid.Row="2"
+                        Grid.Row="3"
                         MinWidth="25"
                         MinHeight="25"
                         Content="-"
                         Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='TrebleDown'}" />
                     <Button
                         Grid.Column="1"
-                        Grid.Row="2"
+                        Grid.Row="3"
                         MinWidth="25"
                         MinHeight="25"
                         Content="+"
@@ -182,21 +234,21 @@
 
                     <Slider
                         Grid.Column="0"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         Orientation="Horizontal"
                         Minimum="-10"
                         Maximum="10"
                         Value="{Binding Balance, Mode=TwoWay, Delay=500}" />
                     <Button
                         Grid.Column="1"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         MinWidth="25"
                         MinHeight="25"
                         Content="&lt;-"
                         Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='BalanceLeft'}" />
                     <Button
                         Grid.Column="2"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         MinWidth="25"
                         MinHeight="25"
                         Content="-&gt;"
@@ -216,6 +268,7 @@
                             <DataTemplate>
                                 <Expander
                                     HorizontalAlignment="Stretch"
+                                    IsExpanded="True"
                                     Header="{Binding Key.Name}"
                                     Content="{Binding Value}"
                                     ContentTemplate="{local:ResourceKeyBinding Path=Key.FullName}" />
@@ -258,10 +311,10 @@
                     Grid.Row="1"
                     Grid.RowSpan="2"
                     Grid.Column="0"
-                    ItemsSource="{Binding Bus.Controllers}">
+                    ItemsSource="{Binding Controllers}">
                     <e:Interaction.Behaviors>
                         <local:TreeViewBehavior
-                            SelectedItem="{Binding SelectedBusObject, Mode=TwoWay}" />
+                            SelectedItem="{Binding SelectedObject, Mode=TwoWay}" />
                     </e:Interaction.Behaviors>
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate
@@ -271,16 +324,16 @@
                                     ItemsSource="{Binding Devices}">
                                     <HierarchicalDataTemplate.ItemTemplate>
                                         <DataTemplate>
-                                            <ContentPresenter
-                                                Content="{Binding}" />
+                                            <TextBlock
+                                                Text="{Binding Name}" />
                                         </DataTemplate>
                                     </HierarchicalDataTemplate.ItemTemplate>
-                                    <ContentPresenter
-                                        Content="{Binding}" />
+                                    <TextBlock
+                                        Text="{Binding Name}" />
                                 </HierarchicalDataTemplate>
                             </HierarchicalDataTemplate.ItemTemplate>
-                            <ContentPresenter
-                                Content="{Binding}" />
+                            <TextBlock
+                                Text="{Binding Name}" />
                         </HierarchicalDataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>
@@ -289,19 +342,31 @@
                     Grid.RowSpan="2"
                     Grid.Column="1"
                     Margin="0,0,0,0"
-                    Content="{Binding SelectedBusObjectViewModel}" />
+                    Content="{Binding SelectedObject}" />
             </Grid>
         </TabItem>
+
         <TabItem
-            Header="Transcript">
+            Header="Messages">
             <Grid>
+                <Grid.Resources>
+                    <CollectionViewSource
+                        x:Key="Messages"
+                        Source="{Binding Messages}">
+                        <CollectionViewSource.SortDescriptions>
+                            <scm:SortDescription
+                                PropertyName="Message.MessageTimestamp"
+                                Direction="Descending" />
+                        </CollectionViewSource.SortDescriptions>
+                    </CollectionViewSource>
+                </Grid.Resources>
                 <ScrollViewer>
                     <ItemsControl
                         VirtualizingPanel.IsVirtualizing="True"
-                        ItemsSource="{Binding Source={StaticResource MessagesSource}}">
-                    </ItemsControl>
+                        ItemsSource="{Binding Source={StaticResource Messages}}" />
                 </ScrollViewer>
             </Grid>
         </TabItem>
+
     </TabControl>
 </Window>

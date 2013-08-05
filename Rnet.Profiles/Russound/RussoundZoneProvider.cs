@@ -5,7 +5,7 @@
     /// Describes a zone hanging off a Russound controller device.
     /// </summary>
     [ProfileProvider]
-    public class RussoundZone : ZoneProfileProvider
+    public class RussoundZoneProvider : ZoneProfileProvider
     {
 
 

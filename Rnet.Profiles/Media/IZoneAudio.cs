@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Rnet.Profiles.Media
+﻿namespace Rnet.Profiles.Media
 {
 
     /// <summary>
@@ -13,6 +11,21 @@ namespace Rnet.Profiles.Media
         /// Whether the zone is powered on or off.
         /// </summary>
         Power Power { get; set; }
+
+        /// <summary>
+        /// Toggles the power.
+        /// </summary>
+        void PowerToggle();
+
+        /// <summary>
+        /// Turns the power off.
+        /// </summary>
+        void PowerOn();
+
+        /// <summary>
+        /// Turns the power on.
+        /// </summary>
+        void PowerOff();
 
         /// <summary>
         /// Volume level of the zone.

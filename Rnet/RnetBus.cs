@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
+using System.Reactive;
+using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -12,17 +16,11 @@ namespace Rnet
     {
 
         /// <summary>
-        /// Signals to the bus to stop all threads.
-        /// </summary>
-        CancellationTokenSource cancellationTokenSource;
-
-        /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="connection"></param>
-        /// <param name="id"></param>
         /// <param name="synchronizationContext"></param>
-        public RnetBus(RnetConnection connection, RnetKeypadId id, SynchronizationContext synchronizationContext)
+        public RnetBus(RnetConnection connection, SynchronizationContext synchronizationContext)
         {
             if (connection == null)
                 throw new ArgumentNullException("client");
@@ -31,7 +29,6 @@ namespace Rnet
 
             // we are our own bus
             SynchronizationContext = synchronizationContext;
-            KeypadId = id;
 
             // hook ourselves up to the client
             Client = new RnetClient(connection);
@@ -41,6 +38,7 @@ namespace Rnet
             Client.MessageSent += Client_MessageSent;
             Client.Error += Client_Error;
 
+            // place for controllers to go, will get regenerated on start
             Controllers = new RnetControllerCollection(this);
         }
 
@@ -49,7 +47,7 @@ namespace Rnet
         /// </summary>
         /// <param name="connection"></param>
         public RnetBus(RnetConnection connection)
-            : this(connection, RnetKeypadId.External, SynchronizationContext.Current)
+            : this(connection, SynchronizationContext.Current)
         {
 
         }
@@ -67,11 +65,6 @@ namespace Rnet
         /// Used to report events to the user.
         /// </summary>
         public SynchronizationContext SynchronizationContext { get; private set; }
-
-        /// <summary>
-        /// Keypad ID to use for bus client.
-        /// </summary>
-        public RnetKeypadId KeypadId { get; private set; }
 
         /// <summary>
         /// <see cref="RnetClient"/> through which the bus will communicate.
@@ -108,41 +101,49 @@ namespace Rnet
         /// Starts the RNET bus.
         /// </summary>
         /// <returns></returns>
-        public Task<RnetBusDevice> StartAsync()
+        public Task StartAsync()
         {
-            return StartAsync(DefaultTimeoutToken);
+            return StartAsync(RnetKeypadId.External);
         }
 
         /// <summary>
         /// Starts the RNET bus.
         /// </summary>
-        public async Task<RnetBusDevice> StartAsync(CancellationToken cancellationToken)
+        /// <param name="keypadId"></param>
+        /// <returns></returns>
+        public Task StartAsync(RnetKeypadId keypadId)
+        {
+            return StartAsync(keypadId, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Starts the RNET bus.
+        /// </summary>
+        /// <param name="keypadId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task StartAsync(RnetKeypadId keypadId, CancellationToken cancellationToken)
         {
             if (Client == null)
                 throw new ObjectDisposedException("RnetBus");
 
+            // empty out any existing controllers
+            Controllers.Clear();
+
+            // generate minimal required model and insert new bus device
+            var c = Controllers[RnetControllerId.Root];
+            var z = c.Zones[RnetZoneId.Zone1];
+            var d = new RnetBusDevice(z, keypadId);
+            z.Devices[keypadId] = Device = d;
+
             // start client
             await Client.StartAsync();
 
-            // attempt to acquire required node until cancelled
-            while (Device == null && !cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    // initialize root controller and zone for default bus location
-                    var controller = await Controllers.GetAsync(RnetControllerId.Root);
-                    var zone = await controller.Zones.GetAsync(0);
+            // activate the path to the bus device
+            d.Touch();
 
-                    // insert bus into zone
-                    await zone.Devices.AddAsync(Device = new RnetBusDevice(zone, KeypadId));
-                }
-                catch (OperationCanceledException)
-                {
-                    // ignore
-                }
-            }
-
-            return Device;
+            // initiate device scan
+            await Scan().ToList();
         }
 
         /// <summary>
@@ -151,31 +152,32 @@ namespace Rnet
         /// <returns></returns>
         public Task StopAsync()
         {
-            return StopAsync(DefaultTimeoutToken);
+            return StopAsync(CancellationToken.None);
         }
 
         /// <summary>
         /// Stops the RNET bus.
         /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (Client == null)
                 throw new ObjectDisposedException("RnetBus");
 
+            // wait for theclient to stop
             await Client.StopAsync();
 
-            if (cancellationTokenSource != null)
-            {
-                cancellationTokenSource.Cancel();
-                cancellationTokenSource = null;
-            }
+            // unset so users won't get confused by stale data
+            Controllers.Clear();
+            Device = null;
         }
 
         /// <summary>
         /// Invoked when the client's state changes.
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="args"></param>
         void Client_StateChanged(object sender, RnetClientStateEventArgs args)
         {
             SynchronizationContext.Post(i => OnClientStateChanged(args), null);
@@ -185,7 +187,7 @@ namespace Rnet
         /// Invoked when the connection's state changes.
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="args"></param>
         void Client_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
         {
             SynchronizationContext.Post(i => OnConnectionStateChanged(args), null);
@@ -199,78 +201,6 @@ namespace Rnet
         void Client_MessageReceived(object sender, RnetMessageEventArgs args)
         {
             SynchronizationContext.Post(i => OnClientMessageReceived(args), null);
-        }
-
-        /// <summary>
-        /// Invoked when a message arrives.
-        /// </summary>
-        /// <param name="args"></param>
-        async void OnClientMessageReceived(RnetMessageEventArgs args)
-        {
-            // client is stopped, ignore any trailing events
-            if (Client.State != RnetClientState.Started)
-                return;
-
-            // skip messages not destined to us or everybody
-            var message = args.Message;
-            if (message == null)
-                return;
-
-            // generate or obtain device and allow it to handle message
-            var device = await FindOrCreateAsync(message.SourceDeviceId);
-            if (device != null)
-            {
-                // destined to us
-                if (Device == null ||
-                    message.TargetDeviceId == Device.DeviceId)
-                    await device.ReceiveMessage(message);
-
-                // destined to all devices
-                if (message.TargetDeviceId == RnetDeviceId.AllDevices)
-                    await device.ReceiveMessage(message);
-
-                // destined to all devices on our zone
-                if (Device != null &&
-                    message.TargetDeviceId.KeypadId == RnetKeypadId.AllZone &&
-                    message.TargetDeviceId.ZoneId == Device.DeviceId.ZoneId)
-                    await device.ReceiveMessage(message);
-            }
-
-            // raise event on synchronization context
-            SynchronizationContext.Post(i => OnMessageReceived(args), null);
-        }
-
-        /// <summary>
-        /// Finds an existing known device by the given device ID, or inserts it.
-        /// </summary>
-        /// <param name="deviceId"></param>
-        /// <returns></returns>
-        async Task<RnetDevice> FindOrCreateAsync(RnetDeviceId deviceId)
-        {
-            if (Device != null &&
-                Device.DeviceId == deviceId)
-                return Device;
-
-            // find or create controller
-            var controller = await Controllers.FindAsync(deviceId.ControllerId);
-            if (controller == null)
-                await Controllers.AddAsync(controller = new RnetController(this, new RnetControllerId(deviceId.ControllerId)));
-
-            // we are a controller
-            if (deviceId.KeypadId == RnetKeypadId.Controller)
-                return controller;
-
-            // find or create zone
-            var zone = await controller.Zones.FindAsync(deviceId.ZoneId);
-            if (zone == null)
-                await controller.Zones.AddAsync(zone = new RnetZone(controller, deviceId.ZoneId));
-
-            // find or create device
-            var device = await zone.Devices.FindAsync(deviceId.KeypadId);
-            if (device == null)
-                await zone.Devices.AddAsync(device = new RnetZoneDevice(zone, deviceId.KeypadId));
-
-            return device;
         }
 
         /// <summary>
@@ -294,147 +224,89 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends a RequestData message to the specified device id with the specified paths.
+        /// Invoked when a message arrives.
         /// </summary>
-        /// <param name="deviceId"></param>
-        /// <param name="targetPath"></param>
-        /// <param name="sourcePath"></param>
-        internal Task RequestDataAsync(RnetDeviceId deviceId, RnetPath targetPath)
+        /// <param name="args"></param>
+        async void OnClientMessageReceived(RnetMessageEventArgs args)
         {
-            return Client.SendAsync(new RnetRequestDataMessage(
-                deviceId,
-                Device != null ? Device.DeviceId : RnetDeviceId.External,
-                targetPath,
-                RnetPath.Empty,
-                RnetRequestMessageType.Data));
-        }
+            // client is stopped, ignore any trailing events
+            if (Client.State != RnetClientState.Started)
+                return;
 
-        /// <summary>
-        /// Requests the device with the given <see cref="RnetDeviceId"/>.
-        /// </summary>
-        /// <param name="deviceId"></param>
-        /// <returns></returns>
-        internal async Task<RnetDevice> RequestAsync(RnetDeviceId deviceId, CancellationToken cancellationToken)
-        {
-            // request device information record
-            await RequestDataAsync(deviceId, new RnetPath(0, 0));
+            // skip messages not destined to us or everybody
+            var message = args.Message;
+            if (message == null)
+                return;
 
-            // wait for controller
-            var controller = await Controllers.WaitAsync(deviceId.ControllerId, cancellationToken);
-            if (controller == null)
-                return null;
-
-            // we are the controller
-            if (deviceId.KeypadId == RnetKeypadId.Controller)
-                return controller;
-
-            // wait for zone
-            var zone = await controller.Zones.WaitAsync(deviceId.ZoneId, cancellationToken);
-            if (zone == null)
-                return null;
-
-            // wait for device
-            var device = await zone.Devices.WaitAsync(deviceId.KeypadId, cancellationToken);
-            if (device == null)
-                return null;
-
-            return device;
-        }
-
-        /// <summary>
-        /// Gets the device with the given ID if it's already known.
-        /// </summary>
-        /// <param name="deviceId"></param>
-        /// <returns></returns>
-        public Task<RnetDevice> FindAsync(RnetDeviceId deviceId)
-        {
-            return FindAsync(deviceId, DefaultTimeoutToken);
-        }
-
-        /// <summary>
-        /// Gets the device with the given ID if it's already known.
-        /// </summary>
-        /// <param name="deviceId"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<RnetDevice> FindAsync(RnetDeviceId deviceId, CancellationToken cancellationToken)
-        {
-            if (Device != null &&
-                Device.DeviceId == deviceId)
-                return Device;
-
-            // find the controller
-            var controller = await Controllers.FindAsync(deviceId.ControllerId, cancellationToken);
-            if (controller == null)
-                return null;
-
-            // we are the controller
-            if (deviceId.KeypadId == RnetKeypadId.Controller)
-                return controller;
-
-            // find the zone
-            var zone = await controller.Zones.FindAsync(deviceId.ZoneId, cancellationToken);
-            if (zone == null)
-                return null;
-
-            // find the device
-            var device = await zone.Devices.FindAsync(deviceId.KeypadId, cancellationToken);
-            if (device == null)
-                return null;
-
-            return device;
-        }
-
-        /// <summary>
-        /// Gets the device for the given device ID.
-        /// </summary>
-        /// <param name="deviceId"></param>
-        /// <returns></returns>
-        public async Task<RnetDevice> GetAsync(RnetDeviceId deviceId)
-        {
-            try
+            // generate or obtain device and allow it to handle message
+            var device = GetOrCreateDevice(message.SourceDeviceId);
+            if (device != null)
             {
-                return await GetAsync(deviceId, DefaultTimeoutToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignore
+                // destined to us
+                if (message.TargetDeviceId == Device.DeviceId)
+                    await device.ReceiveMessage(message);
+
+                // destined to all devices
+                if (message.TargetDeviceId == RnetDeviceId.AllDevices)
+                    await device.ReceiveMessage(message);
+
+                // destined to all devices on our zone
+                if (message.TargetDeviceId.KeypadId == RnetKeypadId.AllZone &&
+                    message.TargetDeviceId.ZoneId == Device.DeviceId.ZoneId)
+                    await device.ReceiveMessage(message);
             }
 
-            return null;
+            // raise event on synchronization context
+            SynchronizationContext.Post(i => OnMessageReceived(args), null);
         }
 
         /// <summary>
-        /// Gets the device for the given device ID using a generator function.
+        /// Gets a handle to the device given the specified device id.
         /// </summary>
-        /// <param name="deviceId"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<RnetDevice> GetAsync(RnetDeviceId deviceId, CancellationToken cancellationToken)
+        RnetDevice this[RnetDeviceId id]
         {
-            if (Device != null &&
-                Device.DeviceId == deviceId)
-                return Device;
+            get { return GetOrCreateDevice(id); }
+        }
 
-            // obtain controller
-            var controller = await Controllers.GetAsync(deviceId.ControllerId, cancellationToken);
-            if (controller == null)
+        /// <summary>
+        /// Gets or creates a handle to the device given the specified device id.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        RnetDevice GetOrCreateDevice(RnetDeviceId id)
+        {
+            // get controller
+            var c = Controllers[id.ControllerId];
+            if (c == null)
                 return null;
 
-            // we are looking for a controller
-            if (deviceId.KeypadId == RnetKeypadId.Controller)
-                return controller;
+            // we are a controller
+            if (id.ZoneId == 0 &&
+                id.KeypadId == RnetKeypadId.Controller)
+                return c;
 
-            // obtain zone
-            var zone = await controller.Zones.GetAsync(deviceId.ZoneId, cancellationToken);
-            if (zone == null)
+            // get zone
+            var z = c.Zones[id.ZoneId];
+            if (z == null)
                 return null;
 
-            // obtain device
-            var device = await zone.Devices.GetAsync(deviceId.KeypadId, cancellationToken);
-            if (device == null)
+            // get device
+            var d = z.Devices[id.KeypadId];
+            if (d == null)
                 return null;
 
-            return device;
+            return d;
+        }
+
+        /// <summary>
+        /// Scans for known devices.
+        /// </summary>
+        /// <returns></returns>
+        public IObservable<RnetDevice> Scan()
+        {
+            return Controllers.Scan();
         }
 
         /// <summary>

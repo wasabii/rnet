@@ -95,6 +95,9 @@
     </ApplicationDefinition>
     <Compile Include="BusViewModel.cs" />
     <Compile Include="BusObjectViewModel.cs" />
+    <Compile Include="ControllerViewModel.cs" />
+    <Compile Include="DeviceViewModel.cs" />
+    <Compile Include="ZoneViewModel.cs" />
     <Compile Include="MessageDirection.cs" />
     <Compile Include="MessageViewModel.cs" />
     <Compile Include="MethodNameToCommandConverter.cs" />

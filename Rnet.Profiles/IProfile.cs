@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace Rnet.Profiles
 {
@@ -6,7 +6,7 @@ namespace Rnet.Profiles
     /// <summary>
     /// Describes an interface that represents a profile.
     /// </summary>
-    public interface IProfile
+    public interface IProfile : INotifyPropertyChanged
     {
 
 

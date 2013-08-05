@@ -22,6 +22,22 @@ namespace Rnet
         public static readonly RnetZoneId Trace = 0x7c;
 
         /// <summary>
+        /// Returns <c>true</c> if the zone id is reserved.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static bool IsReserved(RnetZoneId id)
+        {
+            if (id == Reserved ||
+                id == ControllerLink ||
+                id == Peripheral ||
+                id == Trace)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
         /// Implicitly converts a <see cref="RnetZoneId"/> to a <see cref="Byte"/>.
         /// </summary>
         /// <param name="id"></param>

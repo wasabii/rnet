@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Nito.AsyncEx;
 
 namespace Rnet
 {
@@ -14,9 +11,8 @@ namespace Rnet
     public sealed class RnetZoneDeviceCollection : IEnumerable<RnetZoneDevice>, INotifyCollectionChanged
     {
 
-        AsyncMonitor monitor = new AsyncMonitor();
-        SortedDictionary<RnetKeypadId, RnetZoneDevice> devices =
-            new SortedDictionary<RnetKeypadId, RnetZoneDevice>(Comparer<RnetKeypadId>.Default);
+        ConcurrentDictionary<RnetKeypadId, WeakReference<RnetZoneDevice>> devices =
+            new ConcurrentDictionary<RnetKeypadId, WeakReference<RnetZoneDevice>>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -33,167 +29,76 @@ namespace Rnet
         RnetZone Zone { get; set; }
 
         /// <summary>
-        /// Gets the device with the given keypad ID.
+        /// Gets a device with the given identifier.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         public RnetZoneDevice this[RnetKeypadId id]
         {
-            get { return FindAsync(id).Result; }
+            get { return GetOrCreate(id); }
+            internal set { devices.GetOrAdd(id, new WeakReference<RnetZoneDevice>(value)); }
         }
 
         /// <summary>
-        /// Adds a device.
-        /// </summary>
-        /// <param name="device"></param>
-        internal async Task AddAsync(RnetZoneDevice device)
-        {
-            using (await monitor.EnterAsync())
-            {
-                devices[device.Id] = device;
-                RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, device));
-                monitor.PulseAll();
-            }
-        }
-
-        /// <summary>
-        /// Removes a device.
-        /// </summary>
-        /// <param name="device"></param>
-        internal async Task RemoveAsync(RnetZoneDevice device)
-        {
-            using (await monitor.EnterAsync())
-            {
-                devices.Remove(device.Id);
-                RaiseCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, device));
-                monitor.PulseAll();
-            }
-        }
-
-        /// <summary>
-        /// Gets the device with the given ID if it is already known.
+        /// Gets or creates a new device object for the given id.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Task<RnetZoneDevice> FindAsync(RnetKeypadId id)
+        RnetZoneDevice GetOrCreate(RnetKeypadId id)
         {
-            return FindAsync(id, Zone.Controller.Bus.DefaultTimeoutToken);
+            // skip reserved ids except external devices
+            if (id != RnetKeypadId.External &&
+                id != RnetKeypadId.External2 &&
+                RnetKeypadId.IsReserved(id))
+                return null;
+
+            return devices
+                .GetOrAdd(id, i => new WeakReference<RnetZoneDevice>(new RnetZoneDevice(Zone, id)))
+                .GetTargetOrDefault();
         }
 
         /// <summary>
-        /// Gets the device with the given ID if it is already known.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<RnetZoneDevice> FindAsync(RnetKeypadId id, CancellationToken cancellationToken)
-        {
-            using (await monitor.EnterAsync(cancellationToken))
-                return devices.GetOrDefault(id);
-        }
-
-        /// <summary>
-        /// Waits for the specified device to become available.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        internal async Task<RnetZoneDevice> WaitAsync(RnetKeypadId id, CancellationToken cancellationToken)
-        {
-            RnetZoneDevice device = null;
-            while ((device = await FindAsync(id)) == null && !cancellationToken.IsCancellationRequested)
-                using (await monitor.EnterAsync(cancellationToken))
-                    await monitor.WaitAsync(cancellationToken);
-
-            return device;
-        }
-
-        /// <summary>
-        /// Gets the device given by the specified <see cref="RnetKeypadId"/>.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<RnetZoneDevice> GetAsync(RnetKeypadId id)
-        {
-            try
-            {
-                return await GetAsync(id, Zone.Controller.Bus.DefaultTimeoutToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignore
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Gets the device given by the specified <see cref="RnetKeypadId"/>.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<RnetZoneDevice> GetAsync(RnetKeypadId id, CancellationToken cancellationToken)
-        {
-            var device = await FindAsync(id, cancellationToken);
-            if (device == null)
-                device = await RequestAsync(id, cancellationToken);
-
-            return device;
-        }
-
-        /// <summary>
-        /// Requests the device from the bus.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<RnetZoneDevice> RequestAsync(RnetKeypadId id)
-        {
-            try
-            {
-                return await RequestAsync(id, Zone.Controller.Bus.DefaultTimeoutToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignore
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Initiates a device request.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        public async Task<RnetZoneDevice> RequestAsync(RnetKeypadId id, CancellationToken cancellationToken)
-        {
-            return (RnetZoneDevice)await Zone.Controller.Bus.RequestAsync(new RnetDeviceId(Zone.Controller.Id, Zone.Id, id), cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the devices within this zone.
+        /// Returns an enumerator that iterates through the known devices.
         /// </summary>
         /// <returns></returns>
         public IEnumerator<RnetZoneDevice> GetEnumerator()
         {
-            return devices.Values.ToList().GetEnumerator();
+            return devices.Values
+                .Select(i => i.GetTargetOrDefault())
+                .Where(i => i != null)
+                .Where(i => i.IsActive)
+                .OrderBy(i => i.Id)
+                .ToList()
+                .GetEnumerator();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        /// <summary>
+        /// Invoked when a device becomes active.
+        /// </summary>
+        /// <param name="device"></param>
+        internal void OnDeviceActive(RnetZoneDevice device)
         {
-            return GetEnumerator();
+            Zone.Touch();
+            RaiseCollectionChanged();
         }
 
+        /// <summary>
+        /// Raised when devices are added or removed.
+        /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         /// <summary>
         /// Raises the CollectionChanged event.
         /// </summary>
-        /// <param name="args"></param>
-        void RaiseCollectionChanged(NotifyCollectionChangedEventArgs args)
+        void RaiseCollectionChanged()
         {
             if (CollectionChanged != null)
-                CollectionChanged(this, args);
+                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
     }

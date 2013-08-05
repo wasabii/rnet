@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Rnet.Profiles.Basic;
 
 namespace Rnet.Profiles.Russound
 {
@@ -7,11 +9,15 @@ namespace Rnet.Profiles.Russound
     /// <summary>
     /// Basic Russound controller profile. Provides functionality common to all Russound controllers.
     /// </summary>
-    public abstract class RussoundController : ControllerProfileProvider
+    public abstract class RussoundControllerProvider : ControllerProfileProvider
     {
 
-        class ControllerProfile : ControllerProfileObject, IRussoundController
+        class ControllerProfile : ControllerProfileBase, IObject, IDevice, IController, IRussoundController
         {
+
+            RnetZone[] zones;
+
+            string name;
 
             RnetDataHandle modelHandle;
             string model;
@@ -23,9 +29,10 @@ namespace Rnet.Profiles.Russound
             /// Initializes a new instance.
             /// </summary>
             /// <param name="controller"></param>
-            public ControllerProfile(RnetController controller)
+            public ControllerProfile(RnetController controller, int zoneCount)
                 : base(controller)
             {
+                zones = Enumerable.Range(0, zoneCount).Select(i => Controller.Zones[i]).ToArray();
                 modelHandle = controller[0, 0];
                 firmwareVersionHandle = controller[0, 1];
             }
@@ -33,9 +40,15 @@ namespace Rnet.Profiles.Russound
             protected override async Task InitializeAsync()
             {
                 await modelHandle.Subscribe(d =>
-                    Model = d);
+                    name = model = d);
                 await firmwareVersionHandle.Subscribe(d =>
-                    FirmwareVersion = d);
+                    firmwareVersion = d);
+            }
+
+            public string Name
+            {
+                get { return name; }
+                private set { name = value; RaisePropertyChanged("Name"); }
             }
 
             public string Manufacturer
@@ -46,45 +59,42 @@ namespace Rnet.Profiles.Russound
             public string Model
             {
                 get { return model; }
-                set { model = value; RaisePropertyChanged("Model"); }
+                private set { model = value; RaisePropertyChanged("Model"); }
             }
 
             public string FirmwareVersion
             {
                 get { return firmwareVersion; }
-                set { firmwareVersion = value; RaisePropertyChanged("FirmwareVersion"); }
+                private set { firmwareVersion = value; RaisePropertyChanged("FirmwareVersion"); }
             }
 
-            public int ZoneCount
+            public RnetZone[] Zones
             {
-                get { return 6; }
+                get { return zones; }
             }
 
             public Task<IEnumerable<IProfile>> GetZoneProfilesAsync(RnetZone zone)
             {
-                if (zone.Controller != Device)
-                    return null;
-
-                if (zone.Id >= ZoneCount)
+                if (Controller != zone.Controller)
                     return null;
 
                 return Task.FromResult((IEnumerable<IProfile>)new IProfile[]
                 { 
-                    new ZoneProfile(zone),
-                    new RussoundZoneAudio(zone),
+                    new ControllerZoneProfile(zone),
+                    new RussoundZoneAudioProfile(zone),
                 });
             }
 
         }
 
-        class ZoneProfile : ZoneProfileObject, IRussoundZone
+        class ControllerZoneProfile : ZoneProfileBase, IObject, IZone, IRussoundZone
         {
 
             /// <summary>
             /// Initializes a new instance.
             /// </summary>
             /// <param name="zone"></param>
-            public ZoneProfile(RnetZone zone)
+            public ControllerZoneProfile(RnetZone zone)
                 : base(zone)
             {
 
@@ -92,7 +102,7 @@ namespace Rnet.Profiles.Russound
 
             public string Name
             {
-                get { return null; }
+                get { return "Zone " + Zone.Id.Value; }
                 set { }
             }
 
@@ -106,6 +116,11 @@ namespace Rnet.Profiles.Russound
         protected abstract bool IsSupportedModel(string model);
 
         /// <summary>
+        /// Implement this method to return the number of supported zones.
+        /// </summary>
+        protected abstract int ZoneCount { get; }
+
+        /// <summary>
         /// Gets the applicable profiles for the specified device.
         /// </summary>
         /// <param name="controller"></param>
@@ -117,9 +132,10 @@ namespace Rnet.Profiles.Russound
                 return null;
 
             if (IsSupportedModel(model))
-                return new[]
+                return new IProfile[]
                 { 
-                    new ControllerProfile(controller),
+                    new ControllerProfile(controller, ZoneCount),
+                    new RussoundControllerAudioProfile(controller),
                 };
 
             return null;
