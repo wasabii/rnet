@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
 using Rnet.Profiles.Media;
 
 namespace Rnet.Profiles.Russound
@@ -39,6 +39,7 @@ namespace Rnet.Profiles.Russound
         public RussoundZoneAudioProfile(RnetZone zone)
             : base(zone)
         {
+            Debug.WriteLine("RussoundZoneAudioProfile: {0}", zone);
             runHandle =
                 Zone.Controller[2, 0];
             zoneHandle =

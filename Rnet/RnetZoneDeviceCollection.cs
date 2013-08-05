@@ -78,7 +78,7 @@ namespace Rnet
         /// <param name="device"></param>
         internal void OnDeviceActive(RnetZoneDevice device)
         {
-            Zone.Touch();
+            Zone.Activate();
             RaiseCollectionChanged();
         }
 

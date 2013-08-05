@@ -62,7 +62,8 @@ namespace Rnet
             }
 
             // send new data to interested parties
-            RaiseDataAvailable(new RnetDataAvailableEventArgs(data));
+            if (data != null)
+                RaiseDataAvailable(new RnetDataAvailableEventArgs(data));
         }
 
         /// <summary>
@@ -81,21 +82,24 @@ namespace Rnet
         /// <returns></returns>
         public async Task<byte[]> Read(CancellationToken cancellationToken)
         {
-            using (await wait.EnterAsync(cancellationToken))
+            return await RnetUtil.DefaultIfCancelled(async ct =>
             {
-                // cache data available
-                if (buffer != null)
+                using (await wait.EnterAsync(ct))
+                {
+                    // cache data available
+                    if (buffer != null)
+                        return buffer;
+
+                    // issue request for data
+                    await Device.SendRequestData(Path, ct);
+
+                    // wait for data to arrive
+                    while (buffer == null && !ct.IsCancellationRequested)
+                        await wait.WaitAsync(ct);
+
                     return buffer;
-
-                // issue request for data
-                await Device.SendRequestData(Path, cancellationToken);
-
-                // wait for data to arrive
-                while (buffer == null && !cancellationToken.IsCancellationRequested)
-                    await wait.WaitAsync(cancellationToken);
-
-                return buffer;
-            }
+                }
+            }, cancellationToken, Device.ReadTimeoutCancellationToken);
         }
 
         /// <summary>
@@ -114,12 +118,15 @@ namespace Rnet
         /// <returns></returns>
         public async Task<byte[]> Refresh(CancellationToken cancellationToken)
         {
-            // expire cached data
-            using (await wait.EnterAsync(cancellationToken))
-                buffer = null;
+            return await RnetUtil.DefaultIfCancelled(async ct =>
+            {
+                // expire cached data
+                using (await wait.EnterAsync(ct))
+                    buffer = null;
 
-            // reads the new data
-            return await Read(cancellationToken);
+                // reads the new data
+                return await Read(ct);
+            }, cancellationToken, Device.ReadTimeoutCancellationToken);
         }
 
         /// <summary>
@@ -140,21 +147,24 @@ namespace Rnet
         /// <returns></returns>
         public async Task<byte[]> Write(byte[] data, CancellationToken cancellationToken)
         {
-            using (await wait.EnterAsync(cancellationToken))
+            return await RnetUtil.DefaultIfCancelled(async ct =>
             {
-                // clear cached buffer, will reread
-                buffer = null;
+                using (await wait.EnterAsync(ct))
+                {
+                    // clear cached buffer, will reread
+                    buffer = null;
 
-                // initiate set data message followed by request data message
-                await Device.SendSetData(Path, data, cancellationToken);
-                await Device.SendRequestData(Path, cancellationToken);
+                    // initiate set data message followed by request data message
+                    await Device.SendSetData(Path, data, ct);
+                    await Device.SendRequestData(Path, ct);
 
-                // wait for new data value
-                while (buffer == null && !cancellationToken.IsCancellationRequested)
-                    await wait.WaitAsync(cancellationToken);
+                    // wait for new data value
+                    while (buffer == null && !ct.IsCancellationRequested)
+                        await wait.WaitAsync(ct);
 
-                return buffer;
-            }
+                    return buffer;
+                }
+            }, cancellationToken, Device.WriteTimeoutCancellationToken);
         }
 
         /// <summary>
@@ -354,21 +364,24 @@ namespace Rnet
         /// <returns></returns>
         public async Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority, CancellationToken cancellationToken)
         {
-            using (await wait.EnterAsync(cancellationToken))
+            return await RnetUtil.DefaultIfCancelled(async ct =>
             {
-                // clear cached data
-                buffer = null;
+                using (await wait.EnterAsync(ct))
+                {
+                    // clear cached data
+                    buffer = null;
 
-                // initiate event followed by request data message
-                await Device.SendEvent(Path, evt, timestamp, data, priority, cancellationToken);
-                await Device.SendRequestData(Path, cancellationToken);
+                    // initiate event followed by request data message
+                    await Device.SendEvent(Path, evt, timestamp, data, priority, ct);
+                    await Device.SendRequestData(Path, ct);
 
-                // wait for new data value
-                while (buffer == null && !cancellationToken.IsCancellationRequested)
-                    await wait.WaitAsync(cancellationToken);
+                    // wait for new data value
+                    while (buffer == null && !ct.IsCancellationRequested)
+                        await wait.WaitAsync(ct);
 
-                return buffer;
-            }
+                    return buffer;
+                }
+            }, cancellationToken, Device.EventTimeoutCancellationToken);
         }
 
         /// <summary>

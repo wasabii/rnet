@@ -11,6 +11,7 @@
         /// Initializes a new instance.
         /// </summary>
         internal RnetZone(RnetController controller, RnetZoneId id)
+            : base(controller.Bus)
         {
             Controller = controller;
             Id = id;
@@ -36,10 +37,10 @@
         /// Marks the object as active.
         /// </summary>
         /// <returns></returns>
-        internal override void Touch()
+        public override void Activate()
         {
             var a = !IsActive;
-            base.Touch();
+            base.Activate();
             if (a)
                 Controller.Zones.OnZoneActive(this);
         }

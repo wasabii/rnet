@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -73,46 +74,10 @@ namespace Rnet
         /// Scans for any controllers.
         /// </summary>
         /// <returns></returns>
-        public IObservable<RnetController> Scan()
+        public async Task Scan()
         {
-            // active
-            var l1 = controllers.Values
-                .Select(i => i.GetTargetOrDefault())
-                .Where(i => i != null)
-                .Where(i => i.IsActive)
-                .OrderBy(i => i.Id)
-                .Select(i => i.Id)
-                .ToList();
-
-            // inactive
-            var l2 = controllers.Values
-                .Select(i => i.GetTargetOrDefault())
-                .Where(i => i != null)
-                .Where(i => !i.IsActive)
-                .OrderBy(i => i.Id)
-                .Select(i => i.Id)
-                .ToList();
-
-            // unknown
-            var l3 = Enumerable.Range(0, 32)
-                .Select(i => new RnetControllerId((byte)i))
-                .Except(l1)
-                .Except(l2)
-                .OrderBy(i => i)
-                .ToList();
-
-            // query for a random bit of data for each
-            return Enumerable.Empty<RnetControllerId>()
-                .Concat(l1)
-                .Concat(l2)
-                .Concat(l3)
-                .ToObservable()
-                .Select(i =>
-                    Observable.FromAsync(async () =>
-                        new { Data = await this[i][0, 0].Refresh(), Id = i }))
-                .Merge()
-                .Where(i => i.Data != null)
-                .Select(i => this[i.Id]);
+            await Task.WhenAll(Enumerable.Range(0, 16)
+                .Select(async i => await this[i][0, 0].Read()));
         }
 
         /// <summary>

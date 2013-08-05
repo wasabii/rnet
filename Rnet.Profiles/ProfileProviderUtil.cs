@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet.Profiles
@@ -60,20 +61,41 @@ namespace Rnet.Profiles
         {
             return target.Context.GetOrCreate<IObservable<IProfile>>(() =>
                 Providers.ToObservable()
+                    .SubscribeOn(target.Bus.SynchronizationContext)
                     .Select(i =>
                         Observable.FromAsync(() =>
-                            i.GetProfilesAsync(target) ?? Task.FromResult(Enumerable.Empty<IProfile>())))
+                                i.GetProfilesAsync(target) ?? Task.FromResult(Enumerable.Empty<IProfile>()))
+                            .SubscribeOn(target.Bus.SynchronizationContext))
                     .Merge()
                     .Where(i => i != null)
                     .SelectMany(i => i)
                     .Where(i => i != null)
                     .Select(i =>
                         Observable.FromAsync(() =>
-                            InitializeProfileAsync(i)))
+                                InitializeProfileAsync(i))
+                            .SubscribeOn(target.Bus.SynchronizationContext))
                     .Merge())
                     .Select(i => new { Object = i, Profiles = GetProfileTypes(i) })
                     .SelectMany(i => i.Profiles.Select(j => new { Profile = j, Object = i.Object }))
-                    .Select(i => new KeyValuePair<Type, IProfile>(i.Profile, i.Object));
+                    .Select(i => new KeyValuePair<Type, IProfile>(i.Profile, i.Object))
+                    .SubscribeOn(target.Bus.SynchronizationContext)
+                    .ObserveOn(target.Bus.SynchronizationContext);
+        }
+
+        /// <summary>
+        /// Gets the supported profile implementation for the target of the given type.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="profileType"></param>
+        /// <returns></returns>
+        public static Task<IProfile> GetProfile(this RnetBusObject target, Type profileType)
+        {
+            return target.Context.GetOrCreate<Task<IProfile>>(async () =>
+                await GetProfiles(target)
+                    .Where(i => i.Key == profileType)
+                    .Select(i => i.Value)
+                    .OfType<IProfile>()
+                    .FirstOrDefaultAsync());
         }
 
         /// <summary>
@@ -81,15 +103,10 @@ namespace Rnet.Profiles
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static Task<T> GetProfile<T>(this RnetBusObject target)
+        public static async Task<T> GetProfile<T>(this RnetBusObject target)
             where T : class, IProfile
         {
-            return target.Context.GetOrCreate<Task<T>>(async () =>
-                await GetProfiles(target)
-                    .Where(i => i.Key == typeof(T))
-                    .Select(i => i.Value)
-                    .OfType<T>()
-                    .FirstOrDefaultAsync());
+            return (T)await GetProfile(target, typeof(T));
         }
 
     }

@@ -29,6 +29,9 @@ namespace Rnet.Manager
         public BusViewModel()
         {
             Uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
+            StartCommand = new DelegateCommand(Start, () => Bus == null);
+            StopCommand = new DelegateCommand(Stop, () => Bus != null);
+            ScanCommand = new DelegateCommand(Scan, () => Bus != null);
         }
 
         /// <summary>
@@ -79,10 +82,7 @@ namespace Rnet.Manager
         /// <summary>
         /// Starts the bus.
         /// </summary>
-        public ICommand StartCommand
-        {
-            get { return new DelegateCommand(Start, () => Bus == null); }
-        }
+        public DelegateCommand StartCommand { get; private set; }
 
         async void Start()
         {
@@ -100,6 +100,11 @@ namespace Rnet.Manager
             // wrap messages in view model
             Messages = new ObservableCollection<MessageViewModel>();
 
+            // we are started now
+            StartCommand.RaiseCanExecuteChanged();
+            StopCommand.RaiseCanExecuteChanged();
+            ScanCommand.RaiseCanExecuteChanged();
+
             // start the bus
             await Bus.StartAsync();
         }
@@ -107,15 +112,32 @@ namespace Rnet.Manager
         /// <summary>
         /// Stops the bus.
         /// </summary>
-        public ICommand StopCommand
-        {
-            get { return new DelegateCommand(Stop, () => Bus != null); }
-        }
+        public DelegateCommand StopCommand { get; private set; }
 
         async void Stop()
         {
             await Bus.StopAsync();
             Bus = null;
+
+            // we are stopped now
+            StartCommand.RaiseCanExecuteChanged();
+            StopCommand.RaiseCanExecuteChanged();
+            ScanCommand.RaiseCanExecuteChanged();
+        }
+
+        public DelegateCommand ScanCommand { get; private set; }
+
+        async void Scan()
+        {
+            await Bus.Client.SendAsync(new RnetEventMessage(
+                 new RnetDeviceId(RnetControllerId.AllControllers, 0, RnetKeypadId.External),
+                 Bus.Device.DeviceId,
+                 new RnetPath(1, 0),
+                 new RnetPath(1, 0),
+                 (RnetEvent)200,
+                 0,
+                 1,
+                 RnetPriority.High));
         }
 
         void Bus_Error(object sender, RnetClientErrorEventArgs args)

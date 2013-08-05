@@ -24,37 +24,13 @@ namespace Rnet
         /// Initializes a new instance.
         /// </summary>
         /// <param name="uri"></param>
-        /// <param name="synchronizationContext"></param>
-        public RnetBus(Uri uri, SynchronizationContext synchronizationContext)
+        public RnetBus(Uri uri)
         {
             if (uri == null)
                 throw new ArgumentNullException("uri");
-            if (synchronizationContext == null)
-                throw new ArgumentNullException("synchronizationContext");
 
-            // we are our own bus
-            SynchronizationContext = synchronizationContext;
-
-            // hook ourselves up to the client
-            Client = new RnetClient(uri);
-            Client.StateChanged += Client_StateChanged;
-            Client.ConnectionStateChanged += Client_ConnectionStateChanged;
-            Client.MessageReceived += Client_MessageReceived;
-            Client.MessageSent += Client_MessageSent;
-            Client.Error += Client_Error;
-
-            // place for controllers to go, will get regenerated on start
+            Uri = uri;
             Controllers = new RnetControllerCollection(this);
-        }
-
-        /// <summary>
-        /// Initializes a new instance.
-        /// </summary>
-        /// <param name="uri"></param>
-        public RnetBus(Uri uri)
-            : this(uri, SynchronizationContext.Current)
-        {
-
         }
 
         /// <summary>
@@ -66,6 +42,11 @@ namespace Rnet
         {
 
         }
+
+        /// <summary>
+        /// Gets the <see cref="Uri"/> by which to establish the RNET connection.
+        /// </summary>
+        public Uri Uri { get; private set; }
 
         /// <summary>
         /// Gets the default cancellation token.
@@ -139,8 +120,13 @@ namespace Rnet
         /// <returns></returns>
         public async Task StartAsync(RnetKeypadId keypadId, CancellationToken cancellationToken)
         {
-            if (Client == null)
-                throw new ObjectDisposedException("RnetBus");
+            // default to caller's
+            // TODO implement internal fall back
+            SynchronizationContext = SynchronizationContext.Current;
+
+            // required for the bus
+            if (SynchronizationContext == null)
+                throw new RnetException("A synchronization context must be provided.");
 
             // empty out any existing controllers
             Controllers.Clear();
@@ -151,14 +137,20 @@ namespace Rnet
             var d = new RnetBusDevice(z, keypadId);
             z.Devices[keypadId] = Device = d;
 
-            // start client
+            // start new client
+            Client = new RnetClient(Uri);
+            Client.StateChanged += Client_StateChanged;
+            Client.ConnectionStateChanged += Client_ConnectionStateChanged;
+            Client.MessageReceived += Client_MessageReceived;
+            Client.MessageSent += Client_MessageSent;
+            Client.Error += Client_Error;
             await Client.StartAsync();
 
             // activate the path to the bus device
-            d.Touch();
+            d.Activate();
 
             // initiate device scan
-            await Scan().ToList();
+            await Scan();
         }
 
         /// <summary>
@@ -319,9 +311,9 @@ namespace Rnet
         /// Scans for known devices.
         /// </summary>
         /// <returns></returns>
-        public IObservable<RnetDevice> Scan()
+        public async Task Scan()
         {
-            return Controllers.Scan();
+            await Controllers.Scan();
         }
 
         /// <summary>

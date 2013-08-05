@@ -23,7 +23,8 @@ namespace Rnet.Profiles
             var d = await handle.Read();
 
             // read did not invoke action, invoke it once ourselves
-            if (!b) on(d);
+            if (d != null && !b)
+                on(d);
 
             return handle;
         }

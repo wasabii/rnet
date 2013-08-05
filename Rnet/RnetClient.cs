@@ -157,6 +157,10 @@ namespace Rnet
                 {
                     await connection.OpenAsync();
                 }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
                 catch (Exception e)
                 {
                     OnError(new RnetClientErrorEventArgs(e));
@@ -181,10 +185,18 @@ namespace Rnet
                     while (!await EnsureConnection(cancellationToken) && !cancellationToken.IsCancellationRequested)
                         continue;
 
+                    // check for cancelled
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+
                     // read next message
                     var message = await connection.ReceiveAsync(cancellationToken);
                     if (message != null)
                         OnMessageReceived(new RnetMessageEventArgs(message));
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
                 }
                 catch (RnetConnectionException e)
                 {

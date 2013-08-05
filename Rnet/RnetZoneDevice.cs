@@ -35,10 +35,10 @@
         /// Marks the object as active.
         /// </summary>
         /// <returns></returns>
-        internal override void Touch()
+        public override void Activate()
         {
             var a = !IsActive;
-            base.Touch();
+            base.Activate();
             if (a)
                 Zone.Devices.OnDeviceActive(this);
         }

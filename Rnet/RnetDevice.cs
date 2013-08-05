@@ -15,7 +15,7 @@ namespace Rnet
     {
 
         const double DEFAULT_RETRY_DELAY_SECONDS = 1;
-        const double DEFAULT_TIMEOUT_SECONDS = 60;
+        const double DEFAULT_TIMEOUT_SECONDS = 3;
 
         AsyncLock send = new AsyncLock();
         AsyncLock receive = new AsyncLock();
@@ -31,30 +31,19 @@ namespace Rnet
         /// Initializes a new instance.
         /// </summary>
         protected RnetDevice(RnetBus bus)
+            : base(bus)
         {
-            Bus = bus;
-            Visible = false;
             RequiresHandshake = true;
             RetryDelay = TimeSpan.FromSeconds(DEFAULT_RETRY_DELAY_SECONDS);
-            RequestTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
-            SetDataTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
+            ReadTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
+            WriteTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
             EventTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
         }
-
-        /// <summary>
-        /// Reference to the communications bus.
-        /// </summary>
-        public RnetBus Bus { get; protected set; }
 
         /// <summary>
         /// Gets the ID of the device on the RNET bus.
         /// </summary>
         public abstract RnetDeviceId DeviceId { get; }
-
-        /// <summary>
-        /// Set to <c>true</c> during device discovery.
-        /// </summary>
-        public bool Visible { get; internal set; }
 
         /// <summary>
         /// Gets whether or not this device requires a handshake in response to high priority messages.
@@ -69,12 +58,12 @@ namespace Rnet
         /// <summary>
         /// Gets or sets the amount of time to wait for a response to a request message.
         /// </summary>
-        public TimeSpan RequestTimeout { get; set; }
+        public TimeSpan ReadTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the amount of time to wait for a handshake for a set data message.
         /// </summary>
-        public TimeSpan SetDataTimeout { get; set; }
+        public TimeSpan WriteTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the amount of time to wait for a handshake for a set data message.
@@ -82,23 +71,23 @@ namespace Rnet
         public TimeSpan EventTimeout { get; set; }
 
         /// <summary>
-        /// Gets the default <see cref="CancellationToken"/> for a request data message.
+        /// Gets the timeout <see cref="CancellationToken"/> for a read operation.
         /// </summary>
-        internal CancellationToken RequestDataTimeoutCancellationToken
+        internal CancellationToken ReadTimeoutCancellationToken
         {
-            get { return new CancellationTokenSource(RequestTimeout).Token; }
+            get { return new CancellationTokenSource(ReadTimeout).Token; }
         }
 
         /// <summary>
-        /// Gets the default <see cref="CancellationToken"/> for a set data message.
+        /// Gets the timeout <see cref="CancellationToken"/> for a write operation.
         /// </summary>
-        internal CancellationToken SetDataTimeoutCancellationToken
+        internal CancellationToken WriteTimeoutCancellationToken
         {
-            get { return new CancellationTokenSource(SetDataTimeout).Token; }
+            get { return new CancellationTokenSource(WriteTimeout).Token; }
         }
 
         /// <summary>
-        /// Gets the default <see cref="CancellationToken"/> for an event message.
+        /// Gets the timeout <see cref="CancellationToken"/> for an event operation.
         /// </summary>
         internal CancellationToken EventTimeoutCancellationToken
         {
@@ -127,7 +116,7 @@ namespace Rnet
             }
 
             // activity detected
-            Touch();
+            Activate();
         }
 
         /// <summary>

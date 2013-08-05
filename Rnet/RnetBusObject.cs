@@ -12,11 +12,17 @@ namespace Rnet
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        protected RnetBusObject()
+        protected RnetBusObject(RnetBus bus)
         {
+            Bus = bus;
             Context = new RnetContext();
             Timestamp = DateTime.MinValue;
         }
+
+        /// <summary>
+        /// Reference to the communications bus.
+        /// </summary>
+        public RnetBus Bus { get; protected set; }
 
         /// <summary>
         /// Gets a set of items associated with this object.
@@ -39,7 +45,7 @@ namespace Rnet
         /// <summary>
         /// Marks the object as active, raising whatever events are required.
         /// </summary>
-        internal virtual void Touch()
+        public virtual void Activate()
         {
             Timestamp = DateTime.UtcNow;
         }

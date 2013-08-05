@@ -17,8 +17,6 @@ namespace Rnet
         {
             if (keypadId >= 0x7c && keypadId <= 0x7f)
                 throw new ArgumentOutOfRangeException("id", "RnetKeypadId cannot be in a reserved range.");
-
-            Visible = true;
         }
 
     }

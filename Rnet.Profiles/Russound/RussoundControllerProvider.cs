@@ -43,6 +43,10 @@ namespace Rnet.Profiles.Russound
                     name = model = d);
                 await firmwareVersionHandle.Subscribe(d =>
                     firmwareVersion = d);
+
+                // activate all supported zones (even though no data has arrived from them)
+                foreach (var zone in zones)
+                    zone.Activate();
             }
 
             public string Name
@@ -97,12 +101,12 @@ namespace Rnet.Profiles.Russound
             public ControllerZoneProfile(RnetZone zone)
                 : base(zone)
             {
-
+                zone.Activate();
             }
 
             public string Name
             {
-                get { return "Zone " + Zone.Id.Value; }
+                get { return "Zone " + (Zone.Id.Value + 1); }
                 set { }
             }
 

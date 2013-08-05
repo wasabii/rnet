@@ -6,6 +6,7 @@
     xmlns:e="http://schemas.microsoft.com/expression/2010/interactivity"
     xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
+    xmlns:rnetpb="clr-namespace:Rnet.Profiles.Basic;assembly=Rnet.Profiles"
     xmlns:rnetpm="clr-namespace:Rnet.Profiles.Media;assembly=Rnet.Profiles"
     xmlns:local="clr-namespace:Rnet.Manager"
     mc:Ignorable="d"
@@ -36,6 +37,8 @@
                     Width="Auto" />
                 <ColumnDefinition
                     Width="Auto" />
+                <ColumnDefinition
+                    Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox
                 Grid.Column="0"
@@ -50,6 +53,11 @@
                 Margin="4,0,0,0"
                 Content="Stop"
                 Command="{Binding StopCommand}" />
+            <Button
+                Grid.Column="3"
+                Margin="4,0,0,0"
+                Content="Scan"
+                Command="{Binding ScanCommand}" />
         </Grid>
 
         <TabControl
@@ -122,8 +130,16 @@
                             ItemsSource="{Binding Zones}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock
-                                        Text="{Binding}" />
+                                    <ContentPresenter
+                                        Content="{local:RnetProfileBinding {x:Type rnetpb:IZone}}">
+                                        <ContentPresenter.ContentTemplate>
+                                            <DataTemplate
+                                                DataType="{x:Type rnetpb:IZone}">
+                                                <TextBlock
+                                                    Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </ContentPresenter.ContentTemplate>
+                                    </ContentPresenter>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

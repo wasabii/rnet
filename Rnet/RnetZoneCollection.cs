@@ -76,7 +76,7 @@ namespace Rnet
         /// <param name="zone"></param>
         internal void OnZoneActive(RnetZone zone)
         {
-            Controller.Touch();
+            Controller.Activate();
             RaiseCollectionChanged();
         }
 
