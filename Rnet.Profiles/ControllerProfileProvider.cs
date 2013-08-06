@@ -8,12 +8,17 @@ namespace Rnet.Profiles
     /// <summary>
     /// Serves as a basic <see cref="ProfileProvider"/> that only includes controllers.
     /// </summary>
-    public abstract class ControllerProfileProvider : DeviceProfileProvider
+    public abstract class ControllerProfileProvider : ProfileProvider
     {
 
-        public override sealed Task<IEnumerable<IProfile>> GetDeviceProfilesAsync(RnetDevice target)
+        public sealed override Task<IEnumerable<IProfile>> GetProfiles(RnetBusObject target)
         {
-            return target is RnetController ? GetControllerProfilesAsync((RnetController)target) : Task.FromResult(Enumerable.Empty<IProfile>());
+            if (target is RnetController)
+                return GetControllerProfiles((RnetController)target);
+            else if (target is RnetZone)
+                return GetZoneProfiles((RnetZone)target);
+            else
+                return Task.FromResult(Enumerable.Empty<IProfile>());
         }
 
         /// <summary>
@@ -21,10 +26,21 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public virtual Task<IEnumerable<IProfile>> GetControllerProfilesAsync(RnetController target)
+        public virtual Task<IEnumerable<IProfile>> GetControllerProfiles(RnetController target)
         {
             return Task.FromResult(Enumerable.Empty<IProfile>());
         }
+
+        /// <summary>
+        /// Override this method to return applicable profiles for the target zones.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public virtual Task<IEnumerable<IProfile>> GetZoneProfiles(RnetZone target)
+        {
+            return Task.FromResult(Enumerable.Empty<IProfile>());
+        }
+
 
     }
 

@@ -8,11 +8,14 @@ using System.Linq;
 namespace Rnet
 {
 
-    public sealed class RnetZoneDeviceCollection : IEnumerable<RnetZoneDevice>, INotifyCollectionChanged
+    /// <summary>
+    /// Manages a collection of devices assigned to a zone.
+    /// </summary>
+    public sealed class RnetZoneDeviceCollection : IEnumerable<RnetDevice>, INotifyCollectionChanged
     {
 
-        ConcurrentDictionary<RnetKeypadId, WeakReference<RnetZoneDevice>> devices =
-            new ConcurrentDictionary<RnetKeypadId, WeakReference<RnetZoneDevice>>();
+        ConcurrentDictionary<RnetKeypadId, WeakReference<RnetDevice>> devices =
+            new ConcurrentDictionary<RnetKeypadId, WeakReference<RnetDevice>>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -33,10 +36,10 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public RnetZoneDevice this[RnetKeypadId id]
+        public RnetDevice this[RnetKeypadId id]
         {
             get { return GetOrCreate(id); }
-            internal set { devices.GetOrAdd(id, new WeakReference<RnetZoneDevice>(value)); }
+            internal set { devices.GetOrAdd(id, new WeakReference<RnetDevice>(value)); }
         }
 
         /// <summary>
@@ -44,7 +47,7 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        RnetZoneDevice GetOrCreate(RnetKeypadId id)
+        RnetDevice GetOrCreate(RnetKeypadId id)
         {
             // skip reserved ids except external devices
             if (id != RnetKeypadId.External &&
@@ -53,7 +56,7 @@ namespace Rnet
                 return null;
 
             return devices
-                .GetOrAdd(id, i => new WeakReference<RnetZoneDevice>(new RnetZoneDevice(Zone, id)))
+                .GetOrAdd(id, i => new WeakReference<RnetDevice>(new RnetZoneRemoteDevice(Zone, id)))
                 .GetTargetOrDefault();
         }
 
@@ -61,13 +64,13 @@ namespace Rnet
         /// Returns an enumerator that iterates through the known devices.
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<RnetZoneDevice> GetEnumerator()
+        public IEnumerator<RnetDevice> GetEnumerator()
         {
             return devices.Values
                 .Select(i => i.GetTargetOrDefault())
                 .Where(i => i != null)
                 .Where(i => i.IsActive)
-                .OrderBy(i => i.Id)
+                .OrderBy(i => i.DeviceId)
                 .ToList()
                 .GetEnumerator();
         }
@@ -76,7 +79,7 @@ namespace Rnet
         /// Invoked when a device becomes active.
         /// </summary>
         /// <param name="device"></param>
-        internal void OnDeviceActive(RnetZoneDevice device)
+        internal void OnDeviceActive(RnetDevice device)
         {
             Zone.Activate();
             RaiseCollectionChanged();

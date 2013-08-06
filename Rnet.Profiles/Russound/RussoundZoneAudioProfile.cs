@@ -1,10 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Threading.Tasks;
+
 using Rnet.Profiles.Media;
 
 namespace Rnet.Profiles.Russound
 {
 
+    /// <summary>
+    /// Implements <see cref="IZoneAudio"/> for a zone on a Russound controller.
+    /// </summary>
     class RussoundZoneAudioProfile : ZoneProfileBase, IZoneAudio
     {
 
@@ -39,7 +43,7 @@ namespace Rnet.Profiles.Russound
         public RussoundZoneAudioProfile(RnetZone zone)
             : base(zone)
         {
-            Debug.WriteLine("RussoundZoneAudioProfile: {0}", zone);
+            Trace.TraceInformation("RussoundZoneAudioProfile:ctor Id={0}", (int)zone.Id);
             runHandle =
                 Zone.Controller[2, 0];
             zoneHandle =

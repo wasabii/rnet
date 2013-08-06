@@ -1,4 +1,5 @@
-﻿namespace Rnet
+﻿using System.Diagnostics;
+namespace Rnet
 {
 
     /// <summary>
@@ -13,6 +14,7 @@
         internal RnetZone(RnetController controller, RnetZoneId id)
             : base(controller.Bus)
         {
+            Trace.TraceInformation("RnetZone:ctor Id={0}", (int)id);
             Controller = controller;
             Id = id;
             Devices = new RnetZoneDeviceCollection(this);

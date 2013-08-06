@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -57,29 +58,20 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static IObservable<KeyValuePair<Type, IProfile>> GetProfiles(this RnetBusObject target)
+        public static Task<Dictionary<Type, IProfile>> GetProfiles(this RnetBusObject target)
         {
-            return target.Context.GetOrCreate<IObservable<IProfile>>(() =>
-                Providers.ToObservable()
-                    .SubscribeOn(target.Bus.SynchronizationContext)
-                    .Select(i =>
-                        Observable.FromAsync(() =>
-                                i.GetProfilesAsync(target) ?? Task.FromResult(Enumerable.Empty<IProfile>()))
-                            .SubscribeOn(target.Bus.SynchronizationContext))
-                    .Merge()
-                    .Where(i => i != null)
-                    .SelectMany(i => i)
-                    .Where(i => i != null)
-                    .Select(i =>
-                        Observable.FromAsync(() =>
-                                InitializeProfileAsync(i))
-                            .SubscribeOn(target.Bus.SynchronizationContext))
-                    .Merge())
-                    .Select(i => new { Object = i, Profiles = GetProfileTypes(i) })
-                    .SelectMany(i => i.Profiles.Select(j => new { Profile = j, Object = i.Object }))
-                    .Select(i => new KeyValuePair<Type, IProfile>(i.Profile, i.Object))
-                    .SubscribeOn(target.Bus.SynchronizationContext)
-                    .ObserveOn(target.Bus.SynchronizationContext);
+            return target.Context.GetOrCreate<Task<Dictionary<Type, IProfile>>>(async () =>
+                (await Task.WhenAll(
+                    Providers
+                        .Select(async i =>
+                            (await i.GetProfiles(target) ?? Enumerable.Empty<IProfile>())
+                                .ToList())))
+                .SelectMany(i => i)
+                .Where(i => i != null)
+                .Select(i => new { Object = i, ProfileTypes = GetProfileTypes(i) })
+                .SelectMany(i => i.ProfileTypes.Select(j => new { ProfileType = j, Object = i.Object }))
+                .GroupBy(i => i.ProfileType)
+                .ToDictionary(i => i.Key, i => i.First().Object));
         }
 
         /// <summary>
@@ -90,12 +82,20 @@ namespace Rnet.Profiles
         /// <returns></returns>
         public static Task<IProfile> GetProfile(this RnetBusObject target, Type profileType)
         {
-            return target.Context.GetOrCreate<Task<IProfile>>(async () =>
+            // key stored in context is a generic task type
+            var t = typeof(Task<>)
+                .MakeGenericType(profileType);
+
+            // value stored in context is a func which returns an implementation
+            var f = (Func<Task<IProfile>>)(async () =>
                 await GetProfiles(target)
                     .Where(i => i.Key == profileType)
                     .Select(i => i.Value)
                     .OfType<IProfile>()
                     .FirstOrDefaultAsync());
+
+            // obtain it or add a new one
+            return (Task<IProfile>)target.Context.GetOrCreate(t, f);
         }
 
         /// <summary>

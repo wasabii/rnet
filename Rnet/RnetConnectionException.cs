@@ -3,6 +3,9 @@
 namespace Rnet
 {
 
+    /// <summary>
+    /// Represents errors that occur during RNET connection operations.
+    /// </summary>
     public class RnetConnectionException : RnetException
     {
 

@@ -2,27 +2,20 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-using Nito.AsyncEx;
-
 namespace Rnet
 {
 
     /// <summary>
-    /// Provides a handle by which to manipulate data at a specific path in an RNET device.
+    /// Provides a handle by which to manipulate data at a specific path on an RNET device.
     /// </summary>
-    public class RnetDataHandle
+    public abstract class RnetDataHandle
     {
-
-        AsyncMonitor wait = new AsyncMonitor();
-        byte[] buffer;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="device"></param>
-        /// <param name="parent"></param>
         /// <param name="path"></param>
-        internal RnetDataHandle(RnetDevice device, RnetPath path)
+        internal protected RnetDataHandle(RnetDevice device, RnetPath path)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
@@ -32,7 +25,7 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Device that owns this handle.
+        /// Owning device of the handle.
         /// </summary>
         public RnetDevice Device { get; private set; }
 
@@ -42,32 +35,7 @@ namespace Rnet
         public RnetPath Path { get; private set; }
 
         /// <summary>
-        /// Invoked by the device when data has been received. Makes the data available to users of this handle instance.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        internal async Task Receive(byte[] data)
-        {
-            using (await wait.EnterAsync())
-            {
-                // check for duplicates; unneccessary events might be hard on consumers due to parsing
-                if (data.ArrayEquals(buffer))
-                    return;
-
-                // store data locally
-                buffer = data;
-
-                // notify anything waiting on the data
-                wait.PulseAll();
-            }
-
-            // send new data to interested parties
-            if (data != null)
-                RaiseDataAvailable(new RnetDataAvailableEventArgs(data));
-        }
-
-        /// <summary>
-        /// Reads the data from the device path. Cached data may be returned if available.
+        /// Reads the data from the device path.
         /// </summary>
         /// <returns></returns>
         public Task<byte[]> Read()
@@ -76,34 +44,14 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Reads the data from the device path. Cached data may be returned if available.
+        /// Reads the data from the device path.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> Read(CancellationToken cancellationToken)
-        {
-            return await RnetUtil.DefaultIfCancelled(async ct =>
-            {
-                using (await wait.EnterAsync(ct))
-                {
-                    // cache data available
-                    if (buffer != null)
-                        return buffer;
-
-                    // issue request for data
-                    await Device.SendRequestData(Path, ct);
-
-                    // wait for data to arrive
-                    while (buffer == null && !ct.IsCancellationRequested)
-                        await wait.WaitAsync(ct);
-
-                    return buffer;
-                }
-            }, cancellationToken, Device.ReadTimeoutCancellationToken);
-        }
+        public abstract Task<byte[]> Read(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Expires any cached data.
+        /// Refreshes the data from the device.
         /// </summary>
         /// <returns></returns>
         public Task<byte[]> Refresh()
@@ -112,63 +60,14 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Expires any cached data.
+        /// Refreshes the data from the device.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> Refresh(CancellationToken cancellationToken)
-        {
-            return await RnetUtil.DefaultIfCancelled(async ct =>
-            {
-                // expire cached data
-                using (await wait.EnterAsync(ct))
-                    buffer = null;
-
-                // reads the new data
-                return await Read(ct);
-            }, cancellationToken, Device.ReadTimeoutCancellationToken);
-        }
+        public abstract Task<byte[]> Refresh(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Writes the data to the device and returns the new value.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public Task<byte[]> Write(byte[] data)
-        {
-            return Write(data, CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Writes the data to the device and returns the new value.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<byte[]> Write(byte[] data, CancellationToken cancellationToken)
-        {
-            return await RnetUtil.DefaultIfCancelled(async ct =>
-            {
-                using (await wait.EnterAsync(ct))
-                {
-                    // clear cached buffer, will reread
-                    buffer = null;
-
-                    // initiate set data message followed by request data message
-                    await Device.SendSetData(Path, data, ct);
-                    await Device.SendRequestData(Path, ct);
-
-                    // wait for new data value
-                    while (buffer == null && !ct.IsCancellationRequested)
-                        await wait.WaitAsync(ct);
-
-                    return buffer;
-                }
-            }, cancellationToken, Device.WriteTimeoutCancellationToken);
-        }
-
-        /// <summary>
-        /// Writes the single byte to the path and returns the new value. The new value may be different than what was written.
+        /// Writes the byte to the device and returns the data after the write was completed.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -178,7 +77,7 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Writes the single byte to the path and returns the new value. The new value may be different than what was written.
+        /// Writes the byte to the device and returns the data after the write was completed.
         /// </summary>
         /// <param name="value"></param>
         /// <param name="cancellationToken"></param>
@@ -189,17 +88,35 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Writes the data to the device and returns the data after the write was completed.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public Task<byte[]> Write(byte[] data)
+        {
+            return Write(data, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Writes the data to the device and returns the data after the write was completed.
+        /// </summary>
+        /// <typeparam name="?"></typeparam>
+        /// <param name="?"></param>
+        /// <returns></returns>
+        public abstract Task<byte[]> Write(byte[] data, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <returns></returns>
         public Task<byte[]> SendEvent(RnetEvent evt)
         {
-            return SendEvent(evt, (ushort)0, CancellationToken.None);
+            return SendEvent(evt, CancellationToken.None);
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="cancellationToken"></param>
@@ -210,52 +127,18 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
-        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp)
-        {
-            return SendEvent(evt, timestamp, (ushort)0, CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
         /// <returns></returns>
         public Task<byte[]> SendEvent(RnetEvent evt, int timestamp)
         {
-            return checked(SendEvent(evt, (ushort)timestamp));
+            return SendEvent(evt, timestamp, CancellationToken.None);
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
-        public Task<byte[]> SendEvent(RnetEvent evt, byte timestamp)
-        {
-            return SendEvent(evt, (ushort)timestamp);
-        }
-
-        /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <param name="timestamp"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, CancellationToken cancellationToken)
-        {
-            return SendEvent(evt, timestamp, (ushort)0, cancellationToken);
-        }
-
-        /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -267,7 +150,18 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="timestamp"></param>
+        /// <returns></returns>
+        public Task<byte[]> SendEvent(RnetEvent evt, byte timestamp)
+        {
+            return SendEvent(evt, timestamp, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -279,19 +173,30 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
-        /// <param name="data"></param>
         /// <returns></returns>
-        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data)
+        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp)
         {
-            return SendEvent(evt, timestamp, data, RnetPriority.Low, CancellationToken.None);
+            return SendEvent(evt, timestamp, CancellationToken.None);
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="timestamp"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, CancellationToken cancellationToken)
+        {
+            return SendEvent(evt, timestamp, (ushort)0, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -299,36 +204,11 @@ namespace Rnet
         /// <returns></returns>
         public Task<byte[]> SendEvent(RnetEvent evt, int timestamp, int data)
         {
-            return checked(SendEvent(evt, (ushort)timestamp, (ushort)data));
+            return SendEvent(evt, timestamp, data, CancellationToken.None);
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <param name="timestamp"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public Task<byte[]> SendEvent(RnetEvent evt, byte timestamp, byte data)
-        {
-            return SendEvent(evt, (ushort)timestamp, (ushort)data);
-        }
-
-        /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <param name="timestamp"></param>
-        /// <param name="data"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data, CancellationToken cancellationToken)
-        {
-            return SendEvent(evt, timestamp, data, RnetPriority.Low, cancellationToken);
-        }
-
-        /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -341,7 +221,19 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="timestamp"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public Task<byte[]> SendEvent(RnetEvent evt, byte timestamp, byte data)
+        {
+            return SendEvent(evt, timestamp, data, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -354,38 +246,32 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
         /// <param name="data"></param>
-        /// <param name="priority"></param>
-        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority, CancellationToken cancellationToken)
+        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data)
         {
-            return await RnetUtil.DefaultIfCancelled(async ct =>
-            {
-                using (await wait.EnterAsync(ct))
-                {
-                    // clear cached data
-                    buffer = null;
-
-                    // initiate event followed by request data message
-                    await Device.SendEvent(Path, evt, timestamp, data, priority, ct);
-                    await Device.SendRequestData(Path, ct);
-
-                    // wait for new data value
-                    while (buffer == null && !ct.IsCancellationRequested)
-                        await wait.WaitAsync(ct);
-
-                    return buffer;
-                }
-            }, cancellationToken, Device.EventTimeoutCancellationToken);
+            return SendEvent(evt, timestamp, data, CancellationToken.None);
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="timestamp"></param>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data, CancellationToken cancellationToken)
+        {
+            return SendEvent(evt, timestamp, data, RnetPriority.Low, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -399,7 +285,7 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Sends an event to the path and returns the value after the event was received.
+        /// Sends an event to the path on the device and returns the value after the event was received.
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="timestamp"></param>
@@ -413,6 +299,17 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Sends an event to the path on the device and returns the value after the event was received.
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="timestamp"></param>
+        /// <param name="data"></param>
+        /// <param name="priority"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public abstract Task<byte[]> SendEvent(RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Raised when the data buffer stored in the node is changed.
         /// </summary>
         public event EventHandler<RnetDataAvailableEventArgs> DataAvailable;
@@ -421,7 +318,7 @@ namespace Rnet
         /// Raises the BufferChanged event.
         /// </summary>
         /// <param name="args"></param>
-        void RaiseDataAvailable(RnetDataAvailableEventArgs args)
+        protected void RaiseDataAvailable(RnetDataAvailableEventArgs args)
         {
             if (DataAvailable != null)
                 DataAvailable(this, args);

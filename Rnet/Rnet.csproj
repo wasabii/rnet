@@ -63,6 +63,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetBusStateEventArgs.cs" />
+    <Compile Include="IRnetDevice.cs" />
+    <Compile Include="RnetBusState.cs" />
+    <Compile Include="RnetDataHandle.cs" />
+    <Compile Include="RnetDataReceivedEventArgs.cs" />
+    <Compile Include="RnetDevice.cs" />
+    <Compile Include="RnetLocalDataHandle.cs" />
     <Compile Include="RnetNumberSixMessage.cs" />
     <Compile Include="RnetPriority.cs" />
     <Compile Include="RnetTcpUriParser.cs" />
@@ -70,16 +77,14 @@
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="RnetBus.cs" />
     <Compile Include="RnetBusObject.cs" />
-    <Compile Include="RnetConnectionManager.cs" />
     <Compile Include="RnetDataHandleWriter.cs" />
-    <Compile Include="RnetDataHandle.cs" />
+    <Compile Include="RnetRemoteDataHandle.cs" />
     <Compile Include="RnetControllerCollection.cs" />
     <Compile Include="RnetDataUtil.cs" />
     <Compile Include="RnetContext.cs" />
-    <Compile Include="RnetModelObject.cs" />
-    <Compile Include="RnetBusDevice.cs" />
+    <Compile Include="RnetLocalDevice.cs" />
     <Compile Include="RnetClient.cs" />
-    <Compile Include="RnetClientErrorEventArgs.cs" />
+    <Compile Include="RnetExceptionEventArgs.cs" />
     <Compile Include="RnetClientState.cs" />
     <Compile Include="RnetClientStateEventArgs.cs" />
     <Compile Include="RnetConnectionException.cs" />
@@ -87,7 +92,7 @@
     <Compile Include="RnetConnectionStateEventArgs.cs" />
     <Compile Include="RnetController.cs" />
     <Compile Include="RnetData.cs" />
-    <Compile Include="RnetDevice.cs" />
+    <Compile Include="RnetRemoteDevice.cs" />
     <Compile Include="RnetMessageEventArgs.cs" />
     <Compile Include="RnetRequestMessageType.cs" />
     <Compile Include="RnetTextAlignment.cs" />
@@ -108,7 +113,7 @@
     <Compile Include="RnetStreamReader.cs" />
     <Compile Include="RnetZone.cs" />
     <Compile Include="RnetZoneCollection.cs" />
-    <Compile Include="RnetZoneDevice.cs" />
+    <Compile Include="RnetZoneRemoteDevice.cs" />
     <Compile Include="RnetZoneDeviceCollection.cs" />
     <Compile Include="RnetZoneId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

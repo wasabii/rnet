@@ -8,6 +8,8 @@ namespace Rnet
     /// </summary>
     public struct RnetKeypadId : IComparable<RnetKeypadId>, IComparable
     {
+
+        public static readonly RnetKeypadId Null = 0x00;
         public static readonly RnetKeypadId Controller = 0x7f;
         public static readonly RnetKeypadId Reserved = 0x7e;
         public static readonly RnetKeypadId AllZone = 0x7d;

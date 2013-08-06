@@ -1,61 +1,22 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Nito.AsyncEx;
 
 namespace Rnet
 {
 
     /// <summary>
-    /// Provides a durable wrapper around a <see cref="RnetConnection"/>.
+    /// Provides a durable interface to send and receive RNET messages around an existing <see cref="RnetConnection"/>.
     /// </summary>
-    public class RnetClient : RnetModelObject, IDisposable
+    public class RnetClient : IDisposable
     {
 
-        /// <summary>
-        /// Initializes the static instance.
-        /// </summary>
-        static RnetClient()
-        {
-            RnetTcpUriParser.RegisterParser();
-        }
-
-        /// <summary>
-        /// Obtains a <see cref="RnetConnection"/> from the given URI.
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <returns></returns>
-        static RnetConnection CreateConnection(Uri uri)
-        {
-            if (uri.Scheme == "rnet.tcp")
-                return new RnetTcpConnection(uri);
-
-            return null;
-        }
-
         AsyncLock lck = new AsyncLock();
-        RnetConnection connection;
-
-        /// <summary>
-        /// Moment of last attempted connection.
-        /// </summary>
-        DateTime lastConnectionAttempt = DateTime.MinValue;
-
-        /// <summary>
-        /// Last reported connection state.
-        /// </summary>
-        RnetConnectionState lastConnectionState = RnetConnectionState.Closed;
-
-        /// <summary>
-        /// Receives messages from the connection.
-        /// </summary>
-        Task receiveTask;
-
-        /// <summary>
-        /// Signals the worker thread to cancel.
-        /// </summary>
         CancellationTokenSource cts;
+        Task receiveTask;
 
         /// <summary>
         /// Initializes a new instance.
@@ -66,7 +27,8 @@ namespace Rnet
             if (connection == null)
                 throw new ArgumentNullException("connection");
 
-            this.connection = connection;
+            Connection = connection;
+            State = RnetClientState.Stopped;
         }
 
         /// <summary>
@@ -74,123 +36,127 @@ namespace Rnet
         /// </summary>
         /// <param name="uri"></param>
         public RnetClient(Uri uri)
-            :this(CreateConnection(uri))
+            : this(RnetConnection.Create(uri))
         {
 
         }
 
         /// <summary>
-        /// Starts the <see cref="RnetClient"/>.
+        /// Underlying connection.
         /// </summary>
-        public async Task StartAsync()
-        {
-            using (await lck.LockAsync())
-            {
-                // already started
-                if (cts != null)
-                    return;
-
-                // already started
-                if (receiveTask != null)
-                    return;
-
-                // start up receiver using a background task
-                cts = new CancellationTokenSource();
-                receiveTask = Task.Run(async () => await ReceiveLoopAsync(cts.Token));
-            }
-
-            OnStateChanged(new RnetClientStateEventArgs(State));
-        }
-
-        /// <summary>
-        /// Stops the <see cref="RnetClient"/>.
-        /// </summary>
-        public async Task StopAsync()
-        {
-            using (await lck.LockAsync())
-            {
-                if (cts == null)
-                    return;
-
-                // signal cancel and wait for shutdown
-                cts.Cancel();
-            }
-
-            // wait for task to end
-            await receiveTask;
-            receiveTask = null;
-
-            OnStateChanged(new RnetClientStateEventArgs(State));
-        }
+        public RnetConnection Connection { get; private set; }
 
         /// <summary>
         /// Gets the current state of the <see cref="RnetClient"/>.
         /// </summary>
-        public RnetClientState State
+        public RnetClientState State { get; private set; }
+
+        /// <summary>
+        /// Starts the client.
+        /// </summary>
+        /// <returns></returns>
+        public Task Start()
         {
-            get { return cts == null ? RnetClientState.Stopped : RnetClientState.Started; }
+            return Start(CancellationToken.None);
         }
 
         /// <summary>
-        /// Gets the current connection state of the <see cref="RnetClient"/>.
+        /// Starts the client.
         /// </summary>
-        public RnetConnectionState ConnectionState
+        public async Task Start(CancellationToken cancellationToken)
         {
-            get { return connection.State; }
-        }
-
-        /// <summary>
-        /// Ensures an active connection is available
-        /// </summary>
-        async Task<bool> EnsureConnection(CancellationToken ct)
-        {
-            using (await lck.LockAsync(ct))
+            using (await lck.LockAsync())
             {
-                // double check
-                if (connection.State == RnetConnectionState.Open)
-                    return true;
+                if (State != RnetClientState.Stopped)
+                    throw new RnetException("Client is already started.");
 
-                TryRaiseConnectionStateChanged();
+                // start up receiver using a background task
+                cts = new CancellationTokenSource();
+                receiveTask = Task.Run(async () => await ReceiveLoop(cts.Token));
 
-                // attempt to open connection
+                // currenty started
+                State = RnetClientState.Started;
+            }
+
+            OnStateChanged(new RnetClientStateEventArgs(State));
+        }
+
+        /// <summary>
+        /// Stops the client.
+        /// </summary>
+        /// <returns></returns>
+        public Task Stop()
+        {
+            return Stop(CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Stops the client.
+        /// </summary>
+        public async Task Stop(CancellationToken cancellationToken)
+        {
+            using (await lck.LockAsync())
+            {
+                if (State != RnetClientState.Stopped)
+                    throw new RnetException("Client is already started.");
+
+                // signal shutdown
+                cts.Cancel();
+                State = RnetClientState.Stopped;
+
+                // wait for receiving task to terminate
+                await receiveTask;
+                receiveTask = null;
+            }
+
+            OnStateChanged(new RnetClientStateEventArgs(State));
+        }
+
+        /// <summary>
+        /// Attempts to open the connection if it is not yet open.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        async Task OpenConnection(CancellationToken cancellationToken)
+        {
+            using (await lck.LockAsync(cancellationToken))
+            {
+                // connection currently open
+                if (Connection.State == RnetConnectionState.Open)
+                    return;
+
                 try
                 {
-                    await connection.OpenAsync();
+                    // attempt to open connection
+                    Trace.TraceInformation("Opening connection.");
+                    await Connection.Open(cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
-                    return false;
+                    return;
                 }
-                catch (Exception e)
-                {
-                    OnError(new RnetClientErrorEventArgs(e));
-                }
-
-                TryRaiseConnectionStateChanged();
-
-                return connection.State == RnetConnectionState.Open;
             }
         }
 
         /// <summary>
-        /// Receives messages from the connection.
+        /// Receives messages from the connection until cancelled.
         /// </summary>
-        async Task ReceiveLoopAsync(CancellationToken cancellationToken)
+        async Task ReceiveLoop(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     // attempt to restablish a connection if it was lost
-                    while (!await EnsureConnection(cancellationToken) && !cancellationToken.IsCancellationRequested)
-                        continue;
+                    while (Connection.State != RnetConnectionState.Open && !cancellationToken.IsCancellationRequested)
+                        await OpenConnection(cancellationToken);
 
                     // check for cancelled
                     if (cancellationToken.IsCancellationRequested)
                         return;
 
                     // read next message
-                    var message = await connection.ReceiveAsync(cancellationToken);
+                    var message = await Connection.Read(cancellationToken);
                     if (message != null)
                         OnMessageReceived(new RnetMessageEventArgs(message));
                 }
@@ -198,14 +164,9 @@ namespace Rnet
                 {
                     return;
                 }
-                catch (RnetConnectionException e)
-                {
-                    if (ConnectionState == RnetConnectionState.Open)
-                        OnError(new RnetClientErrorEventArgs(e));
-                }
                 catch (Exception e)
                 {
-                    OnError(new RnetClientErrorEventArgs(e));
+                    OnUnhandledException(new RnetExceptionEventArgs(e));
                 }
             }
         }
@@ -215,9 +176,9 @@ namespace Rnet
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public Task SendAsync(RnetMessage message)
+        public Task Send(RnetMessage message)
         {
-            return SendAsync(message, CancellationToken.None);
+            return Send(message, CancellationToken.None);
         }
 
         /// <summary>
@@ -226,14 +187,18 @@ namespace Rnet
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task SendAsync(RnetMessage message, CancellationToken cancellationToken)
+        public async Task Send(RnetMessage message, CancellationToken cancellationToken)
         {
             // attempt to restablish a connection if it was lost
-            while (!await EnsureConnection(cancellationToken) && !cancellationToken.IsCancellationRequested)
-                continue;
+            while (Connection.State != RnetConnectionState.Open && !cancellationToken.IsCancellationRequested)
+                await OpenConnection(cancellationToken);
+
+            // check for cancelled
+            if (cancellationToken.IsCancellationRequested)
+                return;
 
             // send message
-            await connection.SendAsync(message, cancellationToken);
+            await Connection.Send(message, cancellationToken);
 
             // successfully sent
             OnMessageSent(new RnetMessageEventArgs(message));
@@ -270,22 +235,22 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Raised when an error occurs.
+        /// Raised when an exception occurs during the operation of the client that the client could not recover from.
         /// </summary>
-        public event EventHandler<RnetClientErrorEventArgs> Error;
+        public event EventHandler<RnetExceptionEventArgs> UnhandledException;
 
         /// <summary>
-        /// Raises the Error event.
+        /// Raises the UnhandledException event.
         /// </summary>
         /// <param name="args"></param>
-        void OnError(RnetClientErrorEventArgs args)
+        void OnUnhandledException(RnetExceptionEventArgs args)
         {
-            if (Error != null)
-                Error(this, args);
+            if (UnhandledException != null)
+                UnhandledException(this, args);
         }
 
         /// <summary>
-        /// Raised when the state changes.
+        /// Raised when the client state changes.
         /// </summary>
         public event EventHandler<RnetClientStateEventArgs> StateChanged;
 
@@ -297,32 +262,6 @@ namespace Rnet
         {
             if (StateChanged != null)
                 StateChanged(this, args);
-            RaisePropertyChanged("State");
-        }
-
-        /// <summary>
-        /// Raised when the connection state changes.
-        /// </summary>
-        public event EventHandler<RnetConnectionStateEventArgs> ConnectionStateChanged;
-
-        /// <summary>
-        /// Raises the ConnectionStateChanged event.
-        /// </summary>
-        /// <param name="args"></param>
-        void OnConnectionStateChanged(RnetConnectionStateEventArgs args)
-        {
-            if (ConnectionStateChanged != null)
-                ConnectionStateChanged(this, args);
-            RaisePropertyChanged("ConnectionState");
-        }
-
-        /// <summary>
-        /// Raises the ConnectionStateChanged event if required.
-        /// </summary>
-        void TryRaiseConnectionStateChanged()
-        {
-            if (ConnectionState != lastConnectionState)
-                OnConnectionStateChanged(new RnetConnectionStateEventArgs(lastConnectionState = ConnectionState));
         }
 
         /// <summary>
@@ -330,7 +269,16 @@ namespace Rnet
         /// </summary>
         public void Dispose()
         {
-            StopAsync().Wait();
+            try
+            {
+                if (State != RnetClientState.Stopped)
+                    Stop().Wait(2000);
+            }
+            catch (Exception e)
+            {
+                Trace.Fail("Exception in Dispose", e.ToString());
+            }
+
             GC.SuppressFinalize(this);
         }
 

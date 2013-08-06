@@ -11,7 +11,7 @@ namespace Rnet.Profiles
     public abstract class DeviceProfileProvider : ProfileProvider
     {
 
-        public override sealed Task<IEnumerable<IProfile>> GetProfilesAsync(RnetBusObject target)
+        public override sealed Task<IEnumerable<IProfile>> GetProfiles(RnetBusObject target)
         {
             return target is RnetDevice ? GetDeviceProfilesAsync((RnetDevice)target) : Task.FromResult(Enumerable.Empty<IProfile>());
         }

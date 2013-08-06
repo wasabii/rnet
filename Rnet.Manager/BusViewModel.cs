@@ -89,7 +89,7 @@ namespace Rnet.Manager
             Bus = new RnetBus(uri);
             Bus.MessageSent += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Sent));
             Bus.MessageReceived += (s, a) => Messages.Add(new MessageViewModel(a.Message, MessageDirection.Received));
-            Bus.Error += Bus_Error;
+            Bus.UnhandledException += Bus_Error;
 
             // wrap controllers in view model
             Controllers = Bus.Controllers.AsObservableQuery()
@@ -106,7 +106,7 @@ namespace Rnet.Manager
             ScanCommand.RaiseCanExecuteChanged();
 
             // start the bus
-            await Bus.StartAsync();
+            await Bus.Start();
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace Rnet.Manager
 
         async void Stop()
         {
-            await Bus.StopAsync();
+            await Bus.Stop();
             Bus = null;
 
             // we are stopped now
@@ -129,9 +129,9 @@ namespace Rnet.Manager
 
         async void Scan()
         {
-            await Bus.Client.SendAsync(new RnetEventMessage(
+            await Bus.Client.Send(new RnetEventMessage(
                  new RnetDeviceId(RnetControllerId.AllControllers, 0, RnetKeypadId.External),
-                 Bus.Device.DeviceId,
+                 Bus.LocalDevice.DeviceId,
                  new RnetPath(1, 0),
                  new RnetPath(1, 0),
                  (RnetEvent)200,
@@ -140,7 +140,7 @@ namespace Rnet.Manager
                  RnetPriority.High));
         }
 
-        void Bus_Error(object sender, RnetClientErrorEventArgs args)
+        void Bus_Error(object sender, RnetExceptionEventArgs args)
         {
             ExceptionDispatchInfo.Capture(args.Exception).Throw();
         }

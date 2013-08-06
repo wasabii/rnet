@@ -18,6 +18,7 @@ namespace Rnet
         /// <returns></returns>
         public static string GetAsciiString(byte[] dat)
         {
+            
             if (dat == null)
                 return null;
 

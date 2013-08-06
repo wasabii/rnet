@@ -21,7 +21,7 @@ namespace Rnet.Profiles.Basic
             /// Initializes a new instance.
             /// </summary>
             /// <param name="device"></param>
-            public Profile(RnetBusDevice device)
+            public Profile(RnetLocalDevice device)
                 : base(device)
             {
 
@@ -51,7 +51,7 @@ namespace Rnet.Profiles.Basic
 
         public override Task<IEnumerable<IProfile>> GetDeviceProfilesAsync(RnetDevice target)
         {
-            var d = target as RnetBusDevice;
+            var d = target as RnetLocalDevice;
             if (d == null)
                 return base.GetDeviceProfilesAsync(target);
 

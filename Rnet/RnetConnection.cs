@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,14 +13,27 @@ namespace Rnet
     public abstract class RnetConnection : IDisposable
     {
 
-        AsyncLock writerLock = new AsyncLock();
+        /// <summary>
+        /// Obtains a <see cref="RnetConnection"/> from the given URI.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        public static RnetConnection Create(Uri uri)
+        {
+            if (uri.Scheme == "tcp" ||
+                uri.Scheme == "rnet.tcp")
+                return new RnetTcpConnection(uri);
+
+            throw new RnetException("Unknown connection URI schema " + uri.Scheme + ".");
+        }
+
+        AsyncLock write = new AsyncLock();
         RnetStreamWriter writer;
         RnetStreamReader reader;
 
         /// <summary>
-        /// Initializes a new connection that communicates with the given <see cref="Stream"/>.
+        /// Initializes a new instance.
         /// </summary>
-        /// <param name="stream"></param>
         protected RnetConnection()
         {
 
@@ -41,127 +52,121 @@ namespace Rnet
         protected abstract RnetStreamWriter GetWriter();
 
         /// <summary>
-        /// Opens the connection to RNet.
+        /// Opens the connection.
         /// </summary>
-        public async Task OpenAsync()
+        /// <returns></returns>
+        public Task Open()
         {
-            try
-            {
-                try
-                {
-                    await ConnectAsync();
+            return Open(CancellationToken.None);
+        }
 
-                    // establish reader
-                    reader = GetReader();
-                    if (reader == null)
-                        throw new RnetException("Unable to obtain RnetReader.");
+        /// <summary>
+        /// Opens the connection.
+        /// </summary>
+        public async Task Open(CancellationToken cancellationToken)
+        {
+            if (State != RnetConnectionState.Closed)
+                throw new RnetConnectionException("Connection is not closed.");
 
-                    // establish writer
-                    writer = GetWriter();
-                    if (writer == null)
-                        throw new RnetException("Unable to obtain RnetWriter.");
-                }
-                catch (AggregateException e)
-                {
-                    e = e.Flatten();
-                    if (e.InnerExceptions.Count == 1)
-                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
-                    else
-                        ExceptionDispatchInfo.Capture(e).Throw();
-                }
-            }
-            catch (RnetException e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-            catch (Exception e)
-            {
-                throw new RnetConnectionException("Could not open connection.", e);
-            }
+            // establish connection
+            await Connect(cancellationToken);
+
+            // obtain reader
+            reader = GetReader();
+            if (reader == null)
+                throw new RnetException("Unable to obtain RnetReader.");
+
+            // obtain writer
+            writer = GetWriter();
+            if (writer == null)
+                throw new RnetException("Unable to obtain RnetWriter.");
 
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }
 
         /// <summary>
-        /// Closes the current connection.
+        /// Closes the connection.
         /// </summary>
-        public async Task CloseAsync()
+        /// <returns></returns>
+        public Task Close()
         {
-            try
-            {
-                try
-                {
-                    await DisconnectAsync();
-                }
-                catch (AggregateException e)
-                {
-                    e = e.Flatten();
-                    if (e.InnerExceptions.Count == 1)
-                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
-                    else
-                        ExceptionDispatchInfo.Capture(e).Throw();
-                }
-            }
-            catch (RnetException e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-            catch (Exception e)
-            {
-                throw new RnetConnectionException("Could not close connection.", e);
-            }
-
-            OnStateChanged(new RnetConnectionStateEventArgs(State));
+            return Close(CancellationToken.None);
         }
 
         /// <summary>
-        /// Implementations should establish a connection.
+        /// Closes the connection.
         /// </summary>
-        /// <returns></returns>
-        protected abstract Task ConnectAsync();
-
-        /// <summary>
-        /// Implementations should disconnect.
-        /// </summary>
-        /// <returns></returns>
-        protected abstract Task DisconnectAsync();
-
-        /// <summary>
-        /// Sends the message to the connection.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public virtual Task SendAsync(RnetMessage message)
-        {
-            return SendAsync(message, CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Sends the message to the connection.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public virtual Task SendAsync(RnetMessage message, CancellationToken cancellationToken)
+        public async Task Close(CancellationToken cancellationToken)
         {
             if (State != RnetConnectionState.Open)
-                throw new RnetConnectionException("RNET connection is not open.");
+                throw new RnetConnectionException("Connection is not open.");
 
-            // write to writer in the background, but synchronously
+            // disconnect
+            await Disconnect(cancellationToken);
+            reader = null;
+            writer = null;
+
+            OnStateChanged(new RnetConnectionStateEventArgs(State));
+        }
+
+        /// <summary>
+        /// Connects to the RNET endpoint.
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Task Connect(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Disconnects from the RNET endpoint.
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Task Disconnect(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sends a message to the connection.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Task Send(RnetMessage message)
+        {
+            return Send(message, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Sends a message to the connection.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task Send(RnetMessage message, CancellationToken cancellationToken)
+        {
+            if (State != RnetConnectionState.Open)
+                throw new RnetConnectionException("Connection is not open.");
+
+            // write in the background to prevent blocking the calling thread on a socket
             return Task.Run(async () =>
-            {
-                using (await writerLock.LockAsync(cancellationToken))
-                    message.Write(writer);
-            }, cancellationToken);
+                    await WriteMessage(message, cancellationToken),
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// Writes the message with the writer.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        async Task WriteMessage(RnetMessage message, CancellationToken cancellationToken)
+        {
+            using (await write.LockAsync(cancellationToken))
+                message.Write(writer);
         }
 
         /// <summary>
         /// Reads the next message from the connection.
         /// </summary>
         /// <returns></returns>
-        public virtual Task<RnetMessage> ReceiveAsync()
+        public Task<RnetMessage> Read()
         {
-            return ReceiveAsync(CancellationToken.None);
+            return Read(CancellationToken.None);
         }
 
         /// <summary>
@@ -169,26 +174,12 @@ namespace Rnet
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
+        public virtual Task<RnetMessage> Read(CancellationToken cancellationToken)
         {
-            try
-            {
-                if (State != RnetConnectionState.Open)
-                    throw new RnetConnectionException("Connection is not open.");
+            if (State != RnetConnectionState.Open)
+                throw new RnetConnectionException("Connection is not open.");
 
-                return reader.ReadAsync(cancellationToken);
-            }
-            catch (AggregateException e)
-            {
-                e = e.Flatten();
-                if (e.InnerExceptions.Count == 1)
-                    ExceptionDispatchInfo.Capture(e.InnerException).Throw();
-                else
-                    ExceptionDispatchInfo.Capture(e).Throw();
-
-                // unreachable
-                return null;
-            }
+            return reader.ReadAsync(cancellationToken);
         }
 
         /// <summary>
@@ -216,8 +207,15 @@ namespace Rnet
         /// </summary>
         public void Dispose()
         {
-            CloseAsync().Wait();
-            GC.SuppressFinalize(this);
+            try
+            {
+                Close().Wait(5000);
+                GC.SuppressFinalize(this);
+            }
+            catch
+            { 
+                // ignore all
+            }
         }
 
         /// <summary>

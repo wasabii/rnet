@@ -21,7 +21,7 @@ namespace Rnet
         TcpClient tcp;
 
         /// <summary>
-        /// Initializes a new connection to an RNET device.
+        /// Initializes a new connection to RNET.
         /// </summary>
         /// <param name="uri"></param>
         public RnetTcpConnection(Uri uri)
@@ -31,16 +31,16 @@ namespace Rnet
 
             if (uri.HostNameType == UriHostNameType.Dns)
             {
-                this.host = uri.DnsSafeHost;
-                this.port = uri.Port;
+                host = uri.DnsSafeHost;
+                port = uri.Port;
             }
 
             if (uri.HostNameType == UriHostNameType.IPv4)
-                this.ep = new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port);
+                ep = new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port);
         }
 
         /// <summary>
-        /// Initializes a new connection to an RNET device at the given endpoint.
+        /// Initializes a new connection to RNET.
         /// </summary>
         /// <param name="ep"></param>
         public RnetTcpConnection(IPEndPoint ep)
@@ -49,7 +49,7 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Initializes a new connection to an RNET device at the given IP address and port.
+        /// Initializes a new connection to RNET.
         /// </summary>
         /// <param name="ip"></param>
         /// <param name="port"></param>
@@ -60,21 +60,21 @@ namespace Rnet
         }
 
         /// <summary>
-        /// Initializes a new connection to the RNET device at the given host name and port.
+        /// Initializes a new connection to RNET.
         /// </summary>
-        /// <param name="hostname"></param>
+        /// <param name="host"></param>
         /// <param name="port"></param>
-        public RnetTcpConnection(string hostname, int port)
+        public RnetTcpConnection(string host, int port)
         {
-            this.host = hostname;
+            this.host = host;
             this.port = port;
         }
 
-        protected override async Task ConnectAsync()
+        protected override async Task Connect(CancellationToken cancellationToken)
         {
             // initialize new TCP client and connect
             tcp = new TcpClient();
-            tcp.ReceiveTimeout = 5000;
+            tcp.ReceiveTimeout = 2000;
 
             if (ep != null)
                 // known endpoint
@@ -84,7 +84,7 @@ namespace Rnet
                 await tcp.ConnectAsync(host, port);
         }
 
-        protected override Task DisconnectAsync()
+        protected override Task Disconnect(CancellationToken cancellationToken)
         {
             if (tcp != null)
             {
@@ -110,7 +110,7 @@ namespace Rnet
             get { return Connected ? RnetConnectionState.Open : RnetConnectionState.Closed; }
         }
 
-        public async override Task<RnetMessage> ReceiveAsync(CancellationToken cancellationToken)
+        public async override Task<RnetMessage> Read(CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -120,7 +120,7 @@ namespace Rnet
 
                 try
                 {
-                    return await base.ReceiveAsync(cancellationToken);
+                    return await base.Read(cancellationToken);
                 }
                 catch (EndOfStreamException e)
                 {

@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Reactive.Linq;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace Rnet
 {
@@ -9,7 +10,7 @@ namespace Rnet
     /// <summary>
     /// Provides a durable view of the state of an RNET system.
     /// </summary>
-    public class RnetBus : RnetModelObject, IDisposable
+    public sealed class RnetBus : IDisposable
     {
 
         /// <summary>
@@ -19,6 +20,9 @@ namespace Rnet
         {
             RnetUriParser.RegisterParsers();
         }
+
+        AsyncLock lck = new AsyncLock();
+        RnetBusState state;
 
         /// <summary>
         /// Initializes a new instance.
@@ -31,6 +35,14 @@ namespace Rnet
 
             Uri = uri;
             Controllers = new RnetControllerCollection(this);
+
+            // start new client
+            Client = new RnetClient(Uri);
+            Client.StateChanged += Client_StateChanged;
+            Client.MessageReceived += Client_MessageReceived;
+            Client.MessageSent += Client_MessageSent;
+            Client.UnhandledException += Client_UnhandledException;
+            Client.Connection.StateChanged += Connection_StateChanged;
         }
 
         /// <summary>
@@ -49,15 +61,6 @@ namespace Rnet
         public Uri Uri { get; private set; }
 
         /// <summary>
-        /// Gets the default cancellation token.
-        /// </summary>
-        /// <returns></returns>
-        internal CancellationToken DefaultTimeoutToken
-        {
-            get { return new CancellationTokenSource(TimeSpan.FromSeconds(60)).Token; }
-        }
-
-        /// <summary>
         /// Used to report events to the user.
         /// </summary>
         public SynchronizationContext SynchronizationContext { get; private set; }
@@ -68,38 +71,73 @@ namespace Rnet
         public RnetClient Client { get; private set; }
 
         /// <summary>
-        /// Gets the current state of the client.
+        /// Local device implementation which is exposed on the bus and from which messages originate.
         /// </summary>
-        public RnetClientState ClientState
-        {
-            get { return Client.State; }
-        }
+        public RnetLocalDevice LocalDevice { get; private set; }
 
         /// <summary>
-        /// Gets the current state of the connection.
-        /// </summary>
-        public RnetConnectionState ConnectionState
-        {
-            get { return Client.ConnectionState; }
-        }
-
-        /// <summary>
-        /// Device node representing ourselves.
-        /// </summary>
-        public RnetBusDevice Device { get; private set; }
-
-        /// <summary>
-        /// RNET devices detected on the bus.
+        /// Controllers detected on the bus.
         /// </summary>
         public RnetControllerCollection Controllers { get; private set; }
 
         /// <summary>
+        /// Gets the current state of the bus.
+        /// </summary>
+        public RnetBusState State { get; private set; }
+
+        /// <summary>
+        /// Sets the current state.
+        /// </summary>
+        /// <param name="state"></param>
+        void SetState(RnetBusState state)
+        {
+            OnStateChanged(new RnetBusStateEventArgs(State = state));
+        }
+
+        /// <summary>
+        /// Updates the bus state given the connection state.
+        /// </summary>
+        void UpdateState()
+        {
+            // bus has no desire to be started
+            if (state != RnetBusState.Started)
+                return;
+
+            // if the connection is down, we must be trying to reconnect
+            if (Client.Connection.State == RnetConnectionState.Closed)
+                SetState(RnetBusState.Reconnecting);
+            else
+                SetState(RnetBusState.Started);
+        }
+
+        /// <summary>
         /// Starts the RNET bus.
         /// </summary>
         /// <returns></returns>
-        public Task StartAsync()
+        public Task Start()
         {
-            return StartAsync(RnetKeypadId.External);
+            return Start(SynchronizationContext.Current, RnetKeypadId.External, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Starts the RNET bus.
+        /// </summary>
+        /// <param name="synchronizationContext"></param>
+        /// <returns></returns>
+        public Task Start(SynchronizationContext synchronizationContext)
+        {
+            return Start(synchronizationContext, RnetKeypadId.External, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Starts the RNET bus.
+        /// </summary>
+        /// <param name="synchronizationContext"></param>
+        /// <param name="keypadId"></param>
+        /// <returns></returns>
+        public Task Start(SynchronizationContext synchronizationContext, RnetKeypadId keypadId)
+        {
+            return Start(SynchronizationContext.Current, keypadId, CancellationToken.None);
         }
 
         /// <summary>
@@ -107,9 +145,9 @@ namespace Rnet
         /// </summary>
         /// <param name="keypadId"></param>
         /// <returns></returns>
-        public Task StartAsync(RnetKeypadId keypadId)
+        public Task Start(RnetKeypadId keypadId)
         {
-            return StartAsync(keypadId, CancellationToken.None);
+            return Start(SynchronizationContext.Current, keypadId, CancellationToken.None);
         }
 
         /// <summary>
@@ -118,48 +156,54 @@ namespace Rnet
         /// <param name="keypadId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task StartAsync(RnetKeypadId keypadId, CancellationToken cancellationToken)
+        public async Task Start(SynchronizationContext synchronizationContext, RnetKeypadId keypadId, CancellationToken cancellationToken)
         {
-            // default to caller's
-            // TODO implement internal fall back
-            SynchronizationContext = SynchronizationContext.Current;
+            if (synchronizationContext == null)
+                throw new ArgumentNullException("synchronizationContext");
+            if (keypadId == RnetKeypadId.Null)
+                throw new ArgumentNullException("keypadId");
+            if (cancellationToken == null)
+                throw new ArgumentNullException("cancellationToken");
 
-            // required for the bus
-            if (SynchronizationContext == null)
-                throw new RnetException("A synchronization context must be provided.");
+            using (await lck.LockAsync(cancellationToken))
+            {
+                if (state == RnetBusState.Started)
+                    throw new RnetException("Bus is already started or starting.");
 
-            // empty out any existing controllers
-            Controllers.Clear();
+                // our intentions are to be started
+                state = RnetBusState.Started;
 
-            // generate minimal required model and insert new bus device
-            var c = Controllers[RnetControllerId.Root];
-            var z = c.Zones[RnetZoneId.Zone1];
-            var d = new RnetBusDevice(z, keypadId);
-            z.Devices[keypadId] = Device = d;
+                // begin starting
+                SetState(RnetBusState.Starting);
+                SynchronizationContext = synchronizationContext;
+                Controllers.Clear();
 
-            // start new client
-            Client = new RnetClient(Uri);
-            Client.StateChanged += Client_StateChanged;
-            Client.ConnectionStateChanged += Client_ConnectionStateChanged;
-            Client.MessageReceived += Client_MessageReceived;
-            Client.MessageSent += Client_MessageSent;
-            Client.Error += Client_Error;
-            await Client.StartAsync();
+                // generate minimal required model and insert new local device
+                var c = Controllers[RnetControllerId.Root];
+                var z = c.Zones[RnetZoneId.Zone1];
+                var d = new RnetLocalDevice(z, keypadId);
+                z.Devices[keypadId] = LocalDevice = d;
 
-            // activate the path to the bus device
-            d.Activate();
+                // start client running
+                await Client.Start();
 
-            // initiate device scan
-            await Scan();
+                // activate the path to the local device
+                d.Activate();
+
+                // initiate device scan
+                await Scan();
+
+                SetState(RnetBusState.Started);
+            }
         }
 
         /// <summary>
         /// Stops the RNET bus.
         /// </summary>
         /// <returns></returns>
-        public Task StopAsync()
+        public Task Stop()
         {
-            return StopAsync(CancellationToken.None);
+            return Stop(CancellationToken.None);
         }
 
         /// <summary>
@@ -167,37 +211,40 @@ namespace Rnet
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public async Task Stop(CancellationToken cancellationToken)
         {
-            if (Client == null)
-                throw new ObjectDisposedException("RnetBus");
+            using (await lck.LockAsync())
+            {
+                if (state != RnetBusState.Started)
+                    throw new RnetException("Bus is already stopped or stopping.");
 
-            // wait for theclient to stop
-            await Client.StopAsync();
+                // our intentions are to be stopped
+                state = RnetBusState.Stopped;
 
-            // unset so users won't get confused by stale data
-            Controllers.Clear();
-            Device = null;
+                SetState(RnetBusState.Stopping);
+                await Client.Stop();
+                SetState(RnetBusState.Stopped);
+            }
         }
 
         /// <summary>
-        /// Invoked when the client's state changes.
+        /// Invoked when the connection state is changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        void Connection_StateChanged(object sender, RnetConnectionStateEventArgs args)
+        {
+            UpdateState();
+        }
+
+        /// <summary>
+        /// Invoked when the client state is changed.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
         void Client_StateChanged(object sender, RnetClientStateEventArgs args)
         {
-            SynchronizationContext.Post(i => OnClientStateChanged(args), null);
-        }
-
-        /// <summary>
-        /// Invoked when the connection's state changes.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        void Client_ConnectionStateChanged(object sender, RnetConnectionStateEventArgs args)
-        {
-            SynchronizationContext.Post(i => OnConnectionStateChanged(args), null);
+            UpdateState();
         }
 
         /// <summary>
@@ -225,9 +272,9 @@ namespace Rnet
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        void Client_Error(object sender, RnetClientErrorEventArgs args)
+        void Client_UnhandledException(object sender, RnetExceptionEventArgs args)
         {
-            SynchronizationContext.Post(i => OnError(args), null);
+            SynchronizationContext.Post(i => OnUnhandledException(args), null);
         }
 
         /// <summary>
@@ -237,34 +284,36 @@ namespace Rnet
         async void OnClientMessageReceived(RnetMessageEventArgs args)
         {
             // client is stopped, ignore any trailing events
-            if (Client.State != RnetClientState.Started)
+            if (State != RnetBusState.Started)
                 return;
 
-            // skip messages not destined to us or everybody
+            // unknown
             var message = args.Message;
             if (message == null)
                 return;
 
-            // generate or obtain device and allow it to handle message
-            var device = GetOrCreateDevice(message.SourceDeviceId);
+            // find device from which the message originated
+            var device = GetOrCreateDevice(message.SourceDeviceId) as RnetRemoteDevice;
             if (device != null)
             {
+                // device has been seen
+                device.Activate();
+
                 // destined to us
-                if (message.TargetDeviceId == Device.DeviceId)
-                    await device.ReceiveMessage(message);
+                if (message.TargetDeviceId == LocalDevice.DeviceId)
+                    await device.SentMessage(message);
 
                 // destined to all devices
                 if (message.TargetDeviceId == RnetDeviceId.AllDevices)
-                    await device.ReceiveMessage(message);
+                    await device.SentMessage(message);
 
                 // destined to all devices on our zone
                 if (message.TargetDeviceId.KeypadId == RnetKeypadId.AllZone &&
-                    message.TargetDeviceId.ZoneId == Device.DeviceId.ZoneId)
-                    await device.ReceiveMessage(message);
+                    message.TargetDeviceId.ZoneId == LocalDevice.DeviceId.ZoneId)
+                    await device.SentMessage(message);
             }
 
-            // raise event on synchronization context
-            SynchronizationContext.Post(i => OnMessageReceived(args), null);
+            OnMessageReceived(args);
         }
 
         /// <summary>
@@ -347,50 +396,33 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Raised when the bus state changes.
+        /// </summary>
+        public event EventHandler<RnetBusStateEventArgs> StateChanged;
+
+        /// <summary>
+        /// Raises the StateChanged event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnStateChanged(RnetBusStateEventArgs args)
+        {
+            if (StateChanged != null)
+                StateChanged(this, args);
+        }
+
+        /// <summary>
         /// Raised when an error occurs.
         /// </summary>
-        public event EventHandler<RnetClientErrorEventArgs> Error;
+        public event EventHandler<RnetExceptionEventArgs> UnhandledException;
 
         /// <summary>
         /// Raises the Error event.
         /// </summary>
         /// <param name="args"></param>
-        void OnError(RnetClientErrorEventArgs args)
+        void OnUnhandledException(RnetExceptionEventArgs args)
         {
-            if (Error != null)
-                Error(this, args);
-        }
-
-        /// <summary>
-        /// Raised when the state changes.
-        /// </summary>
-        public event EventHandler<RnetClientStateEventArgs> ClientStateChanged;
-
-        /// <summary>
-        /// Raises the ClientStateChanged event.
-        /// </summary>
-        /// <param name="args"></param>
-        void OnClientStateChanged(RnetClientStateEventArgs args)
-        {
-            if (ClientStateChanged != null)
-                ClientStateChanged(this, args);
-            RaisePropertyChanged("ClientState");
-        }
-
-        /// <summary>
-        /// Raised when the connection state changes.
-        /// </summary>
-        public event EventHandler<RnetConnectionStateEventArgs> ConnectionStateChanged;
-
-        /// <summary>
-        /// Raises the ConnectionStateChanged event.
-        /// </summary>
-        /// <param name="args"></param>
-        void OnConnectionStateChanged(RnetConnectionStateEventArgs args)
-        {
-            if (ConnectionStateChanged != null)
-                ConnectionStateChanged(this, args);
-            RaisePropertyChanged("ConnectionState");
+            if (UnhandledException != null)
+                UnhandledException(this, args);
         }
 
         /// <summary>
@@ -398,23 +430,13 @@ namespace Rnet
         /// </summary>
         public void Dispose()
         {
-            if (Client != null)
+            try
             {
-                try
-                {
-                    StopAsync().Wait();
-                    Client.StateChanged -= Client_StateChanged;
-                    Client.ConnectionStateChanged -= Client_ConnectionStateChanged;
-                    Client.MessageReceived -= Client_MessageReceived;
-                    Client.MessageSent -= Client_MessageSent;
-                    Client.Error -= Client_Error;
-                    Client.Dispose();
-                    Client = null;
-                }
-                catch (Exception)
-                {
-
-                }
+                Stop().Wait();
+            }
+            catch (Exception e)
+            {
+                Trace.Fail("Exception in Dispose", e.ToString());
             }
 
             GC.SuppressFinalize(this);

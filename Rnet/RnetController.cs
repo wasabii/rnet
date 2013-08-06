@@ -2,15 +2,10 @@
 {
 
     /// <summary>
-    /// Describes a known controller on the RNET bus.
+    /// Reference to an RNET controller present on the RNET bus.
     /// </summary>
-    public sealed class RnetController : RnetDevice
+    public sealed class RnetController : RnetRemoteDevice
     {
-
-        public override RnetDeviceId DeviceId
-        {
-            get { return new RnetDeviceId(Id, 0, RnetKeypadId.Controller); }
-        }
 
         /// <summary>
         /// Initializes a new instance.
@@ -34,6 +29,14 @@
         public RnetZoneCollection Zones { get; private set; }
 
         /// <summary>
+        /// Gets the device ID of the controller.
+        /// </summary>
+        public override RnetDeviceId DeviceId
+        {
+            get { return new RnetDeviceId(Id, 0, RnetKeypadId.Controller); }
+        }
+
+        /// <summary>
         /// Marks the object as active.
         /// </summary>
         /// <returns></returns>
@@ -43,11 +46,6 @@
             base.Activate();
             if (a)
                 Bus.Controllers.OnControllerActive(this);
-        }
-
-        public override string ToString()
-        {
-            return string.Format("Controller {0}", Id);
         }
 
     }

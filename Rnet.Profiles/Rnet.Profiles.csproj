@@ -65,12 +65,13 @@
     <Compile Include="Media\PartyMode.cs" />
     <Compile Include="Media\Power.cs" />
     <Compile Include="Profile.cs" />
+    <Compile Include="ProfileContext.cs" />
     <Compile Include="RnetDataHandleExtensions.cs" />
+    <Compile Include="Russound\RussoundZoneProfile.cs" />
+    <Compile Include="Russound\RussoundControllerProfile.cs" />
     <Compile Include="Russound\RussoundControllerAudioProfile.cs" />
     <Compile Include="Russound\RussoundZoneAudioProfile.cs" />
-    <Compile Include="ZoneProfileProvider.cs" />
     <Compile Include="DeviceProfileProvider.cs" />
-    <Compile Include="ZoneProfileBase.cs" />
     <Compile Include="Russound\CAM66Provider.cs" />
     <Compile Include="Russound\CAV66Provider.cs" />
     <Compile Include="Russound\IRussoundController.cs" />
@@ -85,7 +86,7 @@
     <Compile Include="ProfileProviderUtil.cs" />
     <Compile Include="ProfileProvider.cs" />
     <Compile Include="Russound\IRussoundZone.cs" />
-    <Compile Include="Russound\RussoundZoneProvider.cs" />
+    <Compile Include="ZoneProfileBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet\Rnet.csproj">

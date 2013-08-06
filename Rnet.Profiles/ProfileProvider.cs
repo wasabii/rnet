@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rnet.Profiles
@@ -20,16 +19,12 @@ namespace Rnet.Profiles
         }
 
         /// <summary>
-        /// Gets a series of tasks that execute the evaluation for whether or not a certain <see cref="IProfile"/>
-        /// implementation is compatible with the <param name="target"/>. If not supported, a task should simply return
-        /// <c>null</c>.
+        /// Returns a series of <see cref="IProfile"/> instances that the <see cref="ProfileProvider"/> knows are
+        /// supported against the given <see cref="RnetBusObject"/>.
         /// </summary>
-        /// <remarks>
-        /// Override this method in <see cref="ProfileProvider"/> implementations to return supported profiles for the
-        /// target.
-        /// </remarks>
+        /// <param name="target"></param>
         /// <returns></returns>
-        public abstract Task<IEnumerable<IProfile>> GetProfilesAsync(RnetBusObject target);
+        public abstract Task<IEnumerable<IProfile>> GetProfiles(RnetBusObject target);
 
     }
 

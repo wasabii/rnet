@@ -4,15 +4,15 @@ namespace Rnet
 {
 
     /// <summary>
-    /// Base class for objects discovered on the RNET bus.
+    /// Base class for objects made available on the RNET bus.
     /// </summary>
-    public abstract class RnetBusObject : RnetModelObject
+    public abstract class RnetBusObject
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        protected RnetBusObject(RnetBus bus)
+        internal protected RnetBusObject(RnetBus bus)
         {
             Bus = bus;
             Context = new RnetContext();
@@ -37,7 +37,7 @@ namespace Rnet
         /// <summary>
         /// Returns <c>true</c> if this bus object is still considered active.
         /// </summary>
-        internal bool IsActive
+        public virtual bool IsActive
         {
             get { return Timestamp >= DateTime.UtcNow.AddDays(-1); }
         }

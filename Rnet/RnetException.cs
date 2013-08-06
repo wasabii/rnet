@@ -4,7 +4,7 @@ namespace Rnet
 {
 
     /// <summary>
-    /// Represents errors that occur during RNet operations.
+    /// Represents errors that occur during RNET operations.
     /// </summary>
     public class RnetException : Exception
     {
