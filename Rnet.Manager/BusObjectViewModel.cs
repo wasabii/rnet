@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Linq;
 
 using Microsoft.Practices.Prism.ViewModel;
 
+using Rnet.Drivers;
 using Rnet.Profiles;
-using Rnet.Profiles.Basic;
 
 namespace Rnet.Manager
 {
@@ -16,7 +14,7 @@ namespace Rnet.Manager
     public class BusObjectViewModel : NotificationObject
     {
 
-        IDictionary<Type, Driver> profiles;
+        Profile[] profiles;
         IObject objectProfile;
         string name;
 
@@ -38,15 +36,14 @@ namespace Rnet.Manager
         async void Initialize()
         {
             // load the supported profiles
-            Profiles = await Object.GetProfiles()
-                .ToDictionary(i => i.Key, i => i.Value);
+            Profiles = await Object.GetProfiles();
 
             // basic object profile provides a display name
             objectProfile = await Object.GetProfile<IObject>();
             if (objectProfile != null)
             {
-                objectProfile.PropertyChanged += (s, a) => Name = objectProfile.Name;
-                Name = objectProfile.Name;
+                objectProfile.PropertyChanged += (s, a) => Name = objectProfile.DisplayName;
+                Name = objectProfile.DisplayName;
             }
         }
 
@@ -58,7 +55,7 @@ namespace Rnet.Manager
         /// <summary>
         /// Known set of profile types and implementation.
         /// </summary>
-        public IDictionary<Type, Driver> Profiles
+        public Profile[] Profiles
         {
             get { return profiles; }
             set { profiles = value; RaisePropertyChanged(() => Profiles); }

@@ -6,7 +6,7 @@
     xmlns:e="http://schemas.microsoft.com/expression/2010/interactivity"
     xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
-    xmlns:rnetpb="clr-namespace:Rnet.Profiles.Basic;assembly=Rnet.Profiles"
+    xmlns:rnetp="clr-namespace:Rnet.Profiles;assembly=Rnet.Profiles"
     xmlns:rnetpm="clr-namespace:Rnet.Profiles.Media;assembly=Rnet.Profiles"
     xmlns:local="clr-namespace:Rnet.Manager"
     mc:Ignorable="d"
@@ -123,7 +123,7 @@
                 </DataTemplate>
 
                 <DataTemplate
-                    x:Key="Rnet.Profiles.Basic.IController">
+                    x:Key="Rnet.Profiles.IController">
                     <StackPanel
                         Orientation="Vertical">
                         <ItemsControl
@@ -131,10 +131,10 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <ContentPresenter
-                                        Content="{local:RnetProfileBinding {x:Type rnetpb:IZone}}">
+                                        Content="{local:RnetProfileBinding {x:Type rnetp:IZone}}">
                                         <ContentPresenter.ContentTemplate>
                                             <DataTemplate
-                                                DataType="{x:Type rnetpb:IZone}">
+                                                DataType="{x:Type rnetp:IZone}">
                                                 <TextBlock
                                                     Text="{Binding Name}" />
                                             </DataTemplate>
@@ -321,9 +321,9 @@
                                     <Expander
                                         HorizontalAlignment="Stretch"
                                         IsExpanded="True"
-                                        Header="{Binding Key.Name}"
-                                        Content="{Binding Value}"
-                                        ContentTemplate="{local:ResourceKeyBinding Path=Key.FullName}" />
+                                        Header="{Binding Metadata.Name}"
+                                        Content="{Binding Instance}"
+                                        ContentTemplate="{local:ResourceKeyBinding Path=Metadata.Name}" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

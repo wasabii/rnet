@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Rnet.Drivers;
 
 namespace Rnet.Profiles.Russound
 {
@@ -7,7 +8,7 @@ namespace Rnet.Profiles.Russound
     /// <summary>
     /// Basic Russound controller profile. Provides functionality common to all Russound controllers.
     /// </summary>
-    public abstract class RussoundControllerProvider : ControllerProfileProvider
+    public abstract class ControllerDriver : Driver
     {
 
         /// <summary>
@@ -16,7 +17,7 @@ namespace Rnet.Profiles.Russound
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        protected abstract bool IsSupportedModel(string model);
+        protected abstract bool Probe(string model);
 
         /// <summary>
         /// Implement this method to return the number of supported zones for the specific Russound device model.
@@ -33,7 +34,7 @@ namespace Rnet.Profiles.Russound
             if (model == null)
                 return false;
 
-            return IsSupportedModel(model);
+            return Probe(model);
         }
 
         /// <summary>

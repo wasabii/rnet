@@ -35,7 +35,7 @@ namespace Rnet
         /// <returns></returns>
         public object GetOrCreate(Type type, Func<object> create)
         {
-            return extensions.GetOrCreate(type, i => Validate(i, create));
+            return extensions.GetOrCreate(type, i => Validate(i, create()));
         }
 
         /// <summary>

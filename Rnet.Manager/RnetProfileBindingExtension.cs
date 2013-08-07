@@ -12,7 +12,7 @@ namespace Rnet.Manager
     /// <summary>
     /// Obtains the RNET profile of the given type for the path bound to.
     /// </summary>
-    [MarkupExtensionReturnType(typeof(Driver))]
+    [MarkupExtensionReturnType(typeof(object))]
     public class RnetProfileBindingExtension : MarkupExtension
     {
 

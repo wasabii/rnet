@@ -14,7 +14,7 @@ namespace Rnet.Manager.Profiles
         /// Initializes a new instance.
         /// </summary>
         /// <param name="zoneAudio"></param>
-        public ZoneAudioViewModel(IZoneAudio zoneAudio)
+        public ZoneAudioViewModel(IAudio zoneAudio)
         {
             ZoneAudio = zoneAudio;
             ZoneAudio.PropertyChanged += ZoneAudio_PropertyChanged;
@@ -31,7 +31,7 @@ namespace Rnet.Manager.Profiles
         /// <summary>
         /// Reference to profile.
         /// </summary>
-        public IZoneAudio ZoneAudio { get; private set; }
+        public IAudio ZoneAudio { get; private set; }
 
         public int Volume
         {

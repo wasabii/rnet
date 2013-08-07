@@ -2,7 +2,7 @@
 
 using Rnet.Profiles;
 
-namespace Rnet.Drivers
+namespace Rnet.Drivers.Default
 {
 
     /// <summary>

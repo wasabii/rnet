@@ -1,8 +1,8 @@
-﻿namespace Rnet.Drivers
+﻿namespace Rnet.Drivers.Default
 {
 
     /// <summary>
-    /// Serves as a simple profile implementation base for a device..
+    /// Serves as a simple profile implementation base for a zone.
     /// </summary>
     public abstract class ZoneProfileBase : ProfileBase
     {
@@ -17,12 +17,14 @@
 
         }
 
-        /// <summary>
-        /// The zone implementing this profile.
-        /// </summary>
+        protected new RnetZone Target
+        {
+            get { return (RnetZone)base.Target; }
+        }
+
         protected RnetZone Zone
         {
-            get { return (RnetZone)Target; }
+            get { return Target; }
         }
 
     }

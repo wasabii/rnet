@@ -1,14 +1,13 @@
 ﻿using System.ServiceModel;
-using System.Threading.Tasks;
 
-namespace Rnet.Profiles.Basic
+namespace Rnet.Profiles
 {
 
     /// <summary>
     /// Provides basic device information.
     /// </summary>
-    [ServiceContract]
-    public interface IDevice : Driver
+    [ServiceContract(Name = "device")]
+    public interface IDevice 
     {
 
         /// <summary>

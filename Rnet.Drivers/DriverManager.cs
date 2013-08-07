@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using System.Reactive.Linq;
 using Nito.AsyncEx;
+using Rnet.Drivers.Default;
 
 namespace Rnet.Drivers
 {
@@ -16,7 +15,16 @@ namespace Rnet.Drivers
     {
 
         static readonly AsyncLock lck = new AsyncLock();
-        static readonly List<DriverPackage> packages = new List<DriverPackage>();
+        static readonly SortedSet<DriverPackage> packages = new SortedSet<DriverPackage>();
+
+        /// <summary>
+        /// Initializes the default instance.
+        /// </summary>
+        static DriverManager()
+        {
+            // ensure default drivers are always available
+            Register(new Default.DriverPackage());
+        }
 
         /// <summary>
         /// Registers a driver package instance.
@@ -26,8 +34,7 @@ namespace Rnet.Drivers
         {
             // insert package at the beginning so we scan it ahead of built-in drivers
             lock (lck)
-                if (!packages.Contains(package))
-                    packages.Insert(0, package);
+                packages.Add(package);
         }
 
         /// <summary>
@@ -40,7 +47,6 @@ namespace Rnet.Drivers
         {
             return (await Task.WhenAll(packages
                 .Select(i => i.GetDriver(device))))
-                .OrderByDescending(i => i.Priority)
                 .FirstOrDefault();
         }
 

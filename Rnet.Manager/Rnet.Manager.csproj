@@ -156,6 +156,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
+      <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
+      <Name>Rnet.Drivers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rnet.Profiles\Rnet.Profiles.csproj">
+      <Project>{a12246ac-a28f-4c52-8eab-cdd6f0b2896e}</Project>
+      <Name>Rnet.Profiles</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
       <Name>Rnet</Name>

@@ -1,4 +1,4 @@
-﻿namespace Rnet.Drivers
+﻿namespace Rnet.Drivers.Default
 {
 
     /// <summary>
@@ -10,19 +10,21 @@
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="target"></param>
-        protected ControllerProfileBase(RnetController target)
-            : base(target)
+        /// <param name="controller"></param>
+        protected ControllerProfileBase(RnetController controller)
+            : base(controller)
         {
 
         }
 
-        /// <summary>
-        /// The controller implementing this profile.
-        /// </summary>
+        protected new RnetController Device
+        {
+            get { return (RnetController)base.Device; }
+        }
+
         protected RnetController Controller
         {
-            get { return (RnetController)Device; }
+            get { return Device; }
         }
 
     }

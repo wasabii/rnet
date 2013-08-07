@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Rnet.Drivers")]
+[assembly: AssemblyTitle("Rnet.Profiles")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Rnet.Drivers")]
-[assembly: AssemblyCopyright("Copyright © Jerome Haltom 2013")]
+[assembly: AssemblyProduct("Rnet.Profiles")]
+[assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("11d6bb9b-a286-4af7-ac0e-698bc068658f")]
+[assembly: Guid("2c2e3a00-8aae-48ec-9773-d4aedf049b09")]
 
 // Version information for an assembly consists of the following four values:
 //

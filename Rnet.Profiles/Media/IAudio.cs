@@ -1,10 +1,14 @@
-﻿namespace Rnet.Profiles.Media
+﻿using System.ComponentModel;
+using System.ServiceModel;
+
+namespace Rnet.Profiles.Media
 {
 
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
-    public interface IZoneAudio : Driver
+    [ServiceContract(Name = "audio")]
+    public interface IAudio : INotifyPropertyChanged
     {
 
         /// <summary>
@@ -84,11 +88,6 @@
         void TrebleDown();
 
         /// <summary>
-        /// Whether loudness is on or off.
-        /// </summary>
-        Loudness Loudness { get; set; }
-
-        /// <summary>
         /// Balance level of the zone.
         /// </summary>
         /// <remarks>
@@ -105,11 +104,6 @@
         /// Shifts the balance to the right.
         /// </summary>
         void BalanceRight();
-
-        /// <summary>
-        /// Party mode of the zone.
-        /// </summary>
-        PartyMode PartyMode { get; }
 
     }
 

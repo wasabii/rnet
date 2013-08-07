@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Rnet.Profiles
+namespace Rnet.Drivers
 {
 
     /// <summary>

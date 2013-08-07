@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Rnet.Drivers
@@ -10,7 +11,7 @@ namespace Rnet.Drivers
     /// the <see cref="Driver"/> class directly, but rather resolve its profiles through the <see 
     /// cref="ProfileManager"/>.
     /// </summary>
-    public abstract class Driver
+    public abstract class Driver : IComparable<Driver>
     {
 
         /// <summary>
@@ -37,15 +38,23 @@ namespace Rnet.Drivers
         }
 
         /// <summary>
-        /// Returns a class implementing the requested profile type if the driver implements support for that type. If
-        /// support is not available <c>null</c> should be returned. Implementations of this method should probe the
-        /// device in order to determine if they offer support for it.
+        /// Driver implementations should implement this method to return the set of profile implementation instances
+        /// supported by the underlying device.
         /// </summary>
-        /// <param name="profileType"></param>
+        protected abstract Task<object[]> GetProfiles();
+
+        /// <summary>
+        /// Internal exposure of GetProfiles.
+        /// </summary>
         /// <returns></returns>
-        protected internal Task<object> GetProfile(Type profileType)
+        internal Task<object[]> GetProfilesInternal()
         {
-            return Task.FromResult<object>(null);
+            return GetProfiles();
+        }
+
+        int IComparable<Driver>.CompareTo(Driver other)
+        {
+            return Priority.CompareTo(other.Priority);
         }
 
     }
