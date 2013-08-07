@@ -156,9 +156,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rnet.Profiles\Rnet.Profiles.csproj">
+    <ProjectReference Include="..\Rnet.Profiles\Rnet.Drivers.csproj">
       <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
-      <Name>Rnet.Profiles</Name>
+      <Name>Rnet.Drivers</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>

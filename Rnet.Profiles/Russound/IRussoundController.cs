@@ -1,7 +1,7 @@
 ﻿namespace Rnet.Profiles.Russound
 {
 
-    public interface IRussoundController : IProfile
+    public interface IRussoundController : Driver
     {
 
 

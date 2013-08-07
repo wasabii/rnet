@@ -1,10 +1,10 @@
-﻿namespace Rnet.Profiles
+﻿namespace Rnet.Drivers
 {
 
     /// <summary>
     /// Serves as a simple profile implementation base for a device..
     /// </summary>
-    public abstract class ZoneProfileBase : Profile
+    public abstract class ZoneProfileBase : ProfileBase
     {
 
         /// <summary>

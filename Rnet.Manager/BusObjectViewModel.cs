@@ -16,7 +16,7 @@ namespace Rnet.Manager
     public class BusObjectViewModel : NotificationObject
     {
 
-        IDictionary<Type, IProfile> profiles;
+        IDictionary<Type, Driver> profiles;
         IObject objectProfile;
         string name;
 
@@ -58,7 +58,7 @@ namespace Rnet.Manager
         /// <summary>
         /// Known set of profile types and implementation.
         /// </summary>
-        public IDictionary<Type, IProfile> Profiles
+        public IDictionary<Type, Driver> Profiles
         {
             get { return profiles; }
             set { profiles = value; RaisePropertyChanged(() => Profiles); }

@@ -4,7 +4,7 @@
     /// <summary>
     /// Basic information exposed by any RNET object.
     /// </summary>
-    public interface IObject : IProfile
+    public interface IObject : Driver
     {
 
         /// <summary>

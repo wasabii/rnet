@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
 
-namespace Rnet.Profiles
+namespace Rnet.Drivers
 {
 
     /// <summary>
-    /// Base model object class.
+    /// Provides a simple base class for model objects.
     /// </summary>
     public abstract class ModelObject : INotifyPropertyChanged
     {

@@ -7,7 +7,7 @@ namespace Rnet.Profiles.Basic
     /// Describes basic capabilities of controllers.
     /// </summary>
     [ServiceContract]
-    public interface IController : IProfile
+    public interface IController : Driver
     {
 
         /// <summary>

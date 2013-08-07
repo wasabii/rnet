@@ -41,10 +41,10 @@ namespace Rnet.Profiles.Russound
         /// </summary>
         /// <param name="controller"></param>
         /// <returns></returns>
-        public override async Task<IEnumerable<IProfile>> GetControllerProfiles(RnetController controller)
+        public override async Task<IEnumerable<Driver>> GetControllerProfiles(RnetController controller)
         {
             if (await TestSupported(controller))
-                return new IProfile[]
+                return new Driver[]
                 { 
                     new RussoundControllerProfile(controller, ZoneCount),
                     new RussoundControllerAudioProfile(controller),
@@ -58,10 +58,10 @@ namespace Rnet.Profiles.Russound
         /// </summary>
         /// <param name="zone"></param>
         /// <returns></returns>
-        public override async Task<IEnumerable<IProfile>> GetZoneProfiles(RnetZone zone)
+        public override async Task<IEnumerable<Driver>> GetZoneProfiles(RnetZone zone)
         {
             if (await TestSupported(zone.Controller))
-                return new IProfile[]
+                return new Driver[]
                 {
                     new RussoundZoneProfile(zone),
                     new RussoundZoneAudioProfile(zone),

@@ -1,7 +1,7 @@
 ﻿namespace Rnet.Profiles.Basic
 {
 
-    public interface IZone : IProfile
+    public interface IZone : Driver
     {
 
         /// <summary>

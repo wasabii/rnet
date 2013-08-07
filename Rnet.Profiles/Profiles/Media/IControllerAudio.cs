@@ -6,7 +6,7 @@ namespace Rnet.Profiles.Media
     /// <summary>
     /// Basic audio information for a controller.
     /// </summary>
-    public interface IControllerAudio : IProfile
+    public interface IControllerAudio : Driver
     {
 
         /// <summary>

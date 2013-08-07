@@ -1,4 +1,4 @@
-﻿namespace Rnet.Profiles
+﻿namespace Rnet.Drivers
 {
 
     /// <summary>
@@ -10,9 +10,9 @@
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="controller"></param>
-        protected ControllerProfileBase(RnetController controller)
-            : base(controller)
+        /// <param name="target"></param>
+        protected ControllerProfileBase(RnetController target)
+            : base(target)
         {
 
         }

@@ -14,14 +14,17 @@ namespace Rnet
             new Dictionary<Type, object>();
 
         /// <summary>
-        /// Gets or creates an extension of the specified type.
+        /// Validates that the type is compatible.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="create"></param>
+        /// <param name="type"></param>
+        /// <param name="o"></param>
         /// <returns></returns>
-        public T GetOrCreate<T>(Func<T> create)
+        object Validate(Type type, object o)
         {
-            return (T)extensions.GetOrCreate(typeof(T), i => create());
+            if (!type.IsInstanceOfType(o))
+                throw new InvalidCastException("Value must be of Key type.");
+
+            return o;
         }
 
         /// <summary>
@@ -32,17 +35,19 @@ namespace Rnet
         /// <returns></returns>
         public object GetOrCreate(Type type, Func<object> create)
         {
-            return extensions.GetOrCreate(type, i => create());
+            return extensions.GetOrCreate(type, i => Validate(i, create));
         }
 
         /// <summary>
-        /// Gets the extension of the specified type.
+        /// Gets or creates an extension of the specified type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="create"></param>
         /// <returns></returns>
-        public T Get<T>()
+        public T GetOrCreate<T>(Func<T> create)
+            where T : class
         {
-            return (T)extensions.GetOrDefault(typeof(T));
+            return (T)GetOrCreate(typeof(T), create);
         }
 
         /// <summary>
@@ -53,6 +58,39 @@ namespace Rnet
         public object Get(Type type)
         {
             return extensions.GetOrDefault(type);
+        }
+
+        /// <summary>
+        /// Gets the extension of the specified type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Get<T>()
+        {
+            return (T)Get(typeof(T));
+        }
+
+        /// <summary>
+        /// Sets the extension of the specified type.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public object Set(Type type, object value)
+        {
+            return extensions[type] = Validate(type, value);
+        }
+
+        /// <summary>
+        /// Sets the extension of the specified type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public T Set<T>(T value)
+            where T : class
+        {
+            return (T)Set(typeof(T), value);
         }
 
     }

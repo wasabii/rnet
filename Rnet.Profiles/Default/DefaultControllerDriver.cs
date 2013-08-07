@@ -1,24 +1,25 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rnet.Drivers;
 
-namespace Rnet.Profiles
+namespace Rnet.Drivers.Profiles
 {
 
     /// <summary>
-    /// Serves as a basic <see cref="ProfileProvider"/> that only includes controllers.
+    /// Serves as a basic <see cref="DriverPackage"/> that only includes controllers.
     /// </summary>
-    public abstract class ControllerProfileProvider : ProfileProvider
+    public class DefaultControllerDriver : Driver
     {
 
-        public sealed override Task<IEnumerable<IProfile>> GetProfiles(RnetBusObject target)
+        public sealed override Task<IEnumerable<Driver>> GetDriver(RnetBusObject target)
         {
             if (target is RnetController)
                 return GetControllerProfiles((RnetController)target);
             else if (target is RnetZone)
                 return GetZoneProfiles((RnetZone)target);
             else
-                return Task.FromResult(Enumerable.Empty<IProfile>());
+                return Task.FromResult(Enumerable.Empty<Driver>());
         }
 
         /// <summary>
@@ -26,9 +27,9 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public virtual Task<IEnumerable<IProfile>> GetControllerProfiles(RnetController target)
+        public virtual Task<IEnumerable<Driver>> GetControllerProfiles(RnetController target)
         {
-            return Task.FromResult(Enumerable.Empty<IProfile>());
+            return Task.FromResult(Enumerable.Empty<Driver>());
         }
 
         /// <summary>
@@ -36,9 +37,9 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public virtual Task<IEnumerable<IProfile>> GetZoneProfiles(RnetZone target)
+        public virtual Task<IEnumerable<Driver>> GetZoneProfiles(RnetZone target)
         {
-            return Task.FromResult(Enumerable.Empty<IProfile>());
+            return Task.FromResult(Enumerable.Empty<Driver>());
         }
 
 

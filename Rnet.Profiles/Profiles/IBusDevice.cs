@@ -4,7 +4,7 @@
     /// <summary>
     /// Profile provided by the bus device.
     /// </summary>
-    public interface IBusDevice : IProfile
+    public interface IBusDevice : Driver
     {
 
 

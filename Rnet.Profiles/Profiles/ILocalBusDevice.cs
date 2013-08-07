@@ -49,13 +49,13 @@ namespace Rnet.Profiles.Basic
 
         }
 
-        public override Task<IEnumerable<IProfile>> GetDeviceProfilesAsync(RnetDevice target)
+        public override Task<IEnumerable<Driver>> GetDeviceProfilesAsync(RnetDevice target)
         {
             var d = target as RnetLocalDevice;
             if (d == null)
                 return base.GetDeviceProfilesAsync(target);
 
-            return Task.FromResult<IEnumerable<IProfile>>(new[] { new Profile(d) });
+            return Task.FromResult<IEnumerable<Driver>>(new[] { new Profile(d) });
         }
 
     }

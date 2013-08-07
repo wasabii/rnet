@@ -4,7 +4,7 @@
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
-    public interface IZoneAudio : IProfile
+    public interface IZoneAudio : Driver
     {
 
         /// <summary>

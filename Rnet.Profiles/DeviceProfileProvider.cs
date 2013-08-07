@@ -6,14 +6,14 @@ namespace Rnet.Profiles
 {
 
     /// <summary>
-    /// Serves as a basic <see cref="ProfileProvider"/> that only includes devices.
+    /// Serves as a basic <see cref="DriverPackage"/> that only includes devices.
     /// </summary>
-    public abstract class DeviceProfileProvider : ProfileProvider
+    public abstract class DeviceProfileProvider : DriverPackage
     {
 
-        public override sealed Task<IEnumerable<IProfile>> GetProfiles(RnetBusObject target)
+        public override sealed Task<IEnumerable<Driver>> GetDriver(RnetBusObject target)
         {
-            return target is RnetDevice ? GetDeviceProfilesAsync((RnetDevice)target) : Task.FromResult(Enumerable.Empty<IProfile>());
+            return target is RnetDevice ? GetDeviceProfilesAsync((RnetDevice)target) : Task.FromResult(Enumerable.Empty<Driver>());
         }
 
         /// <summary>
@@ -21,9 +21,9 @@ namespace Rnet.Profiles
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public virtual Task<IEnumerable<IProfile>> GetDeviceProfilesAsync(RnetDevice target)
+        public virtual Task<IEnumerable<Driver>> GetDeviceProfilesAsync(RnetDevice target)
         {
-            return Task.FromResult(Enumerable.Empty<IProfile>());
+            return Task.FromResult(Enumerable.Empty<Driver>());
         }
 
     }

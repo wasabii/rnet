@@ -1,7 +1,7 @@
 ﻿namespace Rnet.Profiles.Basic
 {
 
-    public interface IDeviceDirectoryMap : IProfile
+    public interface IDeviceDirectoryMap : Driver
     {
 
 

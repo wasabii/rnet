@@ -4,7 +4,10 @@ using System.Threading.Tasks;
 namespace Rnet.Profiles
 {
 
-    public static class RnetDataHandleExtensions
+    /// <summary>
+    /// Provides various utilities the driver model's interaction with Rnet.
+    /// </summary>
+    public static class RnetUtil
     {
 
         /// <summary>

@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet", "Rnet\Rnet.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Tests", "Rnet.Tests\Rnet.Tests.csproj", "{05FB2CC3-4C77-4D17-8A38-A800EAD2EBA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Profiles", "Rnet.Profiles\Rnet.Profiles.csproj", "{F5AD5681-FA01-43D7-9C55-D4786449BA3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Drivers", "Rnet.Profiles\Rnet.Drivers.csproj", "{F5AD5681-FA01-43D7-9C55-D4786449BA3B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Manager", "Rnet.Manager\Rnet.Manager.csproj", "{E42F6C2E-3F42-4809-BA27-0B45BFE99B17}"
 EndProject
