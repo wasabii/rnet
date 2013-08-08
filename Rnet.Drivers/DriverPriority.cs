@@ -13,17 +13,17 @@
         Fallback = -256,
 
         /// <summary>
-        /// Default position of new drivers. Set to Native if you are providing an official driver.
+        /// Default unconfigured priority of drivers. Prevents superseding Default drivers if they are available.
         /// </summary>
         Unconfigured = -128,
 
         /// <summary>
-        /// Official driver for the device. Supercedes default drivers if available.
+        /// Default driver for the device. Must be set explicitely to override the default position of Unconfigured.
         /// </summary>
-        Native = 0,
+        Default = 0,
 
         /// <summary>
-        /// Custom driver which supercedes native drivers if available.
+        /// Custom driver which supercedes Default drivers if available.
         /// </summary>
         Override = 256,
 

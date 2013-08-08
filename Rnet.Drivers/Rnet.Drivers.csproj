@@ -68,13 +68,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContainerContext.cs" />
-    <Compile Include="Default\ControllerBusObjectContainer.cs" />
-    <Compile Include="Default\ControllerProfile.cs" />
-    <Compile Include="Default\ControllerProfileBase.cs" />
-    <Compile Include="Default\ZoneBusObjectContainer.cs" />
-    <Compile Include="Default\LogicalObjectProfileBase.cs" />
-    <Compile Include="Default\LocalDeviceProfileBase.cs" />
-    <Compile Include="Default\ZoneProfileBase.cs" />
+    <Compile Include="Default\ControllerContainer.cs" />
+    <Compile Include="Default\Controller.cs" />
+    <Compile Include="Default\ControllerBase.cs" />
+    <Compile Include="Default\Zone.cs" />
+    <Compile Include="Default\LocalDevice.cs" />
+    <Compile Include="Default\LocalDeviceDriver.cs" />
+    <Compile Include="Default\ZoneContainer.cs" />
+    <Compile Include="Default\LogicalObjectBase.cs" />
+    <Compile Include="Default\ZoneBase.cs" />
     <Compile Include="Default\ControllerDriver.cs" />
     <Compile Include="Default\DriverPackage.cs" />
     <Compile Include="Driver.cs" />
@@ -86,7 +88,7 @@
     <Compile Include="Profile.cs" />
     <Compile Include="ProfileManager.cs" />
     <Compile Include="ModelObject.cs" />
-    <Compile Include="Default\DeviceProfileBase.cs" />
+    <Compile Include="Default\DeviceBase.cs" />
     <Compile Include="ProfileMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />

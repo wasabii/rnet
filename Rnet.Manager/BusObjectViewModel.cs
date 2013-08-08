@@ -1,9 +1,8 @@
-﻿using System;
+﻿using System.Linq;
 
 using Microsoft.Practices.Prism.ViewModel;
 
 using Rnet.Drivers;
-using Rnet.Profiles;
 
 namespace Rnet.Manager
 {
@@ -14,19 +13,15 @@ namespace Rnet.Manager
     public class BusObjectViewModel : NotificationObject
     {
 
-        Profile[] profiles;
-        IObject objectProfile;
-        string name;
+        Profiles.ViewModel[] profiles;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="o"></param>
-        public BusObjectViewModel(RnetBusObject o)
+        /// <param name="target"></param>
+        public BusObjectViewModel(RnetBusObject target)
         {
-            Object = o;
-
-            // start async operations
+            Target = target;
             Initialize();
         }
 
@@ -36,38 +31,24 @@ namespace Rnet.Manager
         async void Initialize()
         {
             // load the supported profiles
-            Profiles = await Object.GetProfiles();
-
-            // basic object profile provides a display name
-            objectProfile = await Object.GetProfile<IObject>();
-            if (objectProfile != null)
-            {
-                objectProfile.PropertyChanged += (s, a) => Name = objectProfile.DisplayName;
-                Name = objectProfile.DisplayName;
-            }
+            Profiles = (await Target.GetProfiles())
+                .Select(i => Rnet.Manager.Profiles.ViewModel.Create(i))
+                .Where(i => i != null)
+                .ToArray();
         }
 
         /// <summary>
         /// Object being viewed.
         /// </summary>
-        public RnetBusObject Object { get; private set; }
+        public RnetBusObject Target { get; private set; }
 
         /// <summary>
         /// Known set of profile types and implementation.
         /// </summary>
-        public Profile[] Profiles
+        public Profiles.ViewModel[] Profiles
         {
             get { return profiles; }
             set { profiles = value; RaisePropertyChanged(() => Profiles); }
-        }
-
-        /// <summary>
-        /// Gets or sets the name associated with the object.
-        /// </summary>
-        public string Name
-        {
-            get { return name ?? "<unknown>"; }
-            private set { name = value; RaisePropertyChanged(() => Name); }
         }
 
     }

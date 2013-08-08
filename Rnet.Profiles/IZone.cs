@@ -8,7 +8,7 @@ namespace Rnet.Profiles
     /// Base interface for operating against a <see cref="RnetZone"/>.
     /// </summary>
     [ServiceContract(Name = "zone")]
-    public interface IZone
+    public interface IZone : IObject
     {
 
         /// <summary>

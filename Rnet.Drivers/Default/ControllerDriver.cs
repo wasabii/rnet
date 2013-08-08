@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Rnet.Profiles;
+﻿using System.Threading.Tasks;
 
 namespace Rnet.Drivers.Default
 {
 
     /// <summary>
-    /// Basic controller driver.
+    /// Basic controller driver. Can serve as the base for a more complicated implementation.
     /// </summary>
     public class ControllerDriver : Driver
     {
@@ -38,17 +35,24 @@ namespace Rnet.Drivers.Default
             get { return Device; }
         }
 
+        /// <summary>
+        /// Default driver serves only as a fallback.
+        /// </summary>
         public override DriverPriority Priority
         {
             get { return DriverPriority.Fallback; }
         }
 
+        /// <summary>
+        /// Returns a set of profiles which provide only basic functionality.
+        /// </summary>
+        /// <returns></returns>
         protected override Task<object[]> GetProfiles()
         {
-            return Task.FromResult<object[]>(new object[] 
+            return Task.FromResult(new object[] 
             { 
-                new ControllerProfile(Controller),
-                new ControllerBusObjectContainer(Controller) 
+                new Controller(Controller),
+                new ControllerContainer(Controller) 
             });
         }
 

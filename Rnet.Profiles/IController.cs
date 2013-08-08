@@ -8,7 +8,7 @@ namespace Rnet.Profiles
     /// Basic interface for operating against a <see cref="RnetController"/>.
     /// </summary>
     [ServiceContract(Name = "controller")]
-    public interface IController 
+    public interface IController : IDevice
     {
 
         /// <summary>

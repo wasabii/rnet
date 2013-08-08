@@ -1,12 +1,10 @@
 ﻿using System.Threading.Tasks;
 
-using Rnet.Profiles;
-
 namespace Rnet.Drivers.Default
 {
 
     /// <summary>
-    /// Provides an optional base implementation of a profile.
+    /// Provides an optional base implementation for profiles.
     /// </summary>
     public abstract class ProfileBase : ModelObject, IProfileLifecycle
     {

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Nito.AsyncEx;
-using Rnet.Drivers.Default;
 
 namespace Rnet.Drivers
 {
@@ -23,18 +23,20 @@ namespace Rnet.Drivers
         static DriverManager()
         {
             // ensure default drivers are always available
-            Register(new Default.DriverPackage());
+            Register<Default.DriverPackage>();
         }
 
         /// <summary>
-        /// Registers a driver package instance.
+        /// Registers a driver package by type.
         /// </summary>
-        /// <param name="package"></param>
-        public static void Register(this DriverPackage package)
+        /// <typeparam name="T"></typeparam>
+        public static void Register<T>()
+            where T : DriverPackage, new()
         {
-            // insert package at the beginning so we scan it ahead of built-in drivers
             lock (lck)
-                packages.Add(package);
+                if (!packages.Any(i => i.GetType() == typeof(T)))
+                    if (!packages.Add(new T()))
+                        throw new Exception("Unknown error adding package.");
         }
 
         /// <summary>

@@ -7,7 +7,7 @@ namespace Rnet.Profiles
     /// Provides basic device information.
     /// </summary>
     [ServiceContract(Name = "device")]
-    public interface IDevice 
+    public interface IDevice : IObject
     {
 
         /// <summary>

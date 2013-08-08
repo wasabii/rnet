@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
-
+using System.Threading.Tasks;
 using OLinq;
 
 namespace Rnet.Manager
@@ -26,13 +27,13 @@ namespace Rnet.Manager
 
         public RnetZone Zone
         {
-            get { return (RnetZone)Object; }
+            get { return (RnetZone)Target; }
         }
 
         /// <summary>
         /// Gets the devices within the zone.
         /// </summary>
-        public IEnumerable<DeviceViewModel> Devices { get; private set; }
+        public ObservableView<DeviceViewModel> Devices { get; private set; }
 
     }
 

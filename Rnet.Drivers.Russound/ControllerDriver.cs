@@ -1,23 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Rnet.Drivers;
 
-namespace Rnet.Profiles.Russound
+namespace Rnet.Drivers.Russound
 {
 
     /// <summary>
-    /// Basic Russound controller profile. Provides functionality common to all Russound controllers.
+    /// Basic Russound controller driver. Provides functionality common to all Russound controllers.
     /// </summary>
-    public abstract class ControllerDriver : Driver
+    public abstract class ControllerDriver : Default.ControllerDriver
     {
 
         /// <summary>
-        /// Implement this method to test whether a given model value is supported by the implemeneted Russound
-        /// controller provider.
+        /// Initializes a new instance.
         /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        protected abstract bool Probe(string model);
+        /// <param name="controller"></param>
+        public ControllerDriver(RnetController controller)
+            : base(controller)
+        {
+
+        }
 
         /// <summary>
         /// Implement this method to return the number of supported zones for the specific Russound device model.
@@ -25,50 +26,28 @@ namespace Rnet.Profiles.Russound
         protected abstract int ZoneCount { get; }
 
         /// <summary>
-        /// Test whether or not the controller is supported.
+        /// Returns a set of profiles compatible with Russound controllers.
         /// </summary>
         /// <returns></returns>
-        async Task<bool> TestSupported(RnetController controller)
+        protected override async Task<object[]> GetProfiles()
         {
-            var model = await controller[0, 0].ReadAsciiString();
-            if (model == null)
-                return false;
-
-            return Probe(model);
+            return Enumerable.Concat(
+                    await GetRussoundProfiles(),
+                    await base.GetProfiles())
+                .ToArray();
         }
 
         /// <summary>
-        /// Gets the applicable profiles for the specified device.
+        /// Returns a set of profiles specific to Russound controllers.
         /// </summary>
-        /// <param name="controller"></param>
         /// <returns></returns>
-        public override async Task<IEnumerable<Driver>> GetControllerProfiles(RnetController controller)
+        protected internal Task<object[]> GetRussoundProfiles()
         {
-            if (await TestSupported(controller))
-                return new Driver[]
-                { 
-                    new RussoundControllerProfile(controller, ZoneCount),
-                    new RussoundControllerAudioProfile(controller),
-                };
-
-            return null;
-        }
-
-        /// <summary>
-        /// Gets the applicable profiles for the specified zone.
-        /// </summary>
-        /// <param name="zone"></param>
-        /// <returns></returns>
-        public override async Task<IEnumerable<Driver>> GetZoneProfiles(RnetZone zone)
-        {
-            if (await TestSupported(zone.Controller))
-                return new Driver[]
-                {
-                    new RussoundZoneProfile(zone),
-                    new RussoundZoneAudioProfile(zone),
-                };
-
-            return null;
+            return Task.FromResult(new object[]
+            { 
+                new Controller(Controller, ZoneCount),
+                new ControllerContainer(Controller),
+            });
         }
 
     }

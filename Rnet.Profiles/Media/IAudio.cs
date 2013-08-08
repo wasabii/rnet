@@ -7,8 +7,8 @@ namespace Rnet.Profiles.Media
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
-    [ServiceContract(Name = "audio")]
-    public interface IAudio : INotifyPropertyChanged
+    [ServiceContract(Name = "media.audio")]
+    public interface IAudio
     {
 
         /// <summary>

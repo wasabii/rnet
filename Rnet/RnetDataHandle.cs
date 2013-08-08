@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,7 +9,7 @@ namespace Rnet
     /// <summary>
     /// Provides a handle by which to manipulate data at a specific path on an RNET device.
     /// </summary>
-    public abstract class RnetDataHandle
+    public abstract class RnetDataHandle : IObservable<byte[]>
     {
 
         /// <summary>
@@ -322,6 +323,21 @@ namespace Rnet
         {
             if (DataAvailable != null)
                 DataAvailable(this, args);
+        }
+
+        /// <summary>
+        /// Implements <see cref="IObserver<byte[]>"/> so the subscriptions to data modifications can be monitored
+        /// without events.
+        /// </summary>
+        /// <param name="observer"></param>
+        /// <returns></returns>
+        IDisposable IObservable<byte[]>.Subscribe(IObserver<byte[]> observer)
+        {
+            return Observable.FromEventPattern<RnetDataAvailableEventArgs>(
+                    h => DataAvailable += h,
+                    h => DataAvailable -= h)
+                .Select(i => i.EventArgs.Data)
+                .Subscribe(observer);
         }
 
     }

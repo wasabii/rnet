@@ -4,7 +4,7 @@ namespace Rnet.Drivers
 {
 
     /// <summary>
-    /// Describes a profile.
+    /// Describes a profile that may be attached to an <see cref="RnetBusObject"/>.
     /// </summary>
     public sealed class ProfileMetadata
     {
@@ -14,12 +14,12 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="ns"></param>
         /// <param name="name"></param>
-        /// <param name="serviceContract"></param>
-        internal ProfileMetadata(string ns, string name, Type serviceContract)
+        /// <param name="interface"></param>
+        internal ProfileMetadata(string ns, string name, Type @interface)
         {
             Namespace = ns;
             Name = name;
-            ServiceContract = serviceContract;
+            Interface = @interface;
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Rnet.Drivers
         /// <summary>
         /// Interface which provides the service contract.
         /// </summary>
-        public Type ServiceContract { get; set; }
+        public Type Interface { get; set; }
 
     }
 

@@ -4,7 +4,9 @@
     /// <summary>
     /// Provides a profile implementation and the metadata associated with it.
     /// </summary>
-    public sealed class Profile
+    /// <typeparam name="T"></typeparam>
+    public sealed class Profile<T> : Profile
+        where T : class
     {
 
         /// <summary>
@@ -13,7 +15,35 @@
         /// <param name="target"></param>
         /// <param name="metadata"></param>
         /// <param name="instance"></param>
-        internal Profile(RnetBusObject target, ProfileMetadata metadata, object instance)
+        public Profile(RnetBusObject target, ProfileMetadata metadata, T instance)
+            : base(target, metadata, instance)
+        {
+
+        }
+
+        /// <summary>
+        /// Gets the instance which provides the implementation of the profile.
+        /// </summary>
+        public new T Instance
+        {
+            get { return (T)base.Instance; }
+        }
+
+    }
+
+    /// <summary>
+    /// Provides a profile implementation and the metadata associated with it.
+    /// </summary>
+    public abstract class Profile
+    {
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="metadata"></param>
+        /// <param name="instance"></param>
+        internal protected Profile(RnetBusObject target, ProfileMetadata metadata, object instance)
         {
             Target = target;
             Metadata = metadata;
@@ -31,8 +61,7 @@
         public ProfileMetadata Metadata { get; private set; }
 
         /// <summary>
-        /// Gets the instance which provides the implementation of the profile. This object implements the service
-        /// contract referenced in the metadata.
+        /// Gets the instance which provides the implementation of the profile.
         /// </summary>
         public object Instance { get; private set; }
 

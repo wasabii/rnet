@@ -8,7 +8,7 @@ namespace Rnet.Profiles
     /// Basic information exposed by any RNET object.
     /// </summary>
     [ServiceContract(Name = "object")]
-    public interface IObject : INotifyPropertyChanged
+    public interface IObject
     {
 
         /// <summary>

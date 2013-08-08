@@ -103,16 +103,19 @@
     <Compile Include="BusViewModel.cs" />
     <Compile Include="BusObjectViewModel.cs" />
     <Compile Include="ControllerViewModel.cs" />
-    <Compile Include="Profiles\ZoneAudioViewModel.cs" />
-    <Compile Include="RnetBusObjectToProfileConverter.cs" />
-    <Compile Include="RnetProfileBindingExtension.cs" />
+    <Compile Include="Profiles\ControllerViewModel.cs" />
+    <Compile Include="Profiles\ContainerViewModel.cs" />
+    <Compile Include="Profiles\ViewModelAttribute.cs" />
+    <Compile Include="Profiles\ZoneViewModel.cs" />
+    <Compile Include="Profiles\ObjectViewModel.cs" />
+    <Compile Include="Profiles\DeviceViewModel.cs" />
+    <Compile Include="Profiles\Media\AudioViewModel.cs" />
     <Compile Include="DeviceViewModel.cs" />
+    <Compile Include="Profiles\ViewModel.cs" />
+    <Compile Include="Util.cs" />
     <Compile Include="ZoneViewModel.cs" />
     <Compile Include="MessageDirection.cs" />
     <Compile Include="MessageViewModel.cs" />
-    <Compile Include="MethodNameToCommandConverter.cs" />
-    <Compile Include="ResourceKeyBindingExtension.cs" />
-    <Compile Include="ResourceKeyToResourceConverter.cs" />
     <Compile Include="TreeViewBehavior.cs" />
     <Page Include="BusWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -169,9 +172,7 @@
       <Name>Rnet</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Profiles\Media\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.8\tools\Microsoft.Bcl.Build.targets" />

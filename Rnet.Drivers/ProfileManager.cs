@@ -97,6 +97,20 @@ namespace Rnet.Drivers
             }
 
             /// <summary>
+            /// Creates a generic <see cref="Profile"/> instance that wraps the given information.
+            /// </summary>
+            /// <param name="target"></param>
+            /// <param name="metadata"></param>
+            /// <param name="instance"></param>
+            /// <returns></returns>
+            Profile CreateProfile(RnetBusObject target, ProfileMetadata metadata, object instance)
+            {
+                return (Profile)Activator.CreateInstance(
+                    typeof(Profile<>).MakeGenericType(metadata.Interface),
+                        target, metadata, instance);
+            }
+
+            /// <summary>
             /// Extracts the supported profile types out of the given instance and returns a set of <see
             /// cref="Profile"/> objects.
             /// </summary>
@@ -107,7 +121,7 @@ namespace Rnet.Drivers
                 return instance.GetType().GetInterfaces()
                     .Select(i => GetOrCreateMetadata(i))
                     .Where(i => i != null)
-                    .Select(i => new Profile(Target, i, instance));
+                    .Select(i => CreateProfile(Target, i, instance));
             }
 
             /// <summary>
@@ -183,7 +197,7 @@ namespace Rnet.Drivers
         public static async Task<object> GetProfile(this RnetBusObject target, Type contract)
         {
             return (await GetProfiles(target))
-                .Where(i => i.Metadata.ServiceContract == contract)
+                .Where(i => i.Metadata.Interface == contract)
                 .Select(i => i.Instance);
         }
 
@@ -197,7 +211,7 @@ namespace Rnet.Drivers
             where T : class
         {
             return (await GetProfiles(target))
-                .Where(i => i.Metadata.ServiceContract == typeof(T))
+                .Where(i => i.Metadata.Interface == typeof(T))
                 .Select(i => i.Instance)
                 .OfType<T>()
                 .FirstOrDefault();

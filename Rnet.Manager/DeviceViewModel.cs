@@ -16,7 +16,7 @@
 
         public RnetDevice Device
         {
-            get { return (RnetDevice)Object; }
+            get { return (RnetDevice)Target; }
         }
 
     }

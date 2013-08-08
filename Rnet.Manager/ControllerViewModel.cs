@@ -26,7 +26,7 @@ namespace Rnet.Manager
 
         public RnetController Controller
         {
-            get { return (RnetController)Object; }
+            get { return (RnetController)Target; }
         }
 
         /// <summary>

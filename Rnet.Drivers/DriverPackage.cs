@@ -5,8 +5,7 @@ namespace Rnet.Drivers
 {
 
     /// <summary>
-    /// Base driver package class. <see cref="DrivePackage"/>s are searched for <see cref="Driver"/> instances that
-    /// support specific RNET devices.
+    /// Provides the ability to resolve a <see cref="Driver"/> instance for <see cref="RnetDevice"/> objects.
     /// </summary>
     public abstract class DriverPackage : IComparable<DriverPackage>
     {
@@ -22,7 +21,7 @@ namespace Rnet.Drivers
         /// <summary>
         /// Relative priority of all drivers in the package.
         /// </summary>
-        public DriverPriority Priority
+        public virtual DriverPriority Priority
         {
             get { return DriverPriority.Unconfigured; }
         }

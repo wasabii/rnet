@@ -1,46 +1,24 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Reactive.Linq;
 
 namespace Rnet.Drivers
 {
 
     /// <summary>
-    /// Provides various utilities the driver model's interaction with Rnet.
+    /// Provides various utilities that assist in working with the driver model.
     /// </summary>
-    public static class RnetUtil
+    public static class Util
     {
 
         /// <summary>
-        /// Invokes the action when when data is available.
+        /// Projects each element into an ASCII string.
         /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="on"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
-        public static async Task<RnetDataHandle> Subscribe(this RnetDataHandle handle, Action<byte[]> on)
+        public static IObservable<string> ToAscii(this IObservable<byte[]> source)
         {
-            // subscribe to data
-            var b = false;
-            handle.DataAvailable += (s, a) => { b = true; on(a.Data); };
-
-            // issue initial read
-            var d = await handle.Read();
-
-            // read did not invoke action, invoke it once ourselves
-            if (d != null && !b)
-                on(d);
-
-            return handle;
-        }
-
-        /// <summary>
-        /// Invokes the action when when data is available.
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="on"></param>
-        /// <returns></returns>
-        public static Task<RnetDataHandle> Subscribe(this RnetDataHandle handle, Action<string> on)
-        {
-            return Subscribe(handle, d => on(RnetDataUtil.GetAsciiString(d)));
+            return source
+                .Select(d => Rnet.RnetDataUtil.GetAsciiString(d));
         }
 
     }

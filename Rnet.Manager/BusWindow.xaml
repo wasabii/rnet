@@ -8,6 +8,8 @@
     xmlns:rnet="clr-namespace:Rnet;assembly=Rnet"
     xmlns:rnetp="clr-namespace:Rnet.Profiles;assembly=Rnet.Profiles"
     xmlns:rnetpm="clr-namespace:Rnet.Profiles.Media;assembly=Rnet.Profiles"
+    xmlns:rnetmp="clr-namespace:Rnet.Manager.Profiles"
+    xmlns:rnetmpm="clr-namespace:Rnet.Manager.Profiles.Media"
     xmlns:local="clr-namespace:Rnet.Manager"
     mc:Ignorable="d"
     x:Class="Rnet.Manager.BusWindow"
@@ -65,9 +67,6 @@
 
             <TabControl.Resources>
 
-                <local:MethodNameToCommandConverter
-                    x:Key="MethodNameToCommandConverter" />
-
                 <DataTemplate
                     DataType="{x:Type local:MessageViewModel}">
                     <Border>
@@ -97,7 +96,7 @@
                 </DataTemplate>
 
                 <DataTemplate
-                    x:Key="Rnet.Profiles.Basic.IObject">
+                    DataType="{x:Type rnetmp:ObjectViewModel}">
                     <StackPanel
                         Orientation="Vertical">
                         <TextBlock
@@ -107,7 +106,7 @@
                 </DataTemplate>
 
                 <DataTemplate
-                    x:Key="Rnet.Profiles.Basic.IDevice">
+                    DataType="{x:Type rnetmp:DeviceViewModel}">
                     <StackPanel
                         Orientation="Vertical">
                         <TextBlock
@@ -123,31 +122,18 @@
                 </DataTemplate>
 
                 <DataTemplate
-                    x:Key="Rnet.Profiles.IController">
+                    DataType="{x:Type rnetmp:ControllerViewModel}">
                     <StackPanel
                         Orientation="Vertical">
                         <ItemsControl
                             ItemsSource="{Binding Zones}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ContentPresenter
-                                        Content="{local:RnetProfileBinding {x:Type rnetp:IZone}}">
-                                        <ContentPresenter.ContentTemplate>
-                                            <DataTemplate
-                                                DataType="{x:Type rnetp:IZone}">
-                                                <TextBlock
-                                                    Text="{Binding Name}" />
-                                            </DataTemplate>
-                                        </ContentPresenter.ContentTemplate>
-                                    </ContentPresenter>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
+
                         </ItemsControl>
                     </StackPanel>
                 </DataTemplate>
 
                 <DataTemplate
-                    x:Key="Rnet.Profiles.Basic.IZone">
+                    DataType="{x:Type rnetmp:ZoneViewModel}">
                     <StackPanel
                         Orientation="Vertical">
                         <TextBlock
@@ -157,15 +143,7 @@
                 </DataTemplate>
 
                 <DataTemplate
-                    x:Key="Rnet.Profiles.Media.IControllerAudio">
-                    <Grid>
-                        <Button
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='PowerToggle'}" />
-                    </Grid>
-                </DataTemplate>
-
-                <DataTemplate
-                    x:Key="Rnet.Profiles.Media.IZoneAudio">
+                    DataType="{x:Type rnetmpm:AudioViewModel}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition
@@ -192,8 +170,7 @@
                         <Button
                             Grid.Column="0"
                             Grid.Row="0"
-                            Grid.ColumnSpan="3"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='PowerToggle'}">
+                            Grid.ColumnSpan="3">
                             <Button.Style>
                                 <Style
                                     TargetType="Button">
@@ -229,15 +206,13 @@
                             Grid.Row="1"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="-"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='VolumeDown'}" />
+                            Content="-" />
                         <Button
                             Grid.Column="1"
                             Grid.Row="1"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="+"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='VolumeUp'}" />
+                            Content="+" />
 
                         <Slider
                             Grid.Column="0"
@@ -251,15 +226,13 @@
                             Grid.Row="2"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="-"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='BassDown'}" />
+                            Content="-" />
                         <Button
                             Grid.Column="1"
                             Grid.Row="2"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="+"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='BassUp'}" />
+                            Content="+" />
 
                         <Slider
                             Grid.Column="0"
@@ -273,15 +246,13 @@
                             Grid.Row="3"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="-"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='TrebleDown'}" />
+                            Content="-" />
                         <Button
                             Grid.Column="1"
                             Grid.Row="3"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="+"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='TrebleUp'}" />
+                            Content="+" />
 
 
                         <Slider
@@ -296,22 +267,19 @@
                             Grid.Row="4"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="&lt;-"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='BalanceLeft'}" />
+                            Content="&lt;-" />
                         <Button
                             Grid.Column="2"
                             Grid.Row="4"
                             MinWidth="25"
                             MinHeight="25"
-                            Content="-&gt;"
-                            Command="{Binding Converter={StaticResource MethodNameToCommandConverter}, ConverterParameter='BalanceRight'}" />
+                            Content="-&gt;" />
 
                     </Grid>
                 </DataTemplate>
 
                 <DataTemplate
                     DataType="{x:Type local:BusObjectViewModel}">
-
                     <ScrollViewer>
                         <ItemsControl
                             HorizontalAlignment="Stretch"
@@ -321,9 +289,8 @@
                                     <Expander
                                         HorizontalAlignment="Stretch"
                                         IsExpanded="True"
-                                        Header="{Binding Metadata.Name}"
-                                        Content="{Binding Instance}"
-                                        ContentTemplate="{local:ResourceKeyBinding Path=Metadata.Name}" />
+                                        Header="{Binding Profile.Metadata.Name}"
+                                        Content="{Binding}" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
