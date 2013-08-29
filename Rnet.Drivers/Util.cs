@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reactive.Linq;
 
+using Rnet.Profiles;
+
 namespace Rnet.Drivers
 {
 
@@ -19,6 +21,21 @@ namespace Rnet.Drivers
         {
             return source
                 .Select(d => Rnet.RnetDataUtil.GetAsciiString(d));
+        }
+
+        /// <summary>
+        /// Sets the container context values.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="owner"></param>
+        /// <param name="container"></param>
+        public static void SetContainerContext(this RnetBusObject target, RnetBusObject owner, RnetBusObject container)
+        {
+            var context = target.Context.Get<IContainerContext>();
+            if (context == null ||
+                context.Owner != owner ||
+                context.Container != container)
+                target.Context.Set<IContainerContext>(new ContainerContext(owner, container));
         }
 
     }

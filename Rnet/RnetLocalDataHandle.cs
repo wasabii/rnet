@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+
 namespace Rnet
 {
 
@@ -26,6 +27,14 @@ namespace Rnet
         public new RnetRemoteDevice Device
         {
             get { return (RnetRemoteDevice)base.Device; }
+        }
+
+        /// <summary>
+        /// Gets the current value without reading it from the device.
+        /// </summary>
+        public override byte[] Current
+        {
+            get { throw new System.NotImplementedException(); }
         }
 
         /// <summary>

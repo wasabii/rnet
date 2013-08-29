@@ -1,10 +1,12 @@
-﻿namespace Rnet.Profiles
+﻿using Rnet.Profiles;
+
+namespace Rnet.Drivers
 {
 
     /// <summary>
     /// Provides information related to the current position of a <see cref="RnetBusObject"/> in the object tree.
     /// </summary>
-    class ContainerContext : IContainerContext
+    public class ContainerContext : IContainerContext
     {
 
         /// <summary>

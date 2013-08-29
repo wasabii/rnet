@@ -35,6 +35,14 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Gets the current value without reading it from the device.
+        /// </summary>
+        public override byte[] Current
+        {
+            get { return buffer; }
+        }
+
+        /// <summary>
         /// Invoked by the device when data has been received. Makes the data available to users of this handle instance.
         /// </summary>
         /// <param name="data"></param>

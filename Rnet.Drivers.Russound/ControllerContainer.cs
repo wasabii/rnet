@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
+using Rnet.Profiles;
+
 namespace Rnet.Drivers.Russound
 {
 

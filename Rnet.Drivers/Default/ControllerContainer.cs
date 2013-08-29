@@ -27,7 +27,14 @@ namespace Rnet.Drivers.Default
 
         public virtual IEnumerator<RnetBusObject> GetEnumerator()
         {
-            return Controller.Zones.GetEnumerator();
+            foreach (var zone in Controller.Zones)
+            {
+                // ensure zone is registered underneath us
+                zone.SetContainerContext(zone.Controller, zone.Controller);
+
+                // yield result
+                yield return zone;
+            }
         }
 
         /// <summary>

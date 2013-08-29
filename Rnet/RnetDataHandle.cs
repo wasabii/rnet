@@ -36,6 +36,11 @@ namespace Rnet
         public RnetPath Path { get; private set; }
 
         /// <summary>
+        /// Gets the currently cached value, without reading it from the remote device.
+        /// </summary>
+        public abstract byte[] Current { get; }
+
+        /// <summary>
         /// Reads the data from the device path.
         /// </summary>
         /// <returns></returns>
@@ -337,6 +342,7 @@ namespace Rnet
                     h => DataAvailable += h,
                     h => DataAvailable -= h)
                 .Select(i => i.EventArgs.Data)
+                .Merge(Current != null ? Observable.Return(Current) : Observable.Empty<byte[]>())
                 .Subscribe(observer);
         }
 

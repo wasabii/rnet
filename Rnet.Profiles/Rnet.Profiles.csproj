@@ -34,6 +34,7 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IContainer.cs" />

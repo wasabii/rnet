@@ -1,15 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Reflection;
-
-using Nito.AsyncEx;
+using System.ServiceModel;
+using System.Threading.Tasks;
 
 using Rnet.Profiles;
-using System.ServiceModel;
-using System.Collections.Concurrent;
-using System.Linq.Expressions;
 
 namespace Rnet.Drivers
 {
@@ -32,6 +29,7 @@ namespace Rnet.Drivers
         class Cache
         {
 
+            RnetBusObject target;
             Task<Profile[]> profiles;
 
             /// <summary>
@@ -40,13 +38,8 @@ namespace Rnet.Drivers
             /// <param name="target"></param>
             public Cache(RnetBusObject target)
             {
-                Target = target;
+                this.target = target;
             }
-
-            /// <summary>
-            /// Bus object for which we are providing profiles for.
-            /// </summary>
-            RnetBusObject Target { get; set; }
 
             /// <summary>
             /// Obtains the set of profiles supported by the specified device.
@@ -82,15 +75,16 @@ namespace Rnet.Drivers
             /// <returns></returns>
             async Task<object[]> RequestProfiles()
             {
-                if (Target is RnetDevice)
-                    return await RequestProfiles((RnetDevice)Target);
+                if (target is RnetDevice)
+                    return await RequestProfiles((RnetDevice)target);
 
-                var owner = Target.Context.Get<ContainerContext>().Owner;
-                if (owner != null)
+                var context = target.Context.Get<IContainerContext>();
+                if (context != null &&
+                    context.Owner != null)
                 {
-                    var profile = await owner.GetProfile<IOwner>();
+                    var profile = await context.Owner.GetProfile<IOwner>();
                     if (profile != null)
-                        return await profile.GetProfiles(Target);
+                        return await profile.GetProfiles(target);
                 }
 
                 return null;
@@ -121,7 +115,7 @@ namespace Rnet.Drivers
                 return instance.GetType().GetInterfaces()
                     .Select(i => GetOrCreateMetadata(i))
                     .Where(i => i != null)
-                    .Select(i => CreateProfile(Target, i, instance));
+                    .Select(i => CreateProfile(target, i, instance));
             }
 
             /// <summary>
@@ -132,11 +126,17 @@ namespace Rnet.Drivers
             /// <returns></returns>
             async Task<Profile[]> CreateProfiles(Task<object[]> instances)
             {
-                return (await instances)
+                var l = (await instances)
                     .SelectMany(i => CreateProfiles(i))
                     .GroupBy(i => i.Metadata)
                     .Select(i => i.First())
                     .ToArray();
+
+                // initialize any profiles that require it
+                foreach (var p in l.Select(i => i.Instance).OfType<IProfileLifecycle>().Distinct())
+                    await p.Initialize();
+
+                return l;
             }
 
             /// <summary>

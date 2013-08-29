@@ -17,6 +17,14 @@ namespace Rnet.Drivers.Russound
             // register ourselves if we can
             DriverManager.Register<DriverPackage>();
         }
+
+        /// <summary>
+        /// Registers the driver package.
+        /// </summary>
+        public static void Register()
+        {
+
+        }
         
         /// <summary>
         /// We provide official drivers for Russound.
@@ -26,12 +34,12 @@ namespace Rnet.Drivers.Russound
             get { return DriverPriority.Default; }
         }
 
-        protected internal override Task<Driver> GetDriver(RnetDevice device)
+        protected override Task<Driver> GetDriver(RnetDevice device)
         {
             if (device is RnetController)
                 return GetDriver((RnetController)device);
-
-            return null;
+            
+            return Task.FromResult<Driver>(null);
         }
 
         async Task<Driver> GetDriver(RnetController controller)

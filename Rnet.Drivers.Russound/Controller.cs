@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Rnet.Drivers.Default;
 using Rnet.Profiles;
 
@@ -16,7 +16,7 @@ namespace Rnet.Drivers.Russound
 
         RnetZone[] zones;
 
-        string name;
+        string displayName;
 
         RnetDataHandle modelHandle;
         string model;
@@ -37,9 +37,9 @@ namespace Rnet.Drivers.Russound
                 .Select(i => Controller.Zones[i])
                 .ToArray();
 
-            modelHandle = 
+            modelHandle =
                 controller[0, 0];
-            firmwareVersionHandle = 
+            firmwareVersionHandle =
                 controller[0, 1];
         }
 
@@ -47,7 +47,8 @@ namespace Rnet.Drivers.Russound
         {
             modelHandle.ToAscii()
                 .Subscribe(s =>
-                    Name = Model = s);
+                    DisplayName = Model = s);
+
             firmwareVersionHandle.ToAscii()
                 .Subscribe(d =>
                     FirmwareVersion = d);
@@ -59,10 +60,9 @@ namespace Rnet.Drivers.Russound
             return Task.FromResult(false);
         }
 
-        public string Name
+        public IEnumerable<RnetZone> Zones
         {
-            get { return name; }
-            private set { name = value; RaisePropertyChanged("Name"); }
+            get { return zones; }
         }
 
         public string Manufacturer
@@ -82,9 +82,10 @@ namespace Rnet.Drivers.Russound
             private set { firmwareVersion = value; RaisePropertyChanged("FirmwareVersion"); }
         }
 
-        public RnetZone[] Zones
+        public string DisplayName
         {
-            get { return zones; }
+            get { return displayName; }
+            private set { displayName = value; RaisePropertyChanged("DisplayName"); }
         }
 
     }

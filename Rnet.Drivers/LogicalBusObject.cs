@@ -22,7 +22,7 @@ namespace Rnet.Drivers
         protected LogicalBusObject(RnetDevice owner)
             : base(owner.Bus)
         {
-            Context.Set<IContainerContext>(new ContainerContext(owner, owner));
+            this.SetContainerContext(owner, owner);
         }
 
     }

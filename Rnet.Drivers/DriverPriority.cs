@@ -10,12 +10,12 @@
         /// <summary>
         /// Available if no other driver is offered.
         /// </summary>
-        Fallback = -256,
+        Fallback = 256,
 
         /// <summary>
         /// Default unconfigured priority of drivers. Prevents superseding Default drivers if they are available.
         /// </summary>
-        Unconfigured = -128,
+        Unconfigured = 128,
 
         /// <summary>
         /// Default driver for the device. Must be set explicitely to override the default position of Unconfigured.
@@ -25,7 +25,7 @@
         /// <summary>
         /// Custom driver which supercedes Default drivers if available.
         /// </summary>
-        Override = 256,
+        Override = -256,
 
     }
 

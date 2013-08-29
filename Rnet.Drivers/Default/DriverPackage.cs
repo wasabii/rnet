@@ -9,13 +9,14 @@ namespace Rnet.Drivers.Default
     public sealed class DriverPackage : Drivers.DriverPackage
     {
 
-        protected internal override Task<Driver> GetDriver(RnetDevice device)
+        protected override Task<Driver> GetDriver(RnetDevice device)
         {
             if (device is RnetController)
                 return Task.FromResult<Driver>(new ControllerDriver((RnetController)device));
             else if (device is RnetLocalDevice)
                 return Task.FromResult<Driver>(new LocalDeviceDriver((RnetLocalDevice)device));
-            return null;
+            else
+                return Task.FromResult<Driver>(null);
         }
 
         public override DriverPriority Priority

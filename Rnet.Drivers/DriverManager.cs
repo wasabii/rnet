@@ -47,9 +47,14 @@ namespace Rnet.Drivers
         /// <returns></returns>
         static async Task<Driver> CreateDriver(RnetDevice device)
         {
-            return (await Task.WhenAll(packages
-                .Select(i => i.GetDriver(device))))
-                .FirstOrDefault();
+            foreach (var package in packages)
+            {
+                var driver = await package.GetDriverInternal(device);
+                if (driver != null)
+                    return driver;
+            }
+
+            return null;
         }
 
         /// <summary>

@@ -100,35 +100,38 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BusViewModel.cs" />
-    <Compile Include="BusObjectViewModel.cs" />
-    <Compile Include="ControllerViewModel.cs" />
-    <Compile Include="Profiles\ControllerViewModel.cs" />
-    <Compile Include="Profiles\ContainerViewModel.cs" />
-    <Compile Include="Profiles\ViewModelAttribute.cs" />
-    <Compile Include="Profiles\ZoneViewModel.cs" />
-    <Compile Include="Profiles\ObjectViewModel.cs" />
-    <Compile Include="Profiles\DeviceViewModel.cs" />
-    <Compile Include="Profiles\Media\AudioViewModel.cs" />
-    <Compile Include="DeviceViewModel.cs" />
-    <Compile Include="Profiles\ViewModel.cs" />
+    <Compile Include="ObservableDictionary.cs" />
+    <Compile Include="PathConstructor.cs" />
+    <Compile Include="TypeDictionary.cs" />
+    <Compile Include="Views\BusViewModel.cs" />
+    <Compile Include="Views\BusObjectViewModel.cs" />
+    <Compile Include="Views\Profiles\ControllerViewModel.cs" />
+    <Compile Include="Views\Profiles\ContainerViewModel.cs" />
+    <Compile Include="Views\Profiles\ViewModelAttribute.cs" />
+    <Compile Include="Views\Profiles\ZoneViewModel.cs" />
+    <Compile Include="Views\Profiles\ObjectViewModel.cs" />
+    <Compile Include="Views\Profiles\DeviceViewModel.cs" />
+    <Compile Include="Views\Profiles\Media\AudioViewModel.cs" />
+    <Compile Include="Views\Profiles\ViewModel.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="ZoneViewModel.cs" />
-    <Compile Include="MessageDirection.cs" />
-    <Compile Include="MessageViewModel.cs" />
+    <Compile Include="Views\MessageDirection.cs" />
+    <Compile Include="Views\MessageViewModel.cs" />
     <Compile Include="TreeViewBehavior.cs" />
-    <Page Include="BusWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
+    <Compile Include="XamlLoadExtension.cs" />
+    <Compile Include="XamlViewer.cs" />
+    <Resource Include="Views\BusView.xaml">
       <SubType>Designer</SubType>
-    </Page>
+    </Resource>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BusWindow.xaml.cs">
-      <DependentUpon>BusWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
+    <Resource Include="Views\Profiles\ResourceDictionary.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Include="Views\Profiles\Media\ResourceDictionary.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -159,6 +162,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rnet.Drivers.Russound\Rnet.Drivers.Russound.csproj">
+      <Project>{5ed2a90a-cdf8-4923-add5-e0056b468213}</Project>
+      <Name>Rnet.Drivers.Russound</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
       <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
       <Name>Rnet.Drivers</Name>
@@ -172,7 +179,26 @@
       <Name>Rnet</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Views\ResourceDictionary.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Views\Profiles\Media\AudioView.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Content Include="Window.xaml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.8\tools\Microsoft.Bcl.Build.targets" />

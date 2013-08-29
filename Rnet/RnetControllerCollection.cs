@@ -12,11 +12,11 @@ namespace Rnet
     /// <summary>
     /// Provides a collection of controllers.
     /// </summary>
-    public class RnetControllerCollection : IEnumerable<RnetController>, INotifyCollectionChanged
+    public sealed class RnetControllerCollection : IEnumerable<RnetController>, INotifyCollectionChanged
     {
 
-        ConcurrentDictionary<RnetControllerId, WeakReference<RnetController>> controllers =
-            new ConcurrentDictionary<RnetControllerId, WeakReference<RnetController>>();
+        ConcurrentDictionary<RnetControllerId, RnetController> controllers =
+            new ConcurrentDictionary<RnetControllerId, RnetController>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -63,8 +63,7 @@ namespace Rnet
                 return null;
 
             return controllers
-                .GetOrAdd(id, i => new WeakReference<RnetController>(new RnetController(Bus, id)))
-                .GetTargetOrDefault();
+                .GetOrAdd(id, i => new RnetController(Bus, id));
         }
 
         /// <summary>
@@ -84,7 +83,6 @@ namespace Rnet
         public IEnumerator<RnetController> GetEnumerator()
         {
             return controllers.Values
-                .Select(i => i.GetTargetOrDefault())
                 .Where(i => i != null)
                 .Where(i => i.IsActive)
                 .OrderBy(i => i.Id)

@@ -30,8 +30,17 @@ namespace Rnet.Drivers
         /// Returns a driver for the specified RNET device or <c>null</c> if the package does not contain one.
         /// </summary>
         /// <param name="device"></param>
+        internal Task<Driver> GetDriverInternal(RnetDevice device)
+        {
+            return GetDriver(device);
+        }
+
+        /// <summary>
+        /// Returns a driver for the specified RNET device or <c>null</c> if the package does not contain one.
+        /// </summary>
+        /// <param name="device"></param>
         /// <returns></returns>
-        protected internal abstract Task<Driver> GetDriver(RnetDevice device);
+        protected abstract Task<Driver> GetDriver(RnetDevice device);
 
         int IComparable<DriverPackage>.CompareTo(DriverPackage other)
         {
