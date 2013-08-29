@@ -116,7 +116,7 @@ namespace Rnet.Drivers.Russound
 
         public async void PowerToggle()
         {
-            await powerHandle.SendEvent(RnetEvent.AllZonesOnOff, (int)(power == Power.On ? Power.Off : Power.On));
+            await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)(power == Power.On ? Power.Off : Power.On));
         }
 
         public async void PowerOn()
@@ -126,7 +126,7 @@ namespace Rnet.Drivers.Russound
 
         public async void PowerOff()
         {
-            await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)Power.On, Zone.Id);
+            await powerHandle.SendEvent(RnetEvent.ZoneOnOff, (ushort)Power.Off, Zone.Id);
         }
 
         public int Volume

@@ -19,6 +19,7 @@ namespace Rnet
                 throw new ArgumentOutOfRangeException("id", "RnetKeypadId cannot be in a reserved range.");
             
             Zone = zone;
+            Id = keypadId;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +21,8 @@ namespace Rnet
         /// <returns></returns>
         public static RnetConnection Create(Uri uri)
         {
+            Contract.Requires<ArgumentNullException>(uri != null);
+
             if (uri.Scheme == "tcp" ||
                 uri.Scheme == "rnet.tcp")
                 return new RnetTcpConnection(uri);
@@ -139,6 +142,8 @@ namespace Rnet
         /// <returns></returns>
         public virtual Task Send(RnetMessage message, CancellationToken cancellationToken)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             if (State != RnetConnectionState.Open)
                 throw new RnetConnectionException("Connection is not open.");
 
@@ -156,6 +161,8 @@ namespace Rnet
         /// <returns></returns>
         async Task WriteMessage(RnetMessage message, CancellationToken cancellationToken)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             using (await write.LockAsync(cancellationToken))
                 message.Write(writer);
         }

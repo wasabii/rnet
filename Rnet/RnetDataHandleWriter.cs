@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.IO;
 
 namespace Rnet
 {
@@ -18,6 +20,8 @@ namespace Rnet
         /// </summary>
         public RnetDataHandleWriter(int packetCount)
         {
+            Contract.Requires(packetCount > 0);
+
             this.stream = new MemoryStream();
             this.packetCount = packetCount;
         }
@@ -28,6 +32,9 @@ namespace Rnet
         /// <param name="data"></param>
         public void Write(byte[] data, int packetNumber)
         {
+            Contract.Requires<ArgumentNullException>(data != null);
+            Contract.Requires<ArgumentOutOfRangeException>(packetNumber >= 0);
+
             // skip if out of order packet
             if (this.packetNumber != packetNumber - 1)
                 return;

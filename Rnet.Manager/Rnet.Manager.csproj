@@ -102,6 +102,7 @@
     </ApplicationDefinition>
     <Compile Include="ObservableDictionary.cs" />
     <Compile Include="PathConstructor.cs" />
+    <Compile Include="ProfilePresenter.cs" />
     <Compile Include="TypeDictionary.cs" />
     <Compile Include="Views\BusViewModel.cs" />
     <Compile Include="Views\BusObjectViewModel.cs" />
@@ -117,7 +118,6 @@
     <Compile Include="Views\MessageDirection.cs" />
     <Compile Include="Views\MessageViewModel.cs" />
     <Compile Include="TreeViewBehavior.cs" />
-    <Compile Include="XamlLoadExtension.cs" />
     <Compile Include="XamlViewer.cs" />
     <Resource Include="Views\BusView.xaml">
       <SubType>Designer</SubType>

@@ -1,6 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.Threading;
 using System.Threading.Tasks;
-
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -49,6 +50,8 @@ namespace Rnet
         /// <returns></returns>
         internal async Task Receive(byte[] data)
         {
+            Contract.Requires<ArgumentNullException>(data != null);
+
             using (await wait.EnterAsync())
             {
                 // check for duplicates; unneccessary events might be hard on consumers due to parsing

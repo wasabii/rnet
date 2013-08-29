@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -153,10 +154,12 @@ namespace Rnet
         /// <returns></returns>
         protected internal RnetDataHandle GetOrCreateDataHandle(RnetPath path)
         {
+            Contract.Requires<ArgumentException>(path.Length > 0);
+            Contract.Ensures(Contract.Result<RnetDataHandle>() != null);
+
             lock (handles)
                 return handles
-                    .GetOrCreate(path, i => new WeakReference<RnetDataHandle>(CreateDataHandle(i)))
-                    .GetTargetOrDefault();
+                    .GetOrCreate(path, i => CreateDataHandle(i));
         }
 
         /// <summary>

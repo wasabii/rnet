@@ -331,6 +331,22 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Returns an observable that produces the current value, or an empty.
+        /// </summary>
+        /// <returns></returns>
+        IObservable<byte[]> CurrentOrRead()
+        {
+            if (Current != null)
+                return Observable.Return(Current);
+
+            // initiate a read
+            Read();
+            
+            // no data present yet
+            return Observable.Empty<byte[]>();
+        }
+
+        /// <summary>
         /// Implements <see cref="IObserver<byte[]>"/> so the subscriptions to data modifications can be monitored
         /// without events.
         /// </summary>
@@ -342,7 +358,7 @@ namespace Rnet
                     h => DataAvailable += h,
                     h => DataAvailable -= h)
                 .Select(i => i.EventArgs.Data)
-                .Merge(Current != null ? Observable.Return(Current) : Observable.Empty<byte[]>())
+                .Merge(CurrentOrRead())
                 .Subscribe(observer);
         }
 

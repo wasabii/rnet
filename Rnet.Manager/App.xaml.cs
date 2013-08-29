@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Windows;
 
 namespace Rnet.Manager
@@ -9,6 +10,7 @@ namespace Rnet.Manager
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            Assembly.Load("System.Windows.Interactivity");
             Rnet.Drivers.Russound.DriverPackage.Register();
 
             base.OnStartup(e);

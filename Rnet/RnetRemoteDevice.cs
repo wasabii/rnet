@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,6 +94,8 @@ namespace Rnet
         /// <param name="message"></param>
         internal async Task SentMessage(RnetMessage message)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             var hmsg = message as RnetHandshakeMessage;
             if (hmsg != null)
                 await ReceiveHandshakeMessage(hmsg);
@@ -117,6 +120,8 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveHandshakeMessage(RnetHandshakeMessage message)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             using (await handshake.EnterAsync())
             {
                 handshakeMessage = message;
@@ -131,6 +136,8 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveRequestDataMessage(RnetRequestDataMessage message)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             // read data from the local device
             var data = await Bus.LocalDevice[message.TargetPath].Read();
             if (data == null)
@@ -147,6 +154,8 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveSetDataMessage(RnetSetDataMessage message)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             using (await receive.LockAsync())
             {
                 // device requires handshake
@@ -179,9 +188,12 @@ namespace Rnet
         /// <param name="path"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        async Task ReceiveData(RnetPath path, byte[] data)
+        Task ReceiveData(RnetPath path, byte[] data)
         {
-            await GetOrCreateDataHandle(path).Receive(data);
+            Contract.Requires<ArgumentException>(path.Length != 0);
+            Contract.Requires<ArgumentNullException>(data != null);
+
+            return GetOrCreateDataHandle(path).Receive(data);
         }
 
         /// <summary>
@@ -191,6 +203,8 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveEventMessage(RnetEventMessage message)
         {
+            Contract.Requires<ArgumentNullException>(message != null);
+
             using (await receive.LockAsync())
                 if (message.Priority == RnetPriority.High)
                     await Bus.Client.Send(new RnetHandshakeMessage(
@@ -207,6 +221,8 @@ namespace Rnet
         /// <returns></returns>
         internal async Task SendRequestData(RnetPath path, CancellationToken cancellationToken)
         {
+            Contract.Requires<ArgumentException>(path.Length != 0);
+
             // only one request at a time
             using (await send.LockAsync(cancellationToken))
                 await Bus.Client.Send(new RnetRequestDataMessage(
@@ -331,6 +347,8 @@ namespace Rnet
         /// <returns></returns>
         new RnetRemoteDataHandle GetOrCreateDataHandle(RnetPath path)
         {
+            Contract.Requires<ArgumentException>(path.Length > 0);
+
             return (RnetRemoteDataHandle)base.GetOrCreateDataHandle(path);
         }
 
@@ -341,6 +359,8 @@ namespace Rnet
         /// <returns></returns>
         protected internal override RnetDataHandle CreateDataHandle(RnetPath path)
         {
+            Contract.Requires<ArgumentException>(path.Length > 0);
+
             return new RnetRemoteDataHandle(this, path);
         }
 
@@ -352,6 +372,9 @@ namespace Rnet
         /// <returns></returns>
         RnetDataHandleWriter GetOrCreateDataHandleWriter(RnetPath path, int packetCount)
         {
+            Contract.Requires<ArgumentException>(path.Length > 0);
+            Contract.Requires<ArgumentOutOfRangeException>(packetCount > 0);
+
             return writers
                 .GetOrAdd(path, i => new WeakReference<RnetDataHandleWriter>(new RnetDataHandleWriter(packetCount)))
                 .GetTargetOrDefault();
