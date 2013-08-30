@@ -13,8 +13,9 @@ using Rnet.Profiles;
 namespace Rnet.Service.Objects
 {
 
-    [ServiceContract]
+    [ServiceContract(Namespace = "urn:rnet:service", Name = "objects")]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
+    [FormatServiceBehavior]
     class ObjectService : RnetWebServiceBase
     {
 
@@ -41,21 +42,40 @@ namespace Rnet.Service.Objects
         public async Task<object> Get(string uri)
         {
             if (string.IsNullOrWhiteSpace(uri))
-                throw new WebFaultException(HttpStatusCode.BadRequest);
+                return await GetObjectRefs();
 
             // navigate down hierarchy until the end
             var target = await NavigateAtObject(uri.Split('/'), 0, Bus.Controllers);
 
             // ended up at an object
             if (target is RnetBusObject)
-                return GetObject((RnetBusObject)target);
+                return await GetObject((RnetBusObject)target);
 
             // ended up at a profile
             if (target is Profile)
-                return GetProfile((Profile)target);
+                return await GetProfile((Profile)target);
 
             // no idea what we ended up at
             throw new WebFaultException(HttpStatusCode.BadRequest);
+        }
+
+        /// <summary>
+        /// Gets references for every root object.
+        /// </summary>
+        /// <returns></returns>
+        async Task<ObjectRefCollection> GetObjectRefs()
+        {
+            var c = new ObjectRefCollection();
+
+            // assembly references
+            foreach (var i in Bus.Controllers)
+                c.Add(new ObjectRef()
+                {
+                    Id = await GetObjectUri(i),
+                    Name = await GetObjectName(i),
+                });
+
+            return c;
         }
 
         /// <summary>
@@ -68,7 +88,7 @@ namespace Rnet.Service.Objects
         async Task<object> NavigateAtObject(string[] components, int position, IEnumerable<RnetBusObject> objects)
         {
             Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position < 0);
+            Contract.Requires<ArgumentOutOfRangeException>(position >= 0);
             Contract.Requires<ArgumentNullException>(objects != null);
 
             var o = (RnetBusObject)null;
@@ -140,6 +160,7 @@ namespace Rnet.Service.Objects
                 Id = await GetObjectUri(o),
                 Name = await GetObjectName(o),
                 Objects = await GetObjectRefs(o),
+                Profiles = await GetProfileRefs(o),
             };
         }
 
@@ -165,23 +186,6 @@ namespace Rnet.Service.Objects
                 });
 
             return c;
-        }
-
-        /// <summary>
-        /// Returns the name of the object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<string> GetObjectName(RnetBusObject o)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            // obtain object profile
-            var p = await o.GetProfile<IObject>();
-            if (p == null)
-                return await o.GetId();
-
-            return p.DisplayName;
         }
 
         /// <summary>
@@ -216,6 +220,95 @@ namespace Rnet.Service.Objects
         }
 
         /// <summary>
+        /// Returns the name of the object.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<string> GetObjectName(RnetBusObject o)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            // obtain object profile
+            var p = await o.GetProfile<IObject>();
+            if (p == null)
+                return await o.GetId();
+
+            return p.DisplayName;
+        }
+
+        /// <summary>
+        /// Gets the profile refs for the given object.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<ProfileRefCollection> GetProfileRefs(RnetBusObject o)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            // load container
+            var p = await o.GetProfiles() ?? Enumerable.Empty<Profile>();
+            var c = new ProfileRefCollection();
+
+            // assembly references
+            foreach (var i in p)
+                c.Add(new ProfileRef()
+                {
+                    Id = await GetProfileUri(i),
+                    Name = await GetProfileName(i),
+                });
+
+            return c;
+        }
+
+        /// <summary>
+        /// Gets the Uri of the profile.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<Uri> GetProfileUri(Profile profile)
+        {
+            Contract.Requires<ArgumentNullException>(profile != null);
+
+            // url ends with profile path
+            var l = new List<string>();
+            l.Add(PROFILE_PREFIX + await GetProfileName(profile));
+
+            // begin from target object
+            var target = profile.Target;
+
+            do
+            {
+                // obtain ID of current item
+                var id = await target.GetId();
+                Contract.Assert(id != null);
+
+                // add to list and recurse
+                l.Add(id);
+                target = target.GetContainer();
+            }
+            while (target != null);
+
+            // assemble Url from components backwards
+            var uri = BaseUri;
+            foreach (var i in l.Reverse<string>())
+                uri = new Uri(uri, i);
+
+            return uri;
+        }
+
+        /// <summary>
+        /// Returns the name of the profile.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        Task<string> GetProfileName(Profile profile)
+        {
+            Contract.Requires<ArgumentNullException>(profile != null);
+
+            return Task.FromResult<string>(profile.Metadata.Namespace + ":" + profile.Metadata.Name);
+        }
+
+        /// <summary>
         /// Navigate at a profile path.
         /// </summary>
         /// <param name="components"></param>
@@ -225,7 +318,7 @@ namespace Rnet.Service.Objects
         async Task<object> NavigateAtProfile(string[] components, int position, RnetBusObject target)
         {
             Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position < 0);
+            Contract.Requires<ArgumentOutOfRangeException>(position >= 1);
             Contract.Requires<ArgumentNullException>(target != null);
 
             // find matching profile
@@ -255,7 +348,7 @@ namespace Rnet.Service.Objects
         async Task<object> NavigateIntoProfile(string[] components, int position, Profile profile)
         {
             Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position < 1);
+            Contract.Requires<ArgumentOutOfRangeException>(position >= 1);
             Contract.Requires<ArgumentNullException>(profile != null);
 
             // we terminated in a profile
