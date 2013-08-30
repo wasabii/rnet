@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.Xml.Serialization;
+
 using Rnet.Drivers;
 using Rnet.Profiles;
 
@@ -372,10 +371,12 @@ namespace Rnet.Service.Objects
             // build XML document out of properties
             var xml = new XDocument(
                 new XElement(ns + profile.Metadata.Name,
-                    profile.Metadata.Properties.Cast<PropertyDescriptor>()
+                    profile.Metadata.ValueDescriptors
                         .Select(i =>
                             new XElement(ns + i.Name,
-                                i.GetValue(profile.Instance)))));
+                                i.PropertyInfo.GetValue(profile.Instance)))));
+
+            return xml;
         }
 
     }

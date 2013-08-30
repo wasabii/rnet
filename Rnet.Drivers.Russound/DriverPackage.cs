@@ -52,6 +52,8 @@ namespace Rnet.Drivers.Russound
             {
                 case "CAM 6.6":
                     return new CAM66(controller);
+                case "CAM 6.6 Rev2":
+                    return new CAM66(controller);
                 case "CAV 6.6":
                     return new CAV66(controller);
             }
