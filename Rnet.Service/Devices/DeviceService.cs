@@ -283,7 +283,7 @@ namespace Rnet.Service.Devices
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
             // check for cache lifetime
-            WebOperationContext.Current.IncomingRequest.CheckConditionalRetrieve(handle.Timestamp);
+            IncomingRequest.CheckConditionalRetrieve(handle.Timestamp);
 
             // refresh if requested
             CacheControlHeaderValue cc;
