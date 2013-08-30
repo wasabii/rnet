@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.ServiceModel;
+using System.ServiceModel.Web;
 using System.Threading.Tasks;
-using Rnet.Drivers;
-using Rnet.Profiles;
 
-namespace Rnet.Service
+using Rnet.Drivers;
+using Rnet.Service.Devices;
+
+namespace Rnet.Service.Objects
 {
 
+    [ServiceContract]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
-    class RnetServiceImplementation : IRnetService
+    class ObjectService
     {
 
         RnetBus bus;
@@ -20,7 +23,7 @@ namespace Rnet.Service
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
-        internal RnetServiceImplementation(RnetBus bus)
+        internal ObjectService(RnetBus bus)
         {
             this.bus = bus;
         }
@@ -29,9 +32,9 @@ namespace Rnet.Service
         /// Gets the base URI of the current request.
         /// </summary>
         /// <returns></returns>
-        Uri GetBaseUri()
+        Uri BaseUri
         {
-            return OperationContext.Current.Channel.LocalAddress.Uri;
+            get { return WebOperationContext.Current.IncomingRequest.UriTemplateMatch.BaseUri; }
         }
 
         /// <summary>
@@ -44,52 +47,47 @@ namespace Rnet.Service
             return string.Format("{0}.{1}.{2}", (int)id.ControllerId, (int)id.ZoneId, (int)id.KeypadId);
         }
 
-        BusControllerRef ControllerToRef(RnetController controller)
+        ControllerRef ControllerToRef(RnetController controller)
         {
             Contract.Requires<ArgumentNullException>(controller != null);
 
-            return new BusControllerRef()
+            return new ControllerRef()
             {
-                Id = controller.Id,
-                DeviceId = DeviceIdToString(controller.DeviceId),
-                Uri = new Uri(GetBaseUri(), string.Format("devices/{0}", (int)controller.Id)),
+                Id = new Uri(BaseUri, string.Format("{0}", (int)controller.Id)),
             };
         }
 
-        BusControllerInfo ControllerToInfo(RnetController controller)
+        Controller ControllerToInfo(RnetController controller)
         {
             Contract.Requires<ArgumentNullException>(controller != null);
 
-            return new BusControllerInfo()
+            return new Controller()
             {
-                Id = controller.Id,
+                Id = new Uri(BaseUri, string.Format("{0}", (int)controller.Id)),
                 DeviceId = DeviceIdToString(controller.DeviceId),
-                Uri = new Uri(GetBaseUri(), string.Format("devices/{0}", (int)controller.Id)),
                 Zones = controller.Zones
                     .Select(zone => ZoneToRef(zone))
                     .ToList(),
             };
         }
 
-        BusZoneRef ZoneToRef(RnetZone zone)
+        ZoneRef ZoneToRef(RnetZone zone)
         {
             Contract.Requires<ArgumentNullException>(zone != null);
 
-            return new BusZoneRef()
+            return new ZoneRef()
             {
-                Id = zone.Id,
-                Uri = new Uri(GetBaseUri(), string.Format("devices/{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
+                Id = new Uri(BaseUri, string.Format("{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
             };
         }
 
-        BusZoneInfo ZoneToInfo(RnetZone zone)
+        Zone ZoneToInfo(RnetZone zone)
         {
             Contract.Requires<ArgumentNullException>(zone != null);
 
-            return new BusZoneInfo()
+            return new Zone()
             {
-                Id = zone.Controller.Id,
-                Uri = new Uri(GetBaseUri(), string.Format("devices/{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
+                Id = new Uri(BaseUri, string.Format("{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
                 Controller = ControllerToRef(zone.Controller),
                 Devices = zone.Devices
                     .OfType<RnetZoneRemoteDevice>()
@@ -98,35 +96,34 @@ namespace Rnet.Service
             };
         }
 
-        BusDeviceRef DeviceToRef(RnetZoneRemoteDevice device)
+        DeviceRef DeviceToRef(RnetZoneRemoteDevice device)
         {
             Contract.Requires<ArgumentNullException>(device != null);
 
-            return new BusDeviceRef()
+            return new DeviceRef()
             {
-                Id = device.Id,
-                DeviceId = DeviceIdToString(device.DeviceId),
-                Uri = new Uri(GetBaseUri(), string.Format("devices/{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
+                Id = new Uri(BaseUri, string.Format("{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
             };
         }
 
-        BusDeviceInfo DeviceToInfo(RnetZoneRemoteDevice device)
+        Device DeviceToInfo(RnetZoneRemoteDevice device)
         {
             Contract.Requires<ArgumentNullException>(device != null);
 
-            return new BusDeviceInfo()
+            return new Device()
             {
-                Id = (int)device.DeviceId.KeypadId,
+                Id = new Uri(BaseUri, string.Format("{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
                 DeviceId = DeviceIdToString(device.DeviceId),
                 Zone = ZoneToRef(device.Zone),
                 Controller = ControllerToRef(device.Zone.Controller),
-                Uri = new Uri(GetBaseUri(), string.Format("devices/{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
             };
         }
 
-        public BusInfo GetBus()
+        [OperationContract]
+        [WebGet(UriTemplate = "/", ResponseFormat = WebMessageFormat.Json)]
+        public Bus GetBus()
         {
-            return new BusInfo()
+            return new Bus()
             {
                 Controllers = bus.Controllers
                     .Select(controller => ControllerToRef(controller))
@@ -134,7 +131,9 @@ namespace Rnet.Service
             };
         }
 
-        public BusControllerInfo GetController(string controllerId)
+        [OperationContract]
+        [WebGet(UriTemplate = "/{controllerId}", ResponseFormat = WebMessageFormat.Json)]
+        public Controller GetController(string controllerId)
         {
             Contract.Requires<ArgumentNullException>(controllerId != null);
 
@@ -145,6 +144,8 @@ namespace Rnet.Service
             return ControllerToInfo(controller);
         }
 
+        [OperationContract]
+        [WebGet(UriTemplate = "/{controllerId}/profiles", ResponseFormat = WebMessageFormat.Json)]
         public async Task<List<ProfileRef>> GetControllerProfiles(string controllerId)
         {
             Contract.Requires<ArgumentNullException>(controllerId != null);
@@ -156,19 +157,23 @@ namespace Rnet.Service
             return (await controller.GetProfiles())
                 .Select(i => new ProfileRef()
                 {
-                    Uri = new Uri(GetBaseUri(), string.Format("devices/{0}/profiles/{1}",
+                    Uri = new Uri(BaseUri, string.Format("{0}/profiles/{1}",
                         (int)controller.Id,
                         i.Metadata.Name)),
                 })
                 .ToList();
         }
 
+        [OperationContract]
+        [WebGet(UriTemplate = "/{controllerId}/profiles/{profileName}", ResponseFormat = WebMessageFormat.Json)]
         public ProfileInfo GetControllerProfile(string controllerId, string profileName)
         {
             throw new NotImplementedException();
         }
 
-        public BusZoneInfo GetZone(string controllerId, string zoneId)
+        [OperationContract]
+        [WebGet(UriTemplate = "/{controllerId}/{zoneId}", ResponseFormat = WebMessageFormat.Json)]
+        public Zone GetZone(string controllerId, string zoneId)
         {
             Contract.Requires<ArgumentNullException>(controllerId != null);
             Contract.Requires<ArgumentNullException>(zoneId != null);
@@ -184,7 +189,9 @@ namespace Rnet.Service
             return ZoneToInfo(zone);
         }
 
-        public BusDeviceInfo GetDevice(string controllerId, string zoneId, string deviceId)
+        [OperationContract]
+        [WebGet(UriTemplate = "/{controllerId}/{zoneId}/{deviceId}", ResponseFormat = WebMessageFormat.Json)]
+        public Device GetDevice(string controllerId, string zoneId, string deviceId)
         {
             Contract.Requires<ArgumentNullException>(controllerId != null);
             Contract.Requires<ArgumentNullException>(zoneId != null);
@@ -205,6 +212,8 @@ namespace Rnet.Service
             return DeviceToInfo(device);
         }
 
+        [OperationContract(AsyncPattern = true)]
+        [WebGet(UriTemplate = "/{controllerId}/{zoneId}/{deviceId}/profiles", ResponseFormat = WebMessageFormat.Json)]
         public async Task<List<ProfileRef>> GetDeviceProfiles(string controllerId, string zoneId, string deviceId)
         {
             Contract.Requires<ArgumentNullException>(controllerId != null);
@@ -226,7 +235,7 @@ namespace Rnet.Service
             return (await device.GetProfiles())
                 .Select(i => new ProfileRef()
                 {
-                    Uri = new Uri(GetBaseUri(), string.Format("devices/{0}/{1}/{2}/profiles/{3}",
+                    Uri = new Uri(BaseUri, string.Format("{0}/{1}/{2}/profiles/{3}",
                         (int)device.DeviceId.ControllerId,
                         (int)device.DeviceId.ZoneId,
                         (int)device.DeviceId.KeypadId,
@@ -235,6 +244,8 @@ namespace Rnet.Service
                 .ToList();
         }
 
+        [OperationContract]
+        [WebGet(UriTemplate = "/devices/{controllerId}/{zoneId}/{deviceId}/profiles/{profileName}", ResponseFormat = WebMessageFormat.Json)]
         public ProfileInfo GetDeviceProfile(string controllerId, string zoneId, string deviceId, string profileName)
         {
             throw new NotImplementedException();

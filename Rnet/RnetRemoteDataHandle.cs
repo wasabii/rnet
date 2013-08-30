@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -15,6 +16,7 @@ namespace Rnet
 
         AsyncMonitor wait = new AsyncMonitor();
         byte[] buffer;
+        DateTime timestamp;
 
         /// <summary>
         /// Initializes a new instance.
@@ -44,6 +46,14 @@ namespace Rnet
         }
 
         /// <summary>
+        /// Timestamp of the last data update.
+        /// </summary>
+        public override DateTime Timestamp
+        {
+            get { return timestamp; }
+        }
+
+        /// <summary>
         /// Invoked by the device when data has been received. Makes the data available to users of this handle instance.
         /// </summary>
         /// <param name="data"></param>
@@ -60,6 +70,7 @@ namespace Rnet
 
                 // store data locally
                 buffer = data;
+                timestamp = DateTime.UtcNow;
 
                 // notify anything waiting on the data
                 wait.PulseAll();

@@ -4,12 +4,12 @@ using System.ServiceProcess;
 namespace Rnet.Service
 {
 
-    public partial class RnetService : ServiceBase
+    public partial class Service : ServiceBase
     {
 
         ServiceHost host = new ServiceHost();
 
-        public RnetService()
+        public Service()
         {
             InitializeComponent();
         }

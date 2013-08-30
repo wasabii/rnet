@@ -51,8 +51,7 @@ namespace Rnet
                 return null;
 
             return zones
-                .GetOrAdd(id, i => new WeakReference<RnetZone>(new RnetZone(Controller, id)))
-                .GetTargetOrDefault();
+                .GetOrCreate(id, i => new RnetZone(Controller, id));
         }
 
         /// <summary>

@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace Rnet.Service
+namespace Rnet.Service.Devices
 {
 
     [DataContract]
-    class BusControllerInfo : BusDeviceInfo
+    class Bus
     {
 
         [DataMember]
-        public List<BusZoneRef> Zones { get; set; }
+        public List<ControllerRef> Controllers { get; set; }
 
     }
 

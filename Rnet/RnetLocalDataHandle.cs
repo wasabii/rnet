@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rnet
@@ -34,7 +35,15 @@ namespace Rnet
         /// </summary>
         public override byte[] Current
         {
-            get { throw new System.NotImplementedException(); }
+            get { return null; }
+        }
+
+        /// <summary>
+        /// Timestamp of the last data update.
+        /// </summary>
+        public override DateTime Timestamp
+        {
+            get { return DateTime.UtcNow; }
         }
 
         /// <summary>

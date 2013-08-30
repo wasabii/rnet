@@ -41,6 +41,11 @@ namespace Rnet
         public abstract byte[] Current { get; }
 
         /// <summary>
+        /// Timestamp of the last value update.
+        /// </summary>
+        public abstract DateTime Timestamp { get; }
+
+        /// <summary>
         /// Reads the data from the device path.
         /// </summary>
         /// <returns></returns>

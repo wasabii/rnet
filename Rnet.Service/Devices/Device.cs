@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Rnet.Service
+namespace Rnet.Service.Devices
 {
 
     [DataContract]
-    class BusDeviceRef
+    class Device
     {
 
         [DataMember]
-        public int Id { get; set; }
+        public Uri Id { get; set; }
 
         [DataMember]
         public string DeviceId { get; set; }
 
         [DataMember]
-        public Uri Uri{ get; set; }
+        public ControllerRef Controller { get; set; }
+
+        [DataMember]
+        public ZoneRef Zone { get; set; }
 
     }
 

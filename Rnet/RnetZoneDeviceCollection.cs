@@ -56,8 +56,7 @@ namespace Rnet
                 return null;
 
             return devices
-                .GetOrAdd(id, i => new WeakReference<RnetDevice>(new RnetZoneRemoteDevice(Zone, id)))
-                .GetTargetOrDefault();
+                .GetOrCreate(id, i => new RnetZoneRemoteDevice(Zone, id));
         }
 
         /// <summary>

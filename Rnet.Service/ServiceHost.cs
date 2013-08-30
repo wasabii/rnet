@@ -15,7 +15,8 @@ namespace Rnet.Service
         SingleThreadSynchronizationContext sync = new SingleThreadSynchronizationContext();
         Uri uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
         RnetBus bus;
-        WebServiceHost host;
+        WebServiceHost busHost;
+        WebServiceHost objHost;
 
         public void OnStart()
         {
@@ -31,8 +32,11 @@ namespace Rnet.Service
             bus = new RnetBus(uri);
             await bus.Start();
 
-            host = new WebServiceHost(new RnetServiceImplementation(bus), new Uri("http://localhost:12292/rnet/"));
-            host.Open();
+            busHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
+            busHost.Open();
+
+            objHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
+            objHost.Open();
         }
 
         public void OnStop()
@@ -46,7 +50,8 @@ namespace Rnet.Service
         /// </summary>
         async void OnStopAsync()
         {
-            host.Close();
+            busHost.Close();
+            objHost.Close();
 
             await bus.Stop();
         }
