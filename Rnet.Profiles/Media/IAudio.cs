@@ -7,7 +7,7 @@ namespace Rnet.Profiles.Media
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
-    [ServiceContract(Name = "media.audio")]
+    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "media.audio")]
     public interface IAudio
     {
 

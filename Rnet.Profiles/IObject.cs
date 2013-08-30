@@ -6,7 +6,7 @@ namespace Rnet.Profiles
     /// <summary>
     /// Basic information exposed by any RNET object.
     /// </summary>
-    [ServiceContract(Name = "object")]
+    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "object")]
     public interface IObject
     {
 

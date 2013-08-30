@@ -154,6 +154,7 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveSetDataMessage(RnetSetDataMessage message)
         {
+            Contract.Requires<InvalidOperationException>(Bus != null);
             Contract.Requires<ArgumentNullException>(message != null);
 
             using (await receive.LockAsync())

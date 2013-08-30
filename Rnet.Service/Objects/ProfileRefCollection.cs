@@ -4,14 +4,14 @@ using System.Runtime.Serialization;
 namespace Rnet.Service.Objects
 {
 
-    [CollectionDataContract(Name = "Profiles", Namespace = "urn:Rnet.Objects")]
-    class ProfileCollection : List<int>
+    [CollectionDataContract(Name = "Profiles", Namespace = "urn:rnet:objects", ItemName = "ProfileRef")]
+    class ProfileRefCollection : List<ProfileRef>
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public ProfileCollection()
+        public ProfileRefCollection()
             : base()
         {
 
@@ -20,9 +20,9 @@ namespace Rnet.Service.Objects
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="profiles"></param>
-        public ProfileCollection(IEnumerable<int> profiles)
-            : base(profiles)
+        /// <param name="refs"></param>
+        public ProfileRefCollection(IEnumerable<ProfileRef> refs)
+            : base(refs)
         {
 
         }

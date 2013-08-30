@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace Rnet.Service.Devices
 {
 
-    [ServiceContract]
+    [ServiceContract(Namespace = "urn:rnet:service", Name = "devices")]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
-    [WebServiceBehavior]
+    [FormatServiceBehavior]
     class DeviceService : RnetWebServiceBase
     {
 

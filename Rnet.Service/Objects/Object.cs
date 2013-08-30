@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Rnet.Service.Objects
 {
 
-    [DataContract(Namespace = "urn:Rnet.Objects")]
+    [DataContract(Namespace = "urn:rnet:objects")]
     class Object
     {
 
@@ -18,7 +18,7 @@ namespace Rnet.Service.Objects
         public ObjectRefCollection Objects { get; set; }
 
         [DataMember]
-        public ProfileCollection Profiles { get; set; }
+        public ProfileRefCollection Profiles { get; set; }
 
     }
 

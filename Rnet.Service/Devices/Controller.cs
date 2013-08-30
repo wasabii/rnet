@@ -3,7 +3,7 @@
 namespace Rnet.Service.Devices
 {
 
-    [DataContract(Name = "Controller", Namespace = "urn:Rnet.Devices")]
+    [DataContract(Name = "Controller", Namespace = "urn:rnet:devices")]
     class Controller : Device
     {
 

@@ -8,7 +8,7 @@ namespace Rnet.Profiles
     /// Provides functionality for devices that own other bus objects. This is usually implemented along with
     /// <see cref="IContainer"/> to provide information to nested objects.
     /// </summary>
-    [ServiceContract(Name = "owner")]
+    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "owner")]
     public interface IOwner
     {
 

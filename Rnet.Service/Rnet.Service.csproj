@@ -85,8 +85,9 @@
     <Compile Include="Devices\Controller.cs" />
     <Compile Include="Devices\DeviceCollection.cs" />
     <Compile Include="Devices\Device.cs" />
+    <Compile Include="Objects\ProfileRef.cs" />
     <Compile Include="Objects\ObjectRef.cs" />
-    <Compile Include="Objects\ProfileCollection.cs" />
+    <Compile Include="Objects\ProfileRefCollection.cs" />
     <Compile Include="Objects\Object.cs" />
     <Compile Include="Objects\ObjectRefCollection.cs" />
     <Compile Include="Objects\ObjectService.cs" />
@@ -102,8 +103,7 @@
     <Compile Include="ServiceHost.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="RnetWebServiceBase.cs" />
-    <Compile Include="RnetWebServiceHost.cs" />
-    <Compile Include="WebServiceBehavior.cs" />
+    <Compile Include="FormatServiceBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

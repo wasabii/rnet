@@ -5,7 +5,7 @@ namespace Rnet.Service.Objects
 {
 
     [DataContract(Namespace = "urn:rnet:objects")]
-    class ObjectRef
+    class ProfileRef
     {
 
         [DataMember]

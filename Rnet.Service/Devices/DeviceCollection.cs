@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Rnet.Service.Devices
 {
 
-    [CollectionDataContract(Name = "Devices", Namespace = "urn:Rnet.Devices")]
+    [CollectionDataContract(Name = "Devices", Namespace = "urn:rnet:devices")]
     [KnownType(typeof(Controller))]
     [KnownType(typeof(Device))]
     class DeviceCollection : List<Device>

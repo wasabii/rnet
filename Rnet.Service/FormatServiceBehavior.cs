@@ -12,7 +12,7 @@ namespace Rnet.Service
     /// <summary>
     /// Applied to a web service. Implements various abilities we want.
     /// </summary>
-    public class WebServiceBehavior : Attribute, IServiceBehavior, IOperationBehavior, IParameterInspector
+    public class FormatServiceBehavior : Attribute, IServiceBehavior, IOperationBehavior, IParameterInspector
     {
 
         void IServiceBehavior.AddBindingParameters(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase, Collection<ServiceEndpoint> endpoints, BindingParameterCollection bindingParameters)
@@ -63,17 +63,16 @@ namespace Rnet.Service
             if (ctx == null)
                 return;
 
-            var format = ctx.IncomingRequest.UriTemplateMatch.QueryParameters["format"];
-            if (format == null)
-                return;
-
-            switch (format)
+            switch (ctx.IncomingRequest.UriTemplateMatch.QueryParameters["format"])
             {
                 case "xml":
                     ctx.OutgoingResponse.Format = WebMessageFormat.Xml;
                     break;
                 case "json":
                     ctx.OutgoingResponse.Format = WebMessageFormat.Json;
+                    break;
+                default:
+                    ctx.OutgoingResponse.Format = ctx.OutgoingResponse.Format;
                     break;
             }
         }

@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Rnet.Service.Devices
 {
 
-    [DataContract(Namespace = "urn:Rnet.Devices")]
+    [DataContract(Namespace = "urn:rnet:devices")]
     class Device
     {
 

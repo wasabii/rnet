@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Rnet.Service.Objects
 {
 
-    [CollectionDataContract(Name = "Objects", Namespace = "urn:Rnet.Objects", ItemName = "ObjectRef")]
+    [CollectionDataContract(Name = "Objects", Namespace = "urn:rnet:objects", ItemName = "ObjectRef")]
     class ObjectRefCollection : List<ObjectRef>
     {
 
