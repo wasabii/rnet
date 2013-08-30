@@ -126,7 +126,11 @@ namespace Rnet.Drivers
             /// <returns></returns>
             async Task<Profile[]> CreateProfiles(Task<object[]> instances)
             {
-                var l = (await instances)
+                var o = await instances;
+                if (o == null)
+                    return new Profile[0];
+
+                var l = o
                     .SelectMany(i => CreateProfiles(i))
                     .GroupBy(i => i.Metadata)
                     .Select(i => i.First())

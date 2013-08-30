@@ -1,0 +1,9 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:rnetmv="clr-namespace:Rnet.Manager.Views;assembly=Rnet.Manager"
+    Title="RNET Bus Manager"
+    Height="400"
+    Width="600">
+    <rnetmv:BusViewModel />
+</Window>
