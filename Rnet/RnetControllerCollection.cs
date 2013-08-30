@@ -84,7 +84,7 @@ namespace Rnet
             return controllers.Values
                 .Where(i => i != null)
                 .Where(i => i.IsActive)
-                .OrderBy(i => i.Id)
+                .OrderBy(i => i.DeviceId)
                 .ToList()
                 .GetEnumerator();
         }

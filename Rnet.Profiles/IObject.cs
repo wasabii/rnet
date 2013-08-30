@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.ServiceModel;
+﻿using System.ServiceModel;
 
 namespace Rnet.Profiles
 {
@@ -10,6 +9,11 @@ namespace Rnet.Profiles
     [ServiceContract(Name = "object")]
     public interface IObject
     {
+
+        /// <summary>
+        /// Identifier of the object, in relation to it's container.
+        /// </summary>
+        string Id { get; }
 
         /// <summary>
         /// Simple display name of the object.

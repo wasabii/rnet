@@ -12,7 +12,8 @@ namespace Rnet.Service.Devices
 
     [ServiceContract]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
-    class DeviceService : WebServiceBase
+    [WebServiceBehavior]
+    class DeviceService : RnetWebServiceBase
     {
 
         /// <summary>
@@ -25,92 +26,21 @@ namespace Rnet.Service.Devices
 
         }
 
-        static ControllerRef ControllerToRef(RnetController controller)
-        {
-            Contract.Requires<ArgumentNullException>(controller != null);
-
-            return new ControllerRef()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}", (int)controller.Id)),
-            };
-        }
-
-        static Controller ControllerToInfo(RnetController controller)
-        {
-            Contract.Requires<ArgumentNullException>(controller != null);
-
-            return new Controller()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}", (int)controller.Id)),
-                DeviceId = DeviceIdToString(controller.DeviceId),
-                Zones = controller.Zones
-                    .Select(zone => ZoneToRef(zone))
-                    .ToList(),
-            };
-        }
-
-        static ZoneRef ZoneToRef(RnetZone zone)
-        {
-            Contract.Requires<ArgumentNullException>(zone != null);
-
-            return new ZoneRef()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
-            };
-        }
-
-        static Zone ZoneToInfo(RnetZone zone)
-        {
-            Contract.Requires<ArgumentNullException>(zone != null);
-
-            return new Zone()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
-                Controller = ControllerToRef(zone.Controller),
-                Devices = zone.Devices
-                    .OfType<RnetZoneRemoteDevice>()
-                    .Select(device => DeviceToRef(device))
-                    .ToList(),
-            };
-        }
-
-        static DeviceRef DeviceToRef(RnetZoneRemoteDevice device)
-        {
-            Contract.Requires<ArgumentNullException>(device != null);
-
-            return new DeviceRef()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
-            };
-        }
-
-        static Device DeviceToInfo(RnetZoneRemoteDevice device)
-        {
-            Contract.Requires<ArgumentNullException>(device != null);
-
-            return new Device()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
-                DeviceId = DeviceIdToString(device.DeviceId),
-                Zone = ZoneToRef(device.Zone),
-                Controller = ControllerToRef(device.Zone.Controller),
-            };
-        }
-
         /// <summary>
-        /// Gets the bus descriptor.
+        /// Gets all the available devices.
         /// </summary>
         /// <returns></returns>
         [OperationContract]
         [WebGet(UriTemplate = "")]
-        public Bus GetBus()
+        public DeviceCollection GetDevices()
         {
-            return new Bus()
-            {
-                Controllers = Bus.Controllers
-                    .Select(controller => ControllerToRef(controller))
-                    .ToList(),
-            };
+            return new DeviceCollection(Bus.Controllers
+                .SelectMany(i => i.Zones)
+                .SelectMany(i => i.Devices)
+                .Cast<RnetDevice>()
+                .Concat(Bus.Controllers)
+                .OrderBy(i => i.DeviceId)
+                .Select(i => RnetDeviceToInfo(i)));
         }
 
         /// <summary>
@@ -119,8 +49,8 @@ namespace Rnet.Service.Devices
         /// <param name="controllerId"></param>
         /// <returns></returns>
         [OperationContract]
-        [WebGet(UriTemplate = "{controllerId}")]
-        public Controller GetController(string controllerId)
+        [WebGet(UriTemplate = "{controllerId}/{*uri}")]
+        public void BadControllerPath(string controllerId, string uri)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
 
@@ -128,71 +58,9 @@ namespace Rnet.Service.Devices
             if (controller == null)
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
-            return ControllerToInfo(controller);
-        }
-
-        /// <summary>
-        /// Gets controller data.
-        /// </summary>
-        /// <param name="controllerId"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        [OperationContract]
-        [WebGet(UriTemplate = "{controllerId}/data/{*path}")]
-        public async Task<byte[]> GetControllerData(string controllerId, string path)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
-
-            var controller = Bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            return await GetDeviceData(controller, path);
-        }
-
-        /// <summary>
-        /// Updates controller data.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="controllerId"></param>
-        /// <param name="path"></param>
-        [OperationContract]
-        [WebInvoke(Method = "PUT", UriTemplate = "{controllerId}/data/{*path}")]
-        public async void PutControllerData(byte[] data, string controllerId, string path)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
-
-            var controller = Bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            await PutDeviceData(controller, path, data);
-        }
-
-        /// <summary>
-        /// Gets the zone description.
-        /// </summary>
-        /// <param name="controllerId"></param>
-        /// <param name="zoneId"></param>
-        /// <returns></returns>
-        [OperationContract]
-        [WebGet(UriTemplate = "{controllerId}/{zoneId}")]
-        public Zone GetZone(string controllerId, string zoneId)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
-
-            var controller = Bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            var zone = controller.Zones[int.Parse(zoneId)];
-            if (zone == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            return ZoneToInfo(zone);
+            // redirect to proper url
+            OutgoingResponse.Location = new Uri(GetDeviceUri(controller), uri).ToString();
+            OutgoingResponse.StatusCode = HttpStatusCode.RedirectKeepVerb;
         }
 
         /// <summary>
@@ -203,10 +71,10 @@ namespace Rnet.Service.Devices
         /// <param name="keypadId"></param>
         /// <returns></returns>
         [OperationContract]
-        [WebGet(UriTemplate = "{controllerId}/{zoneId}/{keypadId}")]
+        [WebGet(UriTemplate = "{controllerId}.{zoneId}.{keypadId}")]
         Device GetDevice(string controllerId, string zoneId, string keypadId)
         {
-            return DeviceToInfo(GetRnetDevice(controllerId, zoneId, keypadId));
+            return RnetDeviceToInfo(GetRnetDevice(controllerId, zoneId, keypadId));
         }
 
         /// <summary>
@@ -218,7 +86,7 @@ namespace Rnet.Service.Devices
         /// <param name="path"></param>
         /// <returns></returns>
         [OperationContract]
-        [WebGet(UriTemplate = "{controllerId}/{zoneId}/{keypadId}/data/{*path}")]
+        [WebGet(UriTemplate = "{controllerId}.{zoneId}.{keypadId}/data/{*path}")]
         public async Task<byte[]> GetDeviceData(string controllerId, string zoneId, string keypadId, string path)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
@@ -243,13 +111,13 @@ namespace Rnet.Service.Devices
         }
 
         /// <summary>
-        /// Gets the <see cref="RnetZoneRemoteDevice"/> given by the IDs.
+        /// Gets the <see cref="IRnetZoneDevice"/> given by the IDs.
         /// </summary>
         /// <param name="controllerId"></param>
         /// <param name="zoneId"></param>
         /// <param name="keypadId"></param>
         /// <returns></returns>
-        RnetZoneRemoteDevice GetRnetDevice(string controllerId, string zoneId, string keypadId)
+        RnetDevice GetRnetDevice(string controllerId, string zoneId, string keypadId)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
@@ -296,7 +164,7 @@ namespace Rnet.Service.Devices
             if (data == null)
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
-            WebOperationContext.Current.OutgoingResponse.LastModified = handle.Timestamp;
+            OutgoingResponse.LastModified = handle.Timestamp;
             return data;
         }
 

@@ -21,9 +21,14 @@ namespace Rnet.Drivers.Default
 
         }
 
+        public string Id
+        {
+            get { return "controller-" + (Controller.DeviceId.ControllerId + 1); }
+        }
+
         public string DisplayName
         {
-            get { return "Controller " + (Controller.Id.Value + 1); }
+            get { return "Controller " + (Controller.DeviceId.ControllerId + 1); }
         }
 
         public string Manufacturer

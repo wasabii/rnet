@@ -2,253 +2,280 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
 
 using Rnet.Drivers;
-using Rnet.Service.Devices;
+using Rnet.Profiles;
 
 namespace Rnet.Service.Objects
 {
 
     [ServiceContract]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
-    class ObjectService
+    class ObjectService : RnetWebServiceBase
     {
 
-        RnetBus bus;
+        const string PROFILE_PREFIX = "~";
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
-        internal ObjectService(RnetBus bus)
+        public ObjectService(RnetBus bus)
+            : base(bus)
         {
-            this.bus = bus;
+
         }
 
         /// <summary>
-        /// Gets the base URI of the current request.
+        /// Gets the bus descriptor.
         /// </summary>
         /// <returns></returns>
-        Uri BaseUri
+        [OperationContract]
+        [WebGet(UriTemplate = "{*uri}")]
+        [ServiceKnownType(typeof(ObjectRefCollection))]
+        [ServiceKnownType(typeof(Object))]
+        public async Task<object> Get(string uri)
         {
-            get { return WebOperationContext.Current.IncomingRequest.UriTemplateMatch.BaseUri; }
+            if (string.IsNullOrWhiteSpace(uri))
+                throw new WebFaultException(HttpStatusCode.BadRequest);
+
+            // navigate down hierarchy until the end
+            var target = await NavigateAtObject(uri.Split('/'), 0, Bus.Controllers);
+
+            // ended up at an object
+            if (target is RnetBusObject)
+                return GetObject((RnetBusObject)target);
+
+            // ended up at a profile
+            if (target is Profile)
+                return GetProfile((Profile)target);
+
+            // no idea what we ended up at
+            throw new WebFaultException(HttpStatusCode.BadRequest);
         }
 
         /// <summary>
-        /// Converts the given <see cref="RnetDeviceId"/> into a string.
+        /// Begins navigating down the URL components starting from a set of objects.
         /// </summary>
+        /// <param name="components"></param>
+        /// <param name="position"></param>
+        /// <param name="objects"></param>
+        /// <returns></returns>
+        async Task<object> NavigateAtObject(string[] components, int position, IEnumerable<RnetBusObject> objects)
+        {
+            Contract.Requires<ArgumentNullException>(components != null);
+            Contract.Requires<ArgumentOutOfRangeException>(position < 0);
+            Contract.Requires<ArgumentNullException>(objects != null);
+
+            var o = (RnetBusObject)null;
+
+            // repeat for each path item
+            for (int i = position; i < components.Length; i++)
+            {
+                // component refers to a profile
+                if (components[i].StartsWith(PROFILE_PREFIX))
+                {
+                    // cannot do this if no current object known
+                    if (o == null)
+                        throw new WebFaultException(HttpStatusCode.BadRequest);
+
+                    // begin navigating from current object
+                    return await NavigateAtProfile(components, i, o);
+                }
+
+                // find object with matching ID
+                o = await FindObject(objects, components[i]);
+                if (o == null)
+                    throw new WebFaultException(HttpStatusCode.NotFound);
+
+                // next container to work on is this one
+                objects = await o.GetProfile<IContainer>();
+            }
+
+            // item not found; at end of path
+            if (o == null)
+                throw new WebFaultException(HttpStatusCode.NotFound);
+
+            // return the object we ended at
+            return o;
+        }
+
+        /// <summary>
+        /// Searches the given set of <see cref="RnetBusObject"/>s for the one with the matching ID.
+        /// </summary>
+        /// <param name="source"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        string DeviceIdToString(RnetDeviceId id)
+        async Task<RnetBusObject> FindObject(IEnumerable<RnetBusObject> source, string id)
         {
-            return string.Format("{0}.{1}.{2}", (int)id.ControllerId, (int)id.ZoneId, (int)id.KeypadId);
+            Contract.Requires<ArgumentNullException>(source != null);
+            Contract.Requires<ArgumentNullException>(id != null);
+
+            // find first matching ID
+            foreach (var o in source)
+            {
+                var i = await o.GetId();
+                if (i == id)
+                    return o;
+            }
+
+            return null;
         }
 
-        ControllerRef ControllerToRef(RnetController controller)
+        /// <summary>
+        /// Transforms the bus object into output.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<Object> GetObject(RnetBusObject o)
         {
-            Contract.Requires<ArgumentNullException>(controller != null);
+            Contract.Requires<ArgumentNullException>(o != null);
 
-            return new ControllerRef()
+            return new Object()
             {
-                Id = new Uri(BaseUri, string.Format("{0}", (int)controller.Id)),
+                Id = await GetObjectUri(o),
+                Name = await GetObjectName(o),
+                Objects = await GetObjectRefs(o),
             };
         }
 
-        Controller ControllerToInfo(RnetController controller)
+        /// <summary>
+        /// Gets the child objects refs for the given object.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<ObjectRefCollection> GetObjectRefs(RnetBusObject o)
         {
-            Contract.Requires<ArgumentNullException>(controller != null);
+            Contract.Requires<ArgumentNullException>(o != null);
 
-            return new Controller()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}", (int)controller.Id)),
-                DeviceId = DeviceIdToString(controller.DeviceId),
-                Zones = controller.Zones
-                    .Select(zone => ZoneToRef(zone))
-                    .ToList(),
-            };
-        }
+            // load container
+            var p = await o.GetProfile<IContainer>() ?? Enumerable.Empty<RnetBusObject>();
+            var c = new ObjectRefCollection();
 
-        ZoneRef ZoneToRef(RnetZone zone)
-        {
-            Contract.Requires<ArgumentNullException>(zone != null);
-
-            return new ZoneRef()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
-            };
-        }
-
-        Zone ZoneToInfo(RnetZone zone)
-        {
-            Contract.Requires<ArgumentNullException>(zone != null);
-
-            return new Zone()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}", (int)zone.Controller.Id, (int)zone.Id)),
-                Controller = ControllerToRef(zone.Controller),
-                Devices = zone.Devices
-                    .OfType<RnetZoneRemoteDevice>()
-                    .Select(device => DeviceToRef(device))
-                    .ToList(),
-            };
-        }
-
-        DeviceRef DeviceToRef(RnetZoneRemoteDevice device)
-        {
-            Contract.Requires<ArgumentNullException>(device != null);
-
-            return new DeviceRef()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
-            };
-        }
-
-        Device DeviceToInfo(RnetZoneRemoteDevice device)
-        {
-            Contract.Requires<ArgumentNullException>(device != null);
-
-            return new Device()
-            {
-                Id = new Uri(BaseUri, string.Format("{0}/{1}/{2}", (int)device.DeviceId.ControllerId, (int)device.DeviceId.ZoneId, (int)device.DeviceId.KeypadId)),
-                DeviceId = DeviceIdToString(device.DeviceId),
-                Zone = ZoneToRef(device.Zone),
-                Controller = ControllerToRef(device.Zone.Controller),
-            };
-        }
-
-        [OperationContract]
-        [WebGet(UriTemplate = "/", ResponseFormat = WebMessageFormat.Json)]
-        public Bus GetBus()
-        {
-            return new Bus()
-            {
-                Controllers = bus.Controllers
-                    .Select(controller => ControllerToRef(controller))
-                    .ToList(),
-            };
-        }
-
-        [OperationContract]
-        [WebGet(UriTemplate = "/{controllerId}", ResponseFormat = WebMessageFormat.Json)]
-        public Controller GetController(string controllerId)
-        {
-            Contract.Requires<ArgumentNullException>(controllerId != null);
-
-            var controller = bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                return null;
-
-            return ControllerToInfo(controller);
-        }
-
-        [OperationContract]
-        [WebGet(UriTemplate = "/{controllerId}/profiles", ResponseFormat = WebMessageFormat.Json)]
-        public async Task<List<ProfileRef>> GetControllerProfiles(string controllerId)
-        {
-            Contract.Requires<ArgumentNullException>(controllerId != null);
-
-            var controller = bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                return null;
-
-            return (await controller.GetProfiles())
-                .Select(i => new ProfileRef()
+            // assembly references
+            foreach (var i in p)
+                c.Add(new ObjectRef()
                 {
-                    Uri = new Uri(BaseUri, string.Format("{0}/profiles/{1}",
-                        (int)controller.Id,
-                        i.Metadata.Name)),
-                })
-                .ToList();
+                    Id = await GetObjectUri(i),
+                    Name = await GetObjectName(i),
+                });
+
+            return c;
         }
 
-        [OperationContract]
-        [WebGet(UriTemplate = "/{controllerId}/profiles/{profileName}", ResponseFormat = WebMessageFormat.Json)]
-        public ProfileInfo GetControllerProfile(string controllerId, string profileName)
+        /// <summary>
+        /// Returns the name of the object.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<string> GetObjectName(RnetBusObject o)
         {
-            throw new NotImplementedException();
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            // obtain object profile
+            var p = await o.GetProfile<IObject>();
+            if (p == null)
+                return await o.GetId();
+
+            return p.DisplayName;
         }
 
-        [OperationContract]
-        [WebGet(UriTemplate = "/{controllerId}/{zoneId}", ResponseFormat = WebMessageFormat.Json)]
-        public Zone GetZone(string controllerId, string zoneId)
+        /// <summary>
+        /// Gets the Uri of the object.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<Uri> GetObjectUri(RnetBusObject o)
         {
-            Contract.Requires<ArgumentNullException>(controllerId != null);
-            Contract.Requires<ArgumentNullException>(zoneId != null);
+            Contract.Requires<ArgumentNullException>(o != null);
 
-            var controller = bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                return null;
+            var l = new List<string>();
 
-            var zone = controller.Zones[int.Parse(zoneId)];
-            if (zone == null)
-                return null;
+            do
+            {
+                // obtain ID of current item
+                var i = await o.GetId();
+                Contract.Assert(i != null);
 
-            return ZoneToInfo(zone);
+                // add to list and recurse
+                l.Add(i);
+                o = o.GetContainer();
+            }
+            while (o != null);
+
+            // assemble Url from components backwards
+            var uri = BaseUri;
+            foreach (var i in l.Reverse<string>())
+                uri = new Uri(uri, i);
+
+            return uri;
         }
 
-        [OperationContract]
-        [WebGet(UriTemplate = "/{controllerId}/{zoneId}/{deviceId}", ResponseFormat = WebMessageFormat.Json)]
-        public Device GetDevice(string controllerId, string zoneId, string deviceId)
+        /// <summary>
+        /// Navigate at a profile path.
+        /// </summary>
+        /// <param name="components"></param>
+        /// <param name="position"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        async Task<object> NavigateAtProfile(string[] components, int position, RnetBusObject target)
         {
-            Contract.Requires<ArgumentNullException>(controllerId != null);
-            Contract.Requires<ArgumentNullException>(zoneId != null);
-            Contract.Requires<ArgumentNullException>(deviceId != null);
+            Contract.Requires<ArgumentNullException>(components != null);
+            Contract.Requires<ArgumentOutOfRangeException>(position < 0);
+            Contract.Requires<ArgumentNullException>(target != null);
 
-            var controller = bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                return null;
+            // find matching profile
+            var profiles = await target.GetProfiles();
+            if (profiles == null)
+                throw new WebFaultException(HttpStatusCode.NotFound);
 
-            var zone = controller.Zones[int.Parse(zoneId)];
-            if (zone == null)
-                return null;
+            // full profile name
+            var name = components[position++].Remove(0, PROFILE_PREFIX.Length);
 
-            var device = zone.Devices[int.Parse(deviceId)] as RnetZoneRemoteDevice;
-            if (device == null)
-                return null;
+            // first profile with metadata that corresponds with full profile name
+            var profile = profiles.FirstOrDefault(i => i.Metadata.Namespace + ":" + i.Metadata.Name == name);
+            if (profile == null)
+                throw new WebFaultException(HttpStatusCode.NotFound);
 
-            return DeviceToInfo(device);
+            // navigate into the profile itself
+            return await NavigateIntoProfile(components, position, profile);
         }
 
-        [OperationContract(AsyncPattern = true)]
-        [WebGet(UriTemplate = "/{controllerId}/{zoneId}/{deviceId}/profiles", ResponseFormat = WebMessageFormat.Json)]
-        public async Task<List<ProfileRef>> GetDeviceProfiles(string controllerId, string zoneId, string deviceId)
+        /// <summary>
+        /// Navigate into 
+        /// </summary>
+        /// <param name="components"></param>
+        /// <param name="position"></param>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        async Task<object> NavigateIntoProfile(string[] components, int position, Profile profile)
         {
-            Contract.Requires<ArgumentNullException>(controllerId != null);
-            Contract.Requires<ArgumentNullException>(zoneId != null);
-            Contract.Requires<ArgumentNullException>(deviceId != null);
+            Contract.Requires<ArgumentNullException>(components != null);
+            Contract.Requires<ArgumentOutOfRangeException>(position < 1);
+            Contract.Requires<ArgumentNullException>(profile != null);
 
-            var controller = bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                return null;
+            // we terminated in a profile
+            if (position >= components.Length)
+                return profile;
 
-            var zone = controller.Zones[int.Parse(zoneId)];
-            if (zone == null)
-                return null;
-
-            var device = zone.Devices[int.Parse(deviceId)] as RnetZoneRemoteDevice;
-            if (device == null)
-                return null;
-
-            return (await device.GetProfiles())
-                .Select(i => new ProfileRef()
-                {
-                    Uri = new Uri(BaseUri, string.Format("{0}/{1}/{2}/profiles/{3}",
-                        (int)device.DeviceId.ControllerId,
-                        (int)device.DeviceId.ZoneId,
-                        (int)device.DeviceId.KeypadId,
-                        i.Metadata.Name)),
-                })
-                .ToList();
+            throw new NotImplementedException("Navigation within a Profile is not yet supported.");
         }
 
-        [OperationContract]
-        [WebGet(UriTemplate = "/devices/{controllerId}/{zoneId}/{deviceId}/profiles/{profileName}", ResponseFormat = WebMessageFormat.Json)]
-        public ProfileInfo GetDeviceProfile(string controllerId, string zoneId, string deviceId, string profileName)
+        /// <summary>
+        /// Transforms the profile into output.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        async Task<object> GetProfile(Profile profile)
         {
-            throw new NotImplementedException();
+            Contract.Requires<ArgumentNullException>(profile != null);
+
+            // temporary
+            return profile.Metadata.Namespace + ":" + profile.Metadata.Name;
         }
 
     }

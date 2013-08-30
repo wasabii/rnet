@@ -21,6 +21,11 @@ namespace Rnet.Drivers.Default
 
         }
 
+        public string Id
+        {
+            get { return "zone-" + (Zone.Id + 1); }
+        }
+
         public string DisplayName
         {
             get { return "Zone " + (Zone.Id + 1); }

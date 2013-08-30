@@ -100,7 +100,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="RnetBusStateEventArgs.cs" />
-    <Compile Include="IRnetDevice.cs" />
     <Compile Include="RnetBusState.cs" />
     <Compile Include="RnetDataHandle.cs" />
     <Compile Include="RnetDataReceivedEventArgs.cs" />

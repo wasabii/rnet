@@ -6,7 +6,7 @@ namespace Rnet.Drivers.Default
     /// <summary>
     /// Serves as a simple profile implementation base for the local device.
     /// </summary>
-    public class LocalDevice : ProfileBase, IDevice
+    public sealed class LocalDevice : ProfileBase, IDevice
     {
 
         /// <summary>
@@ -17,6 +17,16 @@ namespace Rnet.Drivers.Default
             : base(device)
         {
 
+        }
+
+        protected new RnetLocalDevice Target
+        {
+            get { return (RnetLocalDevice)base.Target; }
+        }
+
+        public string Id
+        {
+            get { return "bus-" + (int)Target.DeviceId.KeypadId; }
         }
 
         public string Manufacturer

@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace Rnet.Service.Devices
 {
 
-    [DataContract]
-    class Controller
+    [DataContract(Name = "Controller", Namespace = "urn:Rnet.Devices")]
+    class Controller : Device
     {
 
-        [DataMember]
-        public Uri Id { get; set; }
 
-        [DataMember]
-        public string DeviceId { get; set; }
-
-        [DataMember]
-        public List<ZoneRef> Zones { get; set; }
 
     }
 

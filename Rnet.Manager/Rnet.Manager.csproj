@@ -114,7 +114,6 @@
     <Compile Include="Views\Profiles\DeviceViewModel.cs" />
     <Compile Include="Views\Profiles\Media\AudioViewModel.cs" />
     <Compile Include="Views\Profiles\ViewModel.cs" />
-    <Compile Include="Util.cs" />
     <Compile Include="Views\MessageDirection.cs" />
     <Compile Include="Views\MessageViewModel.cs" />
     <Compile Include="TreeViewBehavior.cs" />

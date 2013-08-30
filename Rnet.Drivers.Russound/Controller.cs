@@ -61,6 +61,11 @@ namespace Rnet.Drivers.Russound
             return Task.FromResult(false);
         }
 
+        public string Id
+        {
+            get { return "controller-" + (Controller.DeviceId.ControllerId + 1); }
+        }
+
         public IEnumerable<RnetZone> Zones
         {
             get { return zones; }

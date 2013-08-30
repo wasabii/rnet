@@ -4,21 +4,15 @@ using System.Runtime.Serialization;
 namespace Rnet.Service.Devices
 {
 
-    [DataContract]
+    [DataContract(Namespace = "urn:Rnet.Devices")]
     class Device
     {
 
-        [DataMember]
+        [DataMember(Order = 0)]
         public Uri Id { get; set; }
 
-        [DataMember]
+        [DataMember(Order = 1)]
         public string DeviceId { get; set; }
-
-        [DataMember]
-        public ControllerRef Controller { get; set; }
-
-        [DataMember]
-        public ZoneRef Zone { get; set; }
 
     }
 

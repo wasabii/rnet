@@ -83,15 +83,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Devices\Controller.cs" />
-    <Compile Include="Devices\DeviceRef.cs" />
-    <Compile Include="Devices\Zone.cs" />
-    <Compile Include="Devices\Bus.cs" />
-    <Compile Include="Devices\ControllerRef.cs" />
+    <Compile Include="Devices\DeviceCollection.cs" />
     <Compile Include="Devices\Device.cs" />
-    <Compile Include="Devices\ZoneRef.cs" />
+    <Compile Include="Objects\ObjectRef.cs" />
+    <Compile Include="Objects\ProfileCollection.cs" />
+    <Compile Include="Objects\Object.cs" />
+    <Compile Include="Objects\ObjectRefCollection.cs" />
     <Compile Include="Objects\ObjectService.cs" />
-    <Compile Include="Objects\ProfileInfo.cs" />
-    <Compile Include="Objects\ProfileRef.cs" />
     <Compile Include="Service.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -103,7 +101,9 @@
     <Compile Include="Devices\DeviceService.cs" />
     <Compile Include="ServiceHost.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
-    <Compile Include="WebServiceBase.cs" />
+    <Compile Include="RnetWebServiceBase.cs" />
+    <Compile Include="RnetWebServiceHost.cs" />
+    <Compile Include="WebServiceBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

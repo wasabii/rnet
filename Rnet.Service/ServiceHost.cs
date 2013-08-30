@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ServiceModel.Web;
 
 namespace Rnet.Service
 {
@@ -15,8 +14,8 @@ namespace Rnet.Service
         SingleThreadSynchronizationContext sync = new SingleThreadSynchronizationContext();
         Uri uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
         RnetBus bus;
-        WebServiceHost busHost;
-        WebServiceHost objHost;
+        RnetWebServiceHost busHost;
+        RnetWebServiceHost objHost;
 
         public void OnStart()
         {
@@ -32,10 +31,10 @@ namespace Rnet.Service
             bus = new RnetBus(uri);
             await bus.Start();
 
-            busHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
+            busHost = new RnetWebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
             busHost.Open();
 
-            objHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
+            objHost = new RnetWebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
             objHost.Open();
         }
 
