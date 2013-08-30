@@ -10,7 +10,7 @@ namespace Rnet.Service
         public static void Main()
         {
 #if DEBUG
-            var h = new ServiceHost();
+            var h = new Host();
             h.OnStart();
             Console.ReadLine();
             h.OnStop();

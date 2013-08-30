@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ServiceModel;
 
 namespace Rnet.Profiles
 {
@@ -8,7 +7,7 @@ namespace Rnet.Profiles
     /// <summary>
     /// Provided by <see cref="RnetBusObject"/>s that contain other nested <see cref="RnetBusObject"/>s.
     /// </summary>
-    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "container")]
+    [Contract("urn:rnet:profiles", "Container")]
     public interface IContainer : IEnumerable<RnetBusObject>, INotifyCollectionChanged
     {
 

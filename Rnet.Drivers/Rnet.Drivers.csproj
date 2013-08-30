@@ -55,7 +55,7 @@
     <CodeContractsCacheAnalysisResults>True</CodeContractsCacheAnalysisResults>
     <CodeContractsFailBuildOnWarnings>False</CodeContractsFailBuildOnWarnings>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
-    <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
+    <CodeContractsReferenceAssembly>DoNotBuild</CodeContractsReferenceAssembly>
     <CodeContractsAnalysisWarningLevel>0</CodeContractsAnalysisWarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -85,6 +85,7 @@
       <HintPath>..\packages\Nito.AsyncEx.1.0.0\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
     <Reference Include="System.Reactive.Core">
@@ -124,7 +125,6 @@
     <Compile Include="ProfileManager.cs" />
     <Compile Include="ModelObject.cs" />
     <Compile Include="Default\DeviceBase.cs" />
-    <Compile Include="ProfileMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="DriverPackage.cs" />

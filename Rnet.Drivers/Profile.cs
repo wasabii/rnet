@@ -1,4 +1,8 @@
-﻿namespace Rnet.Drivers
+﻿using System;
+
+using Rnet.Profiles.Metadata;
+
+namespace Rnet.Drivers
 {
 
     /// <summary>
@@ -13,10 +17,10 @@
         /// Initializes a new instance.
         /// </summary>
         /// <param name="target"></param>
-        /// <param name="metadata"></param>
+        /// <param name="contract"></param>
         /// <param name="instance"></param>
-        public Profile(RnetBusObject target, ProfileMetadata metadata, T instance)
-            : base(target, metadata, instance)
+        public Profile(RnetBusObject target, ProfileDescriptor contract, T instance)
+            : base(target, contract, instance)
         {
 
         }
@@ -43,8 +47,12 @@
         /// <param name="target"></param>
         /// <param name="metadata"></param>
         /// <param name="instance"></param>
-        internal protected Profile(RnetBusObject target, ProfileMetadata metadata, object instance)
+        internal protected Profile(RnetBusObject target, ProfileDescriptor metadata, object instance)
         {
+            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(target != null);
+            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(metadata != null);
+            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(instance != null);
+
             Target = target;
             Metadata = metadata;
             Instance = instance;
@@ -56,9 +64,9 @@
         public RnetBusObject Target { get; private set; }
 
         /// <summary>
-        /// Gets the metadata that describes the profile.
+        /// Gets the metadata that describes the contract of the profile.
         /// </summary>
-        public ProfileMetadata Metadata { get; private set; }
+        public ProfileDescriptor Metadata { get; private set; }
 
         /// <summary>
         /// Gets the instance which provides the implementation of the profile.

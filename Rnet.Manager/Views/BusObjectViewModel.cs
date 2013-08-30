@@ -37,11 +37,11 @@ namespace Rnet.Manager.Views
 
             // load the supported profiles
             Profiles = new TypeDictionary<Profile>(p
-                .ToDictionary(i => i.Metadata.Interface, i => i));
+                .ToDictionary(i => i.Metadata.Contract, i => i));
             ProfileViewModels = new TypeDictionary<ViewModel>(Profiles
                 .Select(i => Rnet.Manager.Profiles.ViewModel.Create(i.Value))
                 .Where(i => i != null)
-                .ToDictionary(i => i.Profile.Metadata.Interface, i => i));
+                .ToDictionary(i => i.Profile.Metadata.Contract, i => i));
         }
 
         /// <summary>

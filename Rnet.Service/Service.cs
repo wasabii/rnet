@@ -7,7 +7,7 @@ namespace Rnet.Service
     public partial class Service : ServiceBase
     {
 
-        ServiceHost host = new ServiceHost();
+        Host host = new Host();
 
         public Service()
         {
@@ -16,7 +16,7 @@ namespace Rnet.Service
 
         protected override void OnStart(string[] args)
         {
-            host = new ServiceHost();
+            host = new Host();
             host.OnStart();
         }
 

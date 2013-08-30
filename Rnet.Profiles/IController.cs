@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ServiceModel;
 
 namespace Rnet.Profiles
 {
@@ -7,7 +6,7 @@ namespace Rnet.Profiles
     /// <summary>
     /// Basic interface for operating against a <see cref="RnetController"/>.
     /// </summary>
-    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "controller")]
+    [Contract("urn:rnet:profiles", "Controller")]
     public interface IController : IDevice
     {
 

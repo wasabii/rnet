@@ -54,27 +54,28 @@ namespace Rnet.Service
 
         object IParameterInspector.BeforeCall(string operationName, object[] inputs)
         {
+            //var ctx = WebOperationContext.Current;
+            //if (ctx == null)
+            //    return;
+
+            //switch (ctx.IncomingRequest.UriTemplateMatch.QueryParameters["format"])
+            //{
+            //    case "xml":
+            //        ctx.OutgoingResponse.Format = WebMessageFormat.Xml;
+            //        break;
+            //    case "json":
+            //        ctx.OutgoingResponse.Format = WebMessageFormat.Json;
+            //        break;
+            //    default:
+            //        break;
+            //}
+
             return null;
         }
 
         void IParameterInspector.AfterCall(string operationName, object[] outputs, object returnValue, object correlationState)
         {
-            var ctx = WebOperationContext.Current;
-            if (ctx == null)
-                return;
 
-            switch (ctx.IncomingRequest.UriTemplateMatch.QueryParameters["format"])
-            {
-                case "xml":
-                    ctx.OutgoingResponse.Format = WebMessageFormat.Xml;
-                    break;
-                case "json":
-                    ctx.OutgoingResponse.Format = WebMessageFormat.Json;
-                    break;
-                default:
-                    ctx.OutgoingResponse.Format = ctx.OutgoingResponse.Format;
-                    break;
-            }
         }
 
     }

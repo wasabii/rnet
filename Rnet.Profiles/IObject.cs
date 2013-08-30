@@ -1,12 +1,10 @@
-﻿using System.ServiceModel;
-
-namespace Rnet.Profiles
+﻿namespace Rnet.Profiles
 {
 
     /// <summary>
     /// Basic information exposed by any RNET object.
     /// </summary>
-    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "object")]
+    [Contract("urn:rnet:profiles", "Object")]
     public interface IObject
     {
 

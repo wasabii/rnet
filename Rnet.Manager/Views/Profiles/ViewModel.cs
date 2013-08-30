@@ -53,7 +53,7 @@ namespace Rnet.Manager.Profiles
                 .Where(i => i.IsSubclassOf(typeof(ViewModel)))
                 .Select(i => new { Attribute = i.GetCustomAttribute<ViewModelAttribute>(), Type = i })
                 .Where(i => i.Attribute != null)
-                .Where(i => i.Attribute.Interface == profile.Metadata.Interface)
+                .Where(i => i.Attribute.Interface == profile.Metadata.Contract)
                 .Select(i => i.Type)
                 .Select(i => Activator.CreateInstance(i, profile))
                 .Cast<ViewModel>()

@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
-
+using System.Xml.Linq;
+using System.Xml.Serialization;
 using Rnet.Drivers;
 using Rnet.Profiles;
 
@@ -39,13 +42,13 @@ namespace Rnet.Service.Objects
         [WebGet(UriTemplate = "{*uri}")]
         [ServiceKnownType(typeof(ObjectRefCollection))]
         [ServiceKnownType(typeof(Object))]
-        public async Task<object> Get(string uri)
+        public async Task<Message> Get(string uri)
         {
             if (string.IsNullOrWhiteSpace(uri))
                 return await GetObjectRefs();
 
             // navigate down hierarchy until the end
-            var target = await NavigateAtObject(uri.Split('/'), 0, Bus.Controllers);
+            var target = await Resolve(uri.Split('/'), 0, Bus.Controllers);
 
             // ended up at an object
             if (target is RnetBusObject)
@@ -63,7 +66,7 @@ namespace Rnet.Service.Objects
         /// Gets references for every root object.
         /// </summary>
         /// <returns></returns>
-        async Task<ObjectRefCollection> GetObjectRefs()
+        async Task<Message> GetObjectRefs()
         {
             var c = new ObjectRefCollection();
 
@@ -75,7 +78,7 @@ namespace Rnet.Service.Objects
                     Name = await GetObjectName(i),
                 });
 
-            return c;
+            return Context.CreateXmlResponse<ObjectRefCollection>(c);
         }
 
         /// <summary>
@@ -85,7 +88,7 @@ namespace Rnet.Service.Objects
         /// <param name="position"></param>
         /// <param name="objects"></param>
         /// <returns></returns>
-        async Task<object> NavigateAtObject(string[] components, int position, IEnumerable<RnetBusObject> objects)
+        async Task<object> Resolve(string[] components, int position, IEnumerable<RnetBusObject> objects)
         {
             Contract.Requires<ArgumentNullException>(components != null);
             Contract.Requires<ArgumentOutOfRangeException>(position >= 0);
@@ -104,7 +107,7 @@ namespace Rnet.Service.Objects
                         throw new WebFaultException(HttpStatusCode.BadRequest);
 
                     // begin navigating from current object
-                    return await NavigateAtProfile(components, i, o);
+                    return await ResolveProfile(components, i, o);
                 }
 
                 // find object with matching ID
@@ -151,17 +154,19 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        async Task<Object> GetObject(RnetBusObject o)
+        async Task<Message> GetObject(RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
-            return new Object()
+            var r = new Object()
             {
                 Id = await GetObjectUri(o),
                 Name = await GetObjectName(o),
                 Objects = await GetObjectRefs(o),
                 Profiles = await GetProfileRefs(o),
             };
+
+            return Context.CreateXmlResponse<Object>(r);
         }
 
         /// <summary>
@@ -214,7 +219,7 @@ namespace Rnet.Service.Objects
             // assemble Url from components backwards
             var uri = BaseUri;
             foreach (var i in l.Reverse<string>())
-                uri = new Uri(uri, i);
+                uri = uri.UriCombine(i);
 
             return uri;
         }
@@ -291,7 +296,7 @@ namespace Rnet.Service.Objects
             // assemble Url from components backwards
             var uri = BaseUri;
             foreach (var i in l.Reverse<string>())
-                uri = new Uri(uri, i);
+                uri = uri.UriCombine(i);
 
             return uri;
         }
@@ -315,7 +320,7 @@ namespace Rnet.Service.Objects
         /// <param name="position"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        async Task<object> NavigateAtProfile(string[] components, int position, RnetBusObject target)
+        async Task<object> ResolveProfile(string[] components, int position, RnetBusObject target)
         {
             Contract.Requires<ArgumentNullException>(components != null);
             Contract.Requires<ArgumentOutOfRangeException>(position >= 1);
@@ -334,28 +339,12 @@ namespace Rnet.Service.Objects
             if (profile == null)
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
-            // navigate into the profile itself
-            return await NavigateIntoProfile(components, position, profile);
-        }
-
-        /// <summary>
-        /// Navigate into 
-        /// </summary>
-        /// <param name="components"></param>
-        /// <param name="position"></param>
-        /// <param name="profile"></param>
-        /// <returns></returns>
-        async Task<object> NavigateIntoProfile(string[] components, int position, Profile profile)
-        {
-            Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position >= 1);
-            Contract.Requires<ArgumentNullException>(profile != null);
-
-            // we terminated in a profile
+            // are we at the end?
             if (position >= components.Length)
                 return profile;
 
-            throw new NotImplementedException("Navigation within a Profile is not yet supported.");
+            // cannot go deeper than a profile
+            throw new WebFaultException(HttpStatusCode.NotFound);
         }
 
         /// <summary>
@@ -363,12 +352,30 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="profile"></param>
         /// <returns></returns>
-        async Task<object> GetProfile(Profile profile)
+        async Task<Message> GetProfile(Profile profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
-            // temporary
-            return profile.Metadata.Namespace + ":" + profile.Metadata.Name;
+            return Context.CreateXmlResponse(ProfileToXml(profile));
+        }
+
+        /// <summary>
+        /// Transforms the <see cref="Profile"/> into an output document.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        async Task<XDocument> ProfileToXml(Profile profile)
+        {
+            // default namespace of profile
+            var ns = (XNamespace)profile.Metadata.Namespace;
+
+            // build XML document out of properties
+            var xml = new XDocument(
+                new XElement(ns + profile.Metadata.Name,
+                    profile.Metadata.Properties.Cast<PropertyDescriptor>()
+                        .Select(i =>
+                            new XElement(ns + i.Name,
+                                i.GetValue(profile.Instance)))));
         }
 
     }

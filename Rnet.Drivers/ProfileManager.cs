@@ -7,6 +7,7 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Rnet.Profiles;
+using Rnet.Profiles.Metadata;
 
 namespace Rnet.Drivers
 {
@@ -20,8 +21,8 @@ namespace Rnet.Drivers
         /// <summary>
         /// Cache of known metadata.
         /// </summary>
-        static readonly ConcurrentDictionary<Type, ProfileMetadata> metadata =
-            new ConcurrentDictionary<Type, ProfileMetadata>();
+        static readonly ConcurrentDictionary<Type, ProfileDescriptor> contracts =
+            new ConcurrentDictionary<Type, ProfileDescriptor>();
 
         /// <summary>
         /// Caches the set of loaded profiles for each bus object.
@@ -94,14 +95,14 @@ namespace Rnet.Drivers
             /// Creates a generic <see cref="Profile"/> instance that wraps the given information.
             /// </summary>
             /// <param name="target"></param>
-            /// <param name="metadata"></param>
+            /// <param name="contract"></param>
             /// <param name="instance"></param>
             /// <returns></returns>
-            Profile CreateProfile(RnetBusObject target, ProfileMetadata metadata, object instance)
+            Profile CreateProfile(RnetBusObject target, ProfileDescriptor contract, object instance)
             {
                 return (Profile)Activator.CreateInstance(
-                    typeof(Profile<>).MakeGenericType(metadata.Interface),
-                        target, metadata, instance);
+                    typeof(Profile<>).MakeGenericType(contract.Contract),
+                        target, contract, instance);
             }
 
             /// <summary>
@@ -160,13 +161,13 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="contract"></param>
         /// <returns></returns>
-        static ProfileMetadata CreateMetadata(Type contract)
+        static ProfileDescriptor CreateMetadata(Type contract)
         {
-            var attr = contract.GetCustomAttribute<ServiceContractAttribute>();
+            var attr = contract.GetCustomAttribute<ContractAttribute>();
             if (attr == null)
                 return null;
 
-            return new ProfileMetadata(attr.Namespace, attr.Name, contract);
+            return new ProfileDescriptor(attr.Namespace, attr.Name, contract);
         }
 
         /// <summary>
@@ -174,9 +175,9 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="contract"></param>
         /// <returns></returns>
-        static ProfileMetadata GetOrCreateMetadata(Type contract)
+        static ProfileDescriptor GetOrCreateMetadata(Type contract)
         {
-            return ProfileManager.metadata.GetOrAdd(contract, m =>
+            return ProfileManager.contracts.GetOrAdd(contract, m =>
                 CreateMetadata(contract));
         }
 
@@ -201,7 +202,7 @@ namespace Rnet.Drivers
         public static async Task<object> GetProfile(this RnetBusObject target, Type contract)
         {
             return (await GetProfiles(target))
-                .Where(i => i.Metadata.Interface == contract)
+                .Where(i => i.Metadata.Contract == contract)
                 .Select(i => i.Instance);
         }
 
@@ -215,7 +216,7 @@ namespace Rnet.Drivers
             where T : class
         {
             return (await GetProfiles(target))
-                .Where(i => i.Metadata.Interface == typeof(T))
+                .Where(i => i.Metadata.Contract == typeof(T))
                 .Select(i => i.Instance)
                 .OfType<T>()
                 .FirstOrDefault();

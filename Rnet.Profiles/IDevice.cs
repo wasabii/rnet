@@ -1,12 +1,10 @@
-﻿using System.ServiceModel;
-
-namespace Rnet.Profiles
+﻿namespace Rnet.Profiles
 {
 
     /// <summary>
     /// Provides basic device information.
     /// </summary>
-    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "device")]
+    [Contract("urn:rnet:profiles", "Device")]
     public interface IDevice : IObject
     {
 

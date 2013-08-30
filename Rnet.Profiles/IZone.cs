@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ServiceModel;
 
 namespace Rnet.Profiles
 {
@@ -7,7 +6,7 @@ namespace Rnet.Profiles
     /// <summary>
     /// Base interface for operating against a <see cref="RnetZone"/>.
     /// </summary>
-    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "zone")]
+    [Contract("urn:rnet:profiles", "Zone")]
     public interface IZone : IObject
     {
 

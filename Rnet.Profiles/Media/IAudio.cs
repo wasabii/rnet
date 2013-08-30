@@ -1,19 +1,18 @@
-﻿using System.ComponentModel;
-using System.ServiceModel;
-
+﻿
 namespace Rnet.Profiles.Media
 {
 
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
-    [ServiceContract(Namespace = "urn:rnet:profiles", Name = "media.audio")]
+    [Contract("urn:rnet:profiles:media", "Audio")]
     public interface IAudio
     {
 
         /// <summary>
         /// Whether the zone is powered on or off.
         /// </summary>
+        [ValueAttribute("Power")]
         Power Power { get; set; }
 
         /// <summary>
