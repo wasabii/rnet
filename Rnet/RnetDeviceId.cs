@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 
 namespace Rnet
@@ -56,6 +57,8 @@ namespace Rnet
         /// <returns></returns>
         public static RnetDeviceId Read(RnetMessageBodyReader reader)
         {
+            Contract.Requires(reader != null);
+
             return new RnetDeviceId(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
         }
 
@@ -94,6 +97,8 @@ namespace Rnet
         /// <param name="writer"></param>
         public void Write(RnetStreamWriter writer)
         {
+            Contract.Requires(writer != null);
+
             writer.WriteByte(ControllerId);
             writer.WriteByte(ZoneId);
             writer.WriteByte(KeypadId);
@@ -130,6 +135,8 @@ namespace Rnet
         /// <param name="writer"></param>
         public void WriteDebugView(TextWriter writer)
         {
+            Contract.Requires(writer != null);
+
             writer.WriteLine("{");
             using (var wrt = RnetUtil.CreateIndentedTextWriter(writer))
             {

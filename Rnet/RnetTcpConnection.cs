@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -26,6 +27,8 @@ namespace Rnet
         /// <param name="uri"></param>
         public RnetTcpConnection(Uri uri)
         {
+            Contract.Requires(uri != null);
+
             if (uri.Scheme != "rnet.tcp")
                 throw new UriFormatException("Schema of URI must be 'rnet.tcp'.");
 
@@ -45,6 +48,8 @@ namespace Rnet
         /// <param name="ep"></param>
         public RnetTcpConnection(IPEndPoint ep)
         {
+            Contract.Requires(ep != null);
+
             this.ep = ep;
         }
 
@@ -56,7 +61,9 @@ namespace Rnet
         public RnetTcpConnection(IPAddress ip, int port)
             : this(new IPEndPoint(ip, port))
         {
-
+            Contract.Requires(ip != null);
+            Contract.Requires(port >= 0);
+            Contract.Requires(port <= 65535);
         }
 
         /// <summary>
@@ -66,6 +73,9 @@ namespace Rnet
         /// <param name="port"></param>
         public RnetTcpConnection(string host, int port)
         {
+            Contract.Requires(host != null);
+            Contract.Requires(port <= 65535);
+
             this.host = host;
             this.port = port;
         }

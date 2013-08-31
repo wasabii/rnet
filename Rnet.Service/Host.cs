@@ -1,5 +1,5 @@
 ﻿using System;
-using System.ServiceModel;
+using System.Diagnostics.Contracts;
 using System.ServiceModel.Web;
 
 namespace Rnet.Service
@@ -33,6 +33,11 @@ namespace Rnet.Service
         /// </summary>
         async void OnStartAsync()
         {
+            Contract.Requires(bus == null);
+            Contract.Requires(deviceHost == null);
+            Contract.Requires(objectHost == null);
+            Contract.Ensures(bus != null);
+
             bus = new RnetBus(uri);
             await bus.Start();
 
@@ -45,6 +50,8 @@ namespace Rnet.Service
 
         public void OnStop()
         {
+            Contract.Assert(sync != null);
+
             sync.Post(i => OnStopAsync(), null);
             sync.Complete();
         }
@@ -54,9 +61,26 @@ namespace Rnet.Service
         /// </summary>
         async void OnStopAsync()
         {
-            deviceHost.Close();
-            objectHost.Close();
+            Contract.Requires(bus != null);
+            Contract.Requires(deviceHost != null);
+            Contract.Requires(objectHost != null);
+            Contract.Ensures(bus != null);
+            Contract.Ensures(deviceHost == null);
+            Contract.Ensures(objectHost == null);
 
+            if (deviceHost != null)
+            {
+                deviceHost.Close();
+                deviceHost = null;
+            }
+
+            if (objectHost != null)
+            {
+                objectHost.Close();
+                objectHost = null;
+            }
+
+            // allow bus to stay alive
             await bus.Stop();
         }
 

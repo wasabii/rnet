@@ -131,6 +131,8 @@ namespace Rnet
         /// <returns></returns>
         public Task Send(RnetMessage message)
         {
+            Contract.Requires(message != null);
+
             return Send(message, CancellationToken.None);
         }
 
@@ -142,7 +144,7 @@ namespace Rnet
         /// <returns></returns>
         public virtual Task Send(RnetMessage message, CancellationToken cancellationToken)
         {
-            Contract.Requires<ArgumentNullException>(message != null);
+            Contract.Requires(message != null);
 
             if (State != RnetConnectionState.Open)
                 throw new RnetConnectionException("Connection is not open.");

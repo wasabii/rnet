@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Threading;
@@ -16,8 +15,6 @@ namespace Rnet.Service
 
         public override void Post(SendOrPostCallback d, object state)
         {
-            Contract.Requires<ArgumentNullException>(d != null);
-
             queue.Add(new KeyValuePair<SendOrPostCallback, object>(d, state));
         }
 
@@ -26,6 +23,8 @@ namespace Rnet.Service
         /// </summary>
         public void Start()
         {
+            Contract.Assert(thread == null);
+
             thread = new Thread(Main);
             thread.Start();
         }
@@ -55,6 +54,9 @@ namespace Rnet.Service
         /// </summary>
         public void Complete()
         {
+            Contract.Assert(queue != null);
+            Contract.Assert(thread != null);
+
             queue.CompleteAdding();
             thread.Join();
         }

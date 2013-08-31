@@ -118,7 +118,7 @@ namespace Rnet.Service
         /// <param name="bus"></param>
         protected WebServiceBase(RnetBus bus)
         {
-            Contract.Requires<ArgumentNullException>(bus != null);
+            Contract.Requires(bus != null);
 
             this.bus = bus;
         }

@@ -47,8 +47,8 @@ namespace Rnet.Service.Objects
         [ServiceKnownType(typeof(Profile))]
         public async Task<Message> Get(string uri)
         {
-            if (string.IsNullOrWhiteSpace(uri))
-                return await GetObjectRefs();
+            Contract.Ensures(uri != null);
+            Contract.Ensures(Bus != null);
 
             // navigate down hierarchy until the end
             var target = await Resolve(uri.Split('/'), 0, Bus.Controllers);
@@ -97,9 +97,9 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         async Task<object> Resolve(string[] components, int position, IEnumerable<RnetBusObject> objects)
         {
-            Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position >= 0);
-            Contract.Requires<ArgumentNullException>(objects != null);
+            Contract.Requires(components != null);
+            Contract.Requires(position >= 0);
+            Contract.Requires(objects != null);
 
             var o = (RnetBusObject)null;
 
@@ -142,8 +142,8 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         async Task<RnetBusObject> FindObject(IEnumerable<RnetBusObject> source, string id)
         {
-            Contract.Requires<ArgumentNullException>(source != null);
-            Contract.Requires<ArgumentNullException>(id != null);
+            Contract.Requires(source != null);
+            Contract.Requires(id != null);
 
             // find first matching ID
             foreach (var o in source)
@@ -163,7 +163,7 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         async Task<Message> GetObject(RnetBusObject o)
         {
-            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires(o != null);
 
             var r = new Object()
             {
@@ -366,6 +366,8 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         Task<XDocument> GetProfileXml(Profile profile)
         {
+            Contract.Requires<ArgumentNullException>(profile != null);
+
             // default namespace of profile
             var md = profile.Metadata;
             var ns = md.Xmlns;
@@ -399,6 +401,8 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         Task<XDocument> GetProfileMetadataXml(ProfileDescriptor metadata)
         {
+            Contract.Requires<ArgumentNullException>(metadata != null);
+
             // default namespace of profile
             var ns = (XNamespace)PROFILE_METADATA_XMLNS;
 

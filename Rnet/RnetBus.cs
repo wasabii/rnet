@@ -32,8 +32,10 @@ namespace Rnet
         /// <param name="uri"></param>
         public RnetBus(Uri uri)
         {
-            if (uri == null)
-                throw new ArgumentNullException("uri");
+            Contract.Requires(uri != null);
+            Contract.Ensures(Uri != null);
+            Contract.Ensures(Controllers != null);
+            Contract.Ensures(Client != null);
 
             Uri = uri;
             Controllers = new RnetControllerCollection(this);
@@ -54,7 +56,7 @@ namespace Rnet
         public RnetBus(string uri)
             : this(new Uri(uri))
         {
-
+            Contract.Requires(uri != null);
         }
 
         /// <summary>
@@ -101,6 +103,8 @@ namespace Rnet
         /// </summary>
         void UpdateState()
         {
+            Contract.Requires(Client != null);
+
             // bus has no desire to be started
             if (state != RnetBusState.Started)
                 return;
@@ -128,7 +132,7 @@ namespace Rnet
         /// <returns></returns>
         public Task Start(SynchronizationContext synchronizationContext)
         {
-            Contract.Requires<ArgumentNullException>(synchronizationContext != null);
+            Contract.Requires(synchronizationContext != null);
 
             return Start(synchronizationContext, RnetKeypadId.External, CancellationToken.None);
         }
@@ -214,6 +218,8 @@ namespace Rnet
         /// <returns></returns>
         public async Task Stop(CancellationToken cancellationToken)
         {
+            Contract.Requires(Client != null);
+
             using (await lck.LockAsync())
             {
                 if (state != RnetBusState.Started)
@@ -284,7 +290,7 @@ namespace Rnet
         /// <param name="args"></param>
         async void OnClientMessageReceived(RnetMessageEventArgs args)
         {
-            Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires(args != null);
 
             // client is stopped, ignore any trailing events
             if (State != RnetBusState.Started)
@@ -336,6 +342,8 @@ namespace Rnet
         /// <returns></returns>
         RnetDevice GetOrCreateDevice(RnetDeviceId id)
         {
+            Contract.Requires(Controllers != null);
+
             // get controller
             var c = Controllers[id.ControllerId];
             if (c == null)
@@ -365,6 +373,8 @@ namespace Rnet
         /// <returns></returns>
         public async Task Scan()
         {
+            Contract.Requires(Controllers != null);
+
             await Controllers.Scan();
         }
 
@@ -379,7 +389,7 @@ namespace Rnet
         /// <param name="args"></param>
         void OnMessageSent(RnetMessageEventArgs args)
         {
-            Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires(args != null);
 
             if (MessageSent != null)
                 MessageSent(this, args);
@@ -396,7 +406,7 @@ namespace Rnet
         /// <param name="args"></param>
         void OnMessageReceived(RnetMessageEventArgs args)
         {
-            Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires(args != null);
 
             if (MessageReceived != null)
                 MessageReceived(this, args);
@@ -413,7 +423,7 @@ namespace Rnet
         /// <param name="args"></param>
         void OnStateChanged(RnetBusStateEventArgs args)
         {
-            Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires(args != null);
 
             if (StateChanged != null)
                 StateChanged(this, args);
@@ -430,7 +440,7 @@ namespace Rnet
         /// <param name="args"></param>
         void OnUnhandledException(RnetExceptionEventArgs args)
         {
-            Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires(args != null);
 
             if (UnhandledException != null)
                 UnhandledException(this, args);

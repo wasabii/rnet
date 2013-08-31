@@ -191,8 +191,8 @@ namespace Rnet
         /// <returns></returns>
         Task ReceiveData(RnetPath path, byte[] data)
         {
-            Contract.Requires<ArgumentException>(path.Length != 0);
-            Contract.Requires<ArgumentNullException>(data != null);
+            Contract.Requires(path.Length > 0);
+            Contract.Requires(data != null);
 
             return GetOrCreateDataHandle(path).Receive(data);
         }

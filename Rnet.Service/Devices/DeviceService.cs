@@ -146,6 +146,9 @@ namespace Rnet.Service.Devices
         /// <returns></returns>
         async Task<byte[]> GetDeviceData(RnetDevice device, string path)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+            Contract.Requires<ArgumentNullException>(path != null);
+
             var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
             if (handle == null)
                 throw new WebFaultException(HttpStatusCode.NotFound);
@@ -177,6 +180,9 @@ namespace Rnet.Service.Devices
         /// <returns></returns>
         async Task PutDeviceData(RnetDevice device, string path, byte[] data)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+            Contract.Requires<ArgumentNullException>(path != null);
+
             var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
             if (handle == null)
                 throw new WebFaultException(HttpStatusCode.NotFound);

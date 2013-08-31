@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -13,6 +12,13 @@ namespace Rnet
 
         byte[] data;
 
+        [ContractInvariantMethod]
+        void ObjectInvariant()
+        {
+            Contract.Invariant(data != null);
+        }
+
+
         /// <summary>
         /// Reads a <see cref="RnetData"/> structure from the given message body.
         /// </summary>
@@ -20,7 +26,7 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetData Read(RnetMessageBodyReader reader)
         {
-            Contract.Requires<ArgumentNullException>(reader != null);
+            Contract.Requires(reader != null);
 
             var l = reader.ReadUInt16();
             var d = new byte[l];
@@ -37,6 +43,8 @@ namespace Rnet
         internal RnetData(byte[] data)
             : this()
         {
+            Contract.Requires(data != null);
+
             this.data = data;
         }
 
@@ -47,6 +55,8 @@ namespace Rnet
         internal RnetData(ushort length)
             : this()
         {
+            Contract.Requires(length >= 0);
+
             this.data = new byte[length];
         }
 
@@ -57,8 +67,8 @@ namespace Rnet
         /// <returns></returns>
         public byte this[int index]
         {
-            get { Contract.Requires<ArgumentOutOfRangeException>(index >= 0); return data[index]; }
-            set { Contract.Requires<ArgumentOutOfRangeException>(index >= 0); data[index] = value; }
+            get { Contract.Requires(index >= 0); return data[index]; }
+            set { Contract.Requires(index >= 0); data[index] = value; }
         }
 
         /// <summary>
@@ -81,7 +91,7 @@ namespace Rnet
 
         public void WriteDebugView(TextWriter writer)
         {
-            Contract.Requires<ArgumentNullException>(writer != null);
+            Contract.Requires(writer != null);
             Contract.Assert(data != null);
 
             writer.Write("0x");

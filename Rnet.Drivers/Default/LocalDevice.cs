@@ -19,7 +19,7 @@ namespace Rnet.Drivers.Default
 
         }
 
-        protected new RnetLocalDevice Target
+        new RnetLocalDevice Target
         {
             get { return (RnetLocalDevice)base.Target; }
         }

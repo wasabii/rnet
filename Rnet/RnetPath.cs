@@ -44,6 +44,8 @@ namespace Rnet
         /// <returns></returns>
         public static implicit operator RnetPath(string path)
         {
+            Contract.Requires(path != null);
+
             return RnetPath.Parse(path);
         }
 
@@ -72,6 +74,8 @@ namespace Rnet
         /// <returns></returns>
         public static RnetPath Parse(string path)
         {
+            Contract.Requires(path != null);
+
             // split path string and validate for only digits
             var a = path.Split('.');
             if (a.Length < 0 || a.Length > 8)
@@ -93,6 +97,14 @@ namespace Rnet
         byte a, b, c, d, e, f, g, h;
         byte length;
 
+        [ContractInvariantMethod]
+        void ObjectInvariant()
+        {
+            Contract.Invariant(length >= 0);
+            Contract.Invariant(length <= 8);
+        }
+
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
@@ -100,6 +112,8 @@ namespace Rnet
         public RnetPath(IEnumerable<byte> items)
             : this()
         {
+            Contract.Requires(items != null);
+
             foreach (var i in items)
             {
                 if (length >= 8)
@@ -117,7 +131,7 @@ namespace Rnet
         public RnetPath(params byte[] items)
             : this((IEnumerable<byte>)items)
         {
-
+            Contract.Requires(items != null);
         }
 
         /// <summary>
