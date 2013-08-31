@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -21,7 +22,10 @@ namespace Rnet
         /// <returns></returns>
         object Validate(Type type, object o)
         {
-            if (!type.IsInstanceOfType(o))
+            Contract.Requires<ArgumentNullException>(type != null);
+
+
+            if (o != null && !type.IsInstanceOfType(o))
                 throw new InvalidCastException("Value must be of Key type.");
 
             return o;
@@ -35,6 +39,9 @@ namespace Rnet
         /// <returns></returns>
         public object GetOrCreate(Type type, Func<object> create)
         {
+            Contract.Requires<ArgumentNullException>(type != null);
+            Contract.Requires<ArgumentNullException>(create != null);
+
             return extensions.GetOrCreate(type, i => Validate(i, create()));
         }
 
@@ -47,6 +54,8 @@ namespace Rnet
         public T GetOrCreate<T>(Func<T> create)
             where T : class
         {
+            Contract.Requires<ArgumentNullException>(create != null);
+
             return (T)GetOrCreate(typeof(T), create);
         }
 
@@ -57,6 +66,8 @@ namespace Rnet
         /// <returns></returns>
         public object Get(Type type)
         {
+            Contract.Requires<ArgumentNullException>(type != null);
+
             return extensions.GetOrDefault(type);
         }
 
@@ -78,6 +89,8 @@ namespace Rnet
         /// <returns></returns>
         public object Set(Type type, object value)
         {
+            Contract.Requires<ArgumentNullException>(type != null);
+
             return extensions[type] = Validate(type, value);
         }
 

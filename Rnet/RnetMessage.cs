@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 
 namespace Rnet
@@ -59,6 +60,8 @@ namespace Rnet
         /// <param name="writer"></param>
         internal void Write(RnetStreamWriter writer)
         {
+            Contract.Requires<ArgumentNullException>(writer != null);
+
             writer.BeginMessage(TargetDeviceId, SourceDeviceId, MessageType);
             WriteBody(writer);
             writer.EndMessage();

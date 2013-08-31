@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -15,6 +16,8 @@ namespace Rnet
         public static T GetTargetOrDefault<T>(this WeakReference<T> self)
             where T : class
         {
+            Contract.Requires<ArgumentNullException>(self != null);
+
             T value;
             return self.TryGetTarget(out value) ? value : default(T);
         }

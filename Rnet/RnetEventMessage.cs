@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 
 namespace Rnet
@@ -87,6 +89,8 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetEventMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             return new RnetEventMessage(
                 targetDeviceId, sourceDeviceId,
                 RnetPath.Read(reader),

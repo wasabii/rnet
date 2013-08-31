@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 
 namespace Rnet
@@ -134,6 +135,8 @@ namespace Rnet
         /// <param name="buffer"></param>
         internal void WriteBody(byte[] buffer)
         {
+            Contract.Requires<ArgumentNullException>(buffer != null);
+
             for (int i = 0; i < buffer.Length; i++)
                 WriteMessageByte(buffer[i]);
         }

@@ -1,4 +1,7 @@
-﻿namespace Rnet
+﻿using System;
+using System.Diagnostics.Contracts;
+
+namespace Rnet
 {
 
     /// <summary>
@@ -15,6 +18,8 @@
         internal RnetZoneRemoteDevice(RnetZone zone, RnetKeypadId keypadId)
             : base(zone.Controller.Bus)
         {
+            Contract.Requires<ArgumentNullException>(zone != null);
+
             Zone = zone;
             Id = keypadId;
         }

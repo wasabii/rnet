@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -10,12 +11,16 @@ namespace Rnet
 
         public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> self, TKey key)
         {
+            Contract.Requires<ArgumentNullException>(self != null);
+
             TValue value;
             return self.TryGetValue(key, out value) ? value : default(TValue);
         }
 
         public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> self, TKey key, Func<TKey, TValue> create)
         {
+            Contract.Requires<ArgumentNullException>(self != null);
+
             TValue value;
             return self.TryGetValue(key, out value) ? value : self[key] = create(key);
         }
@@ -32,6 +37,8 @@ namespace Rnet
         public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, WeakReference<TValue>> self, TKey key, Func<TKey, TValue> create)
             where TValue : class
         {
+            Contract.Requires<ArgumentNullException>(self != null);
+
             // get existing item
             WeakReference<TValue> reference;
             TValue value;
@@ -45,6 +52,8 @@ namespace Rnet
 
         public static bool Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> self, TKey key)
         {
+            Contract.Requires<ArgumentNullException>(self != null);
+
             TValue value;
             return self.TryRemove(key, out value);
         }

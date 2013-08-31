@@ -52,7 +52,7 @@ namespace Rnet.Drivers
             return GetProfiles();
         }
 
-        int IComparable<Driver>.CompareTo(Driver other)
+        public int CompareTo(Driver other)
         {
             return Priority.CompareTo(other.Priority);
         }

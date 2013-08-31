@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Rnet
@@ -326,6 +327,8 @@ namespace Rnet
         /// <param name="writer"></param>
         internal void Write(RnetStreamWriter writer)
         {
+            Contract.Requires<ArgumentNullException>(writer != null);
+
             writer.WriteByte((byte)length);
             foreach (var item in this)
                 writer.WriteByte(item);
@@ -338,6 +341,8 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetPath Read(RnetMessageBodyReader reader)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             // generate new instance and configure it
             var path = new RnetPath();
             path.length = reader.ReadByte();

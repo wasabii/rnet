@@ -360,8 +360,6 @@ namespace Rnet
         /// <returns></returns>
         protected internal override RnetDataHandle CreateDataHandle(RnetPath path)
         {
-            Contract.Requires<ArgumentException>(path.Length > 0);
-
             return new RnetRemoteDataHandle(this, path);
         }
 

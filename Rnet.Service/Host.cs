@@ -37,13 +37,9 @@ namespace Rnet.Service
             await bus.Start();
 
             deviceHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
-            deviceHost.AddServiceEndpoint(typeof(Devices.DeviceService), new WebHttpBinding(), "")
-                .EndpointBehaviors.Add(new RnetWebHttpBehavior());
             deviceHost.Open();
 
             objectHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
-            objectHost.AddServiceEndpoint(typeof(Objects.ObjectService), new WebHttpBinding(), "")
-                .EndpointBehaviors.Add(new RnetWebHttpBehavior());
             objectHost.Open();
         }
 

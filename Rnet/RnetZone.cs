@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -15,6 +17,8 @@ namespace Rnet
         internal RnetZone(RnetController controller, RnetZoneId id)
             : base(controller.Bus)
         {
+            Contract.Requires<ArgumentNullException>(controller != null);
+
             Trace.TraceInformation("RnetZone:ctor Id={0}", (int)id);
             Controller = controller;
             Id = id;

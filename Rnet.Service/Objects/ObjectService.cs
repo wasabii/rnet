@@ -19,7 +19,7 @@ namespace Rnet.Service.Objects
     [ServiceContract(Namespace = "urn:rnet:service", Name = "objects")]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
     [FormatServiceBehavior]
-    class ObjectService : RnetWebServiceBase
+    class ObjectService : WebServiceBase
     {
 
         const string PROFILE_PREFIX = "~";

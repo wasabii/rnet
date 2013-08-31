@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -15,6 +16,8 @@ namespace Rnet
         internal RnetLocalDevice(RnetZone zone, RnetKeypadId keypadId)
             : base(zone.Bus)
         {
+            Contract.Requires<ArgumentNullException>(zone != null);
+
             if (keypadId >= 0x7c && keypadId <= 0x7f)
                 throw new ArgumentOutOfRangeException("id", "RnetKeypadId cannot be in a reserved range.");
             

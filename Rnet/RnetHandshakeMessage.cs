@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.IO;
 
 namespace Rnet
 {
@@ -40,6 +42,8 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetHandshakeMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             var handshakeType = (RnetHandshakeType)reader.ReadByte();
             
             return new RnetHandshakeMessage(

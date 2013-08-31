@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 
 namespace Rnet
@@ -61,6 +62,8 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetNumberSixMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             return new RnetNumberSixMessage(
                 targetDeviceId, sourceDeviceId,
                 reader.ReadByte(),

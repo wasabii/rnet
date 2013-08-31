@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 
 namespace Rnet
@@ -85,6 +87,8 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetSetDataMessage Read(RnetMessageBodyReader reader, RnetDeviceId targetDeviceId, RnetDeviceId sourceDeviceId)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             var targetPath = RnetPath.Read(reader);
             var sourcePath = RnetPath.Read(reader);
             var packetNumber = reader.ReadUInt16();

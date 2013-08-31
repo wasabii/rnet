@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -153,6 +154,8 @@ namespace Rnet
         /// <returns></returns>
         RnetMessage ParseMessage(RnetMessageBodyReader reader)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             try
             {
                 // parse device ids

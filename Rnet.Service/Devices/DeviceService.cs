@@ -13,7 +13,7 @@ namespace Rnet.Service.Devices
     [ServiceContract(Namespace = "urn:rnet:service", Name = "devices")]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
     [FormatServiceBehavior]
-    class DeviceService : RnetWebServiceBase
+    class DeviceService : WebServiceBase
     {
 
         /// <summary>

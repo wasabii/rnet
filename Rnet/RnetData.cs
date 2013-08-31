@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Text;
 
@@ -19,6 +20,8 @@ namespace Rnet
         /// <returns></returns>
         internal static RnetData Read(RnetMessageBodyReader reader)
         {
+            Contract.Requires<ArgumentNullException>(reader != null);
+
             var l = reader.ReadUInt16();
             var d = new byte[l];
             for (int i = 0; i < l; i++)
@@ -54,8 +57,8 @@ namespace Rnet
         /// <returns></returns>
         public byte this[int index]
         {
-            get { return data[index]; }
-            set { data[index] = value; }
+            get { Contract.Requires<ArgumentOutOfRangeException>(index >= 0); return data[index]; }
+            set { Contract.Requires<ArgumentOutOfRangeException>(index >= 0); data[index] = value; }
         }
 
         /// <summary>
@@ -78,6 +81,9 @@ namespace Rnet
 
         public void WriteDebugView(TextWriter writer)
         {
+            Contract.Requires<ArgumentNullException>(writer != null);
+            Contract.Assert(data != null);
+
             writer.Write("0x");
             for (int i = 0; i < data.Length; i++)
                 writer.Write("{0:x2}", data[i]);
@@ -96,6 +102,8 @@ namespace Rnet
         /// <returns></returns>
         string GetText()
         {
+            Contract.Requires(data != null);
+
             try
             {
                 if (data.Length < 4)

@@ -92,7 +92,6 @@
     <Compile Include="Objects\Object.cs" />
     <Compile Include="Objects\ObjectRefCollection.cs" />
     <Compile Include="Objects\ObjectService.cs" />
-    <Compile Include="RnetWebHttpElement.cs" />
     <Compile Include="Service.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -104,10 +103,9 @@
     <Compile Include="Devices\DeviceService.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
-    <Compile Include="RnetWebServiceBase.cs" />
+    <Compile Include="WebServiceBase.cs" />
     <Compile Include="FormatServiceBehavior.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="RnetWebHttpBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
