@@ -115,6 +115,7 @@
     <Compile Include="Default\ZoneBase.cs" />
     <Compile Include="Default\ControllerDriver.cs" />
     <Compile Include="Default\DriverPackage.cs" />
+    <Compile Include="DriverAttribute.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="DriverPriority.cs" />
     <Compile Include="IProfileLifecycle.cs" />

@@ -26,7 +26,7 @@ namespace Rnet
         internal RnetRemoteDataHandle(RnetRemoteDevice device, RnetPath path)
             : base(device, path)
         {
-
+            Contract.Requires<ArgumentException>(path.Length > 0);
         }
 
         /// <summary>
@@ -135,6 +135,8 @@ namespace Rnet
         /// <returns></returns>
         public override async Task<byte[]> Write(byte[] data, CancellationToken cancellationToken)
         {
+            Contract.Assert(data != null);
+
             return await RnetUtil.DefaultIfCancelled(async ct =>
             {
                 using (await wait.EnterAsync(ct))

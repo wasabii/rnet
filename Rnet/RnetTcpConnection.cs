@@ -27,19 +27,25 @@ namespace Rnet
         /// <param name="uri"></param>
         public RnetTcpConnection(Uri uri)
         {
-            Contract.Requires(uri != null);
+            Contract.Requires<ArgumentNullException>(uri != null);
+            Contract.Requires<UriFormatException>(uri.Scheme == "rnet.tcp", "Schema of URI must be 'rnet.tcp'.");
 
-            if (uri.Scheme != "rnet.tcp")
-                throw new UriFormatException("Schema of URI must be 'rnet.tcp'.");
-
-            if (uri.HostNameType == UriHostNameType.Dns)
+            if (uri.HostNameType == UriHostNameType.Dns ||
+                uri.HostNameType == UriHostNameType.Basic ||
+                uri.HostNameType == UriHostNameType.Unknown)
             {
                 host = uri.DnsSafeHost;
                 port = uri.Port;
-            }
+                if (string.IsNullOrWhiteSpace(host) || port < 0 || port > 65535)
+                    throw new RnetConnectionException("Could not discover valid host and/or port.");
 
+                return;
+            }
             if (uri.HostNameType == UriHostNameType.IPv4)
+            {
                 ep = new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port);
+                return;
+            }
         }
 
         /// <summary>
@@ -49,6 +55,7 @@ namespace Rnet
         public RnetTcpConnection(IPEndPoint ep)
         {
             Contract.Requires(ep != null);
+            Contract.Ensures(this.ep != null);
 
             this.ep = ep;
         }
@@ -74,6 +81,7 @@ namespace Rnet
         public RnetTcpConnection(string host, int port)
         {
             Contract.Requires(host != null);
+            Contract.Requires(port >= 0);
             Contract.Requires(port <= 65535);
 
             this.host = host;
@@ -82,6 +90,9 @@ namespace Rnet
 
         protected override async Task Connect(CancellationToken cancellationToken)
         {
+            Contract.Ensures(tcp != null);
+            Contract.Assert(ep != null || host != null && port > 0 && port < 65535);
+
             // initialize new TCP client and connect
             tcp = new TcpClient();
             tcp.ReceiveTimeout = 2000;
@@ -107,11 +118,13 @@ namespace Rnet
 
         protected override RnetStreamReader GetReader()
         {
+            Contract.Assert(tcp != null);
             return new RnetStreamReader(tcp.GetStream());
         }
 
         protected override RnetStreamWriter GetWriter()
         {
+            Contract.Assert(tcp != null);
             return new RnetStreamWriter(tcp.GetStream());
         }
 

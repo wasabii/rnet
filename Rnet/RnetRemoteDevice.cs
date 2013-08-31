@@ -18,12 +18,12 @@ namespace Rnet
         const double DEFAULT_RETRY_DELAY_SECONDS = 1;
         const double DEFAULT_TIMEOUT_SECONDS = 3;
 
-        AsyncLock send = new AsyncLock();
-        AsyncLock receive = new AsyncLock();
-        AsyncMonitor handshake = new AsyncMonitor();
+        readonly AsyncLock send = new AsyncLock();
+        readonly AsyncLock receive = new AsyncLock();
+        readonly AsyncMonitor handshake = new AsyncMonitor();
         RnetHandshakeMessage handshakeMessage;
 
-        ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandleWriter>> writers =
+        readonly ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandleWriter>> writers =
             new ConcurrentDictionary<RnetPath, WeakReference<RnetDataHandleWriter>>();
 
         /// <summary>
@@ -39,6 +39,15 @@ namespace Rnet
             EventTimeout = TimeSpan.FromSeconds(DEFAULT_TIMEOUT_SECONDS);
         }
 
+        [ContractInvariantMethod]
+        private void ObjectInvariant()
+        {
+            Contract.Invariant(RetryDelay > TimeSpan.Zero);
+            Contract.Invariant(ReadTimeout > TimeSpan.Zero);
+            Contract.Invariant(WriteTimeout > TimeSpan.Zero);
+            Contract.Invariant(EventTimeout > TimeSpan.Zero);
+        }
+        
         /// <summary>
         /// Gets whether or not this device requires a handshake in response to high priority messages.
         /// </summary>
@@ -154,8 +163,10 @@ namespace Rnet
         /// <returns></returns>
         async Task ReceiveSetDataMessage(RnetSetDataMessage message)
         {
-            Contract.Requires<InvalidOperationException>(Bus != null);
             Contract.Requires<ArgumentNullException>(message != null);
+            Contract.Requires<InvalidOperationException>(Bus != null);
+            Contract.Requires<InvalidOperationException>(Bus.Client != null);
+            Contract.Requires<InvalidOperationException>(Bus.LocalDevice != null);
 
             using (await receive.LockAsync())
             {
@@ -172,6 +183,7 @@ namespace Rnet
 
                 // obtain data writer
                 var writer = GetOrCreateDataHandleWriter(message.SourcePath, message.PacketCount);
+                Contract.Assert(writer != null);
 
                 // write message to writer
                 writer.Write(message.Data.ToArray(), message.PacketNumber);
@@ -268,6 +280,9 @@ namespace Rnet
         /// <returns></returns>
         async Task SendSetData(RnetPath targetPath, RnetPath sourcePath, byte[] data, CancellationToken cancellationToken)
         {
+            Contract.Requires(data != null);
+            Contract.Requires(data.Length <= 1024);
+
             // only one writer at a time
             using (await send.LockAsync(cancellationToken))
             {

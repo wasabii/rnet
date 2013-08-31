@@ -12,7 +12,7 @@ namespace Rnet.Service
     /// <summary>
     /// Applied to a web service. Implements various abilities we want.
     /// </summary>
-    public class FormatServiceBehavior : Attribute, IServiceBehavior, IOperationBehavior, IParameterInspector
+    public sealed class FormatServiceBehavior : Attribute, IServiceBehavior, IOperationBehavior, IParameterInspector
     {
 
         void IServiceBehavior.AddBindingParameters(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase, Collection<ServiceEndpoint> endpoints, BindingParameterCollection bindingParameters)

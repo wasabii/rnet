@@ -26,6 +26,15 @@ namespace Rnet
             this.packetCount = packetCount;
         }
 
+        [ContractInvariantMethod]
+        void ObjectInvariant()
+        {
+            Contract.Invariant(stream != null);
+            Contract.Invariant(packetCount >= 0);
+            Contract.Invariant(packetNumber >= -1);
+        }
+
+
         /// <summary>
         /// Receives the data packet.
         /// </summary>
@@ -34,6 +43,7 @@ namespace Rnet
         {
             Contract.Requires<ArgumentNullException>(data != null);
             Contract.Requires<ArgumentOutOfRangeException>(packetNumber >= 0);
+            Contract.Assert(stream != null);
 
             // skip if out of order packet
             if (this.packetNumber != packetNumber - 1)

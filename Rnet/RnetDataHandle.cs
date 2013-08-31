@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,8 +19,8 @@ namespace Rnet
         /// <param name="path"></param>
         internal protected RnetDataHandle(RnetDevice device, RnetPath path)
         {
-            if (device == null)
-                throw new ArgumentNullException("device");
+            Contract.Requires(device != null);
+            Contract.Requires(path.Length > 0);
 
             Device = device;
             Path = path;
@@ -331,6 +332,8 @@ namespace Rnet
         /// <param name="args"></param>
         protected void RaiseDataAvailable(RnetDataAvailableEventArgs args)
         {
+            Contract.Requires(args != null);
+
             if (DataAvailable != null)
                 DataAvailable(this, args);
         }
@@ -346,7 +349,7 @@ namespace Rnet
 
             // initiate a read
             Read();
-            
+
             // no data present yet
             return Observable.Empty<byte[]>();
         }

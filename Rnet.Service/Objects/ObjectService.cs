@@ -29,10 +29,10 @@ namespace Rnet.Service.Objects
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
-        public ObjectService(RnetBus bus)
+        internal ObjectService(RnetBus bus)
             : base(bus)
         {
-
+            Contract.Requires<ArgumentNullException>(bus != null);
         }
 
         /// <summary>
@@ -47,8 +47,17 @@ namespace Rnet.Service.Objects
         [ServiceKnownType(typeof(Profile))]
         public async Task<Message> Get(string uri)
         {
-            Contract.Ensures(uri != null);
-            Contract.Ensures(Bus != null);
+            Contract.Requires<ArgumentNullException>(uri != null);
+
+            // if bus is down, so are we
+            if (Bus.State != RnetBusState.Started ||
+                Bus.Client.State != RnetClientState.Started ||
+                Bus.Client.Connection.State != RnetConnectionState.Open)
+                throw new WebFaultException(HttpStatusCode.ServiceUnavailable);
+
+            // an attempt to browse the root
+            if (uri == "")
+                return await GetObjectRefs();
 
             // navigate down hierarchy until the end
             var target = await Resolve(uri.Split('/'), 0, Bus.Controllers);
@@ -97,9 +106,10 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         async Task<object> Resolve(string[] components, int position, IEnumerable<RnetBusObject> objects)
         {
-            Contract.Requires(components != null);
-            Contract.Requires(position >= 0);
-            Contract.Requires(objects != null);
+            Contract.Requires<ArgumentNullException>(components != null);
+            Contract.Requires<ArgumentOutOfRangeException>(position >= 0);
+            Contract.Requires<ArgumentNullException>(objects != null);
+            Contract.ForAll(components, i => i != null && i.Length > 0);
 
             var o = (RnetBusObject)null;
 

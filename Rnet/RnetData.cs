@@ -134,7 +134,7 @@ namespace Rnet
                 var l = d.GetChars(data, 3, data.Length - 3, c, 0);
 
                 // validate for allowed characters
-                for (int i = 0; i < l; i++)
+                for (int i = 0; i < l && i < c.Length; i++)
                     if (c[i] < 32 || c[i] > 126)
                         return null;
 
@@ -154,6 +154,8 @@ namespace Rnet
         /// <returns></returns>
         string GetDebugText()
         {
+            Contract.Requires(data != null);
+
             try
             {
                 if (data.Length < 4)
@@ -190,6 +192,8 @@ namespace Rnet
         /// <returns></returns>
         public byte[] ToArray()
         {
+            Contract.Assert(data != null);
+
             return data;
         }
 

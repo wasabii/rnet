@@ -34,9 +34,6 @@ namespace Rnet.Drivers.Russound
         RnetDataHandle balanceHandle;
         int balance;
 
-        RnetDataHandle partyModeHandle;
-        PartyMode partyMode;
-
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
@@ -94,7 +91,6 @@ namespace Rnet.Drivers.Russound
             ReceiveTreble(d[4]);
             ReceiveLoudness(d[5]);
             ReceiveBalance(d[6]);
-            ReceivePartyMode(d[9]);
         }
 
         public Power Power
@@ -253,23 +249,6 @@ namespace Rnet.Drivers.Russound
         public async void BalanceRight()
         {
             await balanceHandle.SendEvent(RnetEvent.Plus);
-        }
-
-        public PartyMode PartyMode
-        {
-            get { return partyMode; }
-            set { partyMode = value; RaisePropertyChanged("PartyMode"); ChangePartyMode(); }
-        }
-
-        void ReceivePartyMode(byte value)
-        {
-            partyMode = (PartyMode)value;
-            RaisePropertyChanged("PartyMode");
-        }
-
-        async void ChangePartyMode()
-        {
-            await partyModeHandle.Write((byte)partyMode);
         }
 
     }

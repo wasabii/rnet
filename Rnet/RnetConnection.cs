@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -101,8 +101,9 @@ namespace Rnet
         /// </summary>
         public async Task Close(CancellationToken cancellationToken)
         {
-            if (State != RnetConnectionState.Open)
-                throw new RnetConnectionException("Connection is not open.");
+            Contract.Requires<RnetConnectionException>(State == RnetConnectionState.Open, "Connection is not open.");
+            Contract.Ensures(reader == null);
+            Contract.Ensures(writer == null);
 
             // disconnect
             await Disconnect(cancellationToken);
@@ -222,7 +223,7 @@ namespace Rnet
                 GC.SuppressFinalize(this);
             }
             catch
-            { 
+            {
                 // ignore all
             }
         }

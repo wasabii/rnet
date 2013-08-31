@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Rnet
@@ -14,7 +15,7 @@ namespace Rnet
     public sealed class RnetZoneDeviceCollection : IEnumerable<RnetDevice>, INotifyCollectionChanged
     {
 
-        ConcurrentDictionary<RnetKeypadId, WeakReference<RnetDevice>> devices =
+        readonly ConcurrentDictionary<RnetKeypadId, WeakReference<RnetDevice>> devices =
             new ConcurrentDictionary<RnetKeypadId, WeakReference<RnetDevice>>();
 
         /// <summary>
@@ -23,6 +24,8 @@ namespace Rnet
         /// <param name="zone"></param>
         internal RnetZoneDeviceCollection(RnetZone zone)
         {
+            Contract.Requires(zone != null);
+
             Zone = zone;
         }
 
@@ -80,6 +83,8 @@ namespace Rnet
         /// <param name="device"></param>
         internal void OnDeviceActive(RnetDevice device)
         {
+            Contract.Requires(device != null);
+
             Zone.Activate();
             RaiseCollectionChanged();
         }

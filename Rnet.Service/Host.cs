@@ -17,7 +17,7 @@ namespace Rnet.Service
         }
 
         SingleThreadSynchronizationContext sync = new SingleThreadSynchronizationContext();
-        Uri uri = new Uri("rnet.tcp://173.175.230.163:9999");
+        Uri uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
         RnetBus bus;
         WebServiceHost deviceHost;
         WebServiceHost objectHost;
@@ -33,19 +33,23 @@ namespace Rnet.Service
         /// </summary>
         async void OnStartAsync()
         {
-            Contract.Requires(bus == null);
-            Contract.Requires(deviceHost == null);
-            Contract.Requires(objectHost == null);
-            Contract.Ensures(bus != null);
+            if (bus == null)
+            {
+                bus = new RnetBus(uri);
+                await bus.Start();
+            }
 
-            bus = new RnetBus(uri);
-            await bus.Start();
+            if (deviceHost == null)
+            {
+                deviceHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
+                deviceHost.Open();
+            }
 
-            deviceHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
-            deviceHost.Open();
-
-            objectHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
-            objectHost.Open();
+            if (objectHost == null)
+            {
+                objectHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
+                objectHost.Open();
+            }
         }
 
         public void OnStop()
@@ -53,7 +57,7 @@ namespace Rnet.Service
             Contract.Assert(sync != null);
 
             sync.Post(i => OnStopAsync(), null);
-            sync.Complete();
+            sync.Stop();
         }
 
         /// <summary>
@@ -61,13 +65,6 @@ namespace Rnet.Service
         /// </summary>
         async void OnStopAsync()
         {
-            Contract.Requires(bus != null);
-            Contract.Requires(deviceHost != null);
-            Contract.Requires(objectHost != null);
-            Contract.Ensures(bus != null);
-            Contract.Ensures(deviceHost == null);
-            Contract.Ensures(objectHost == null);
-
             if (deviceHost != null)
             {
                 deviceHost.Close();
@@ -80,7 +77,7 @@ namespace Rnet.Service
                 objectHost = null;
             }
 
-            // allow bus to stay alive
+            // allow bus to stay alive, just shut it down
             await bus.Stop();
         }
 

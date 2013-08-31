@@ -135,7 +135,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ObservableDictionary.cs" />
     <Compile Include="PathConstructor.cs" />
     <Compile Include="ProfilePresenter.cs" />
     <Compile Include="TypeDictionary.cs" />

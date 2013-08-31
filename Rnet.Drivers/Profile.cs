@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 using Rnet.Profiles.Metadata;
 
@@ -22,7 +23,9 @@ namespace Rnet.Drivers
         public Profile(RnetBusObject target, ProfileDescriptor contract, T instance)
             : base(target, contract, instance)
         {
-
+            Contract.Requires(target != null);
+            Contract.Requires(contract != null);
+            Contract.Requires(instance != null);
         }
 
         /// <summary>
@@ -49,9 +52,9 @@ namespace Rnet.Drivers
         /// <param name="instance"></param>
         internal protected Profile(RnetBusObject target, ProfileDescriptor metadata, object instance)
         {
-            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(target != null);
-            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(metadata != null);
-            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(instance != null);
+            Contract.Requires<ArgumentNullException>(target != null);
+            Contract.Requires<ArgumentNullException>(metadata != null);
+            Contract.Requires<ArgumentNullException>(instance != null);
 
             Target = target;
             Metadata = metadata;

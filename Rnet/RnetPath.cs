@@ -100,7 +100,7 @@ namespace Rnet
         [ContractInvariantMethod]
         void ObjectInvariant()
         {
-            Contract.Invariant(length >= 0);
+            Contract.Invariant(length >= 1);
             Contract.Invariant(length <= 8);
         }
 
@@ -116,9 +116,6 @@ namespace Rnet
 
             foreach (var i in items)
             {
-                if (length >= 8)
-                    throw new ArgumentOutOfRangeException("items", "RnetPath can be a maximum of 8 levels.");
-
                 // extend path and set value
                 length++;
                 Set(length - 1, i);
@@ -255,8 +252,8 @@ namespace Rnet
         /// </summary>
         public byte this[int index]
         {
-            get { return Get(index); }
-            set { Set(index, value); }
+            get { Contract.Requires(index >= 0 && index <= 7); return Get(index); }
+            set { Contract.Requires(index >= 0 && index <= 7); Set(index, value); }
         }
 
         /// <summary>
@@ -266,6 +263,8 @@ namespace Rnet
         /// <returns></returns>
         byte Get(int index)
         {
+            Contract.Requires(index >= 0 && index <= 7);
+
             switch (index)
             {
                 case 0:
@@ -332,7 +331,7 @@ namespace Rnet
         /// </summary>
         public int Length
         {
-            get { return length; }
+            get { Contract.Ensures(Contract.Result<int>() >= 1 && Contract.Result<int>() <= 8); return length; }
         }
 
         /// <summary>
@@ -372,8 +371,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetPath Navigate(byte index)
         {
-            if (length >= 8)
-                throw new IndexOutOfRangeException("An RnetPath cannot be more than 8 levels deep.");
+            Contract.Requires(Length < 8, "An RnetPath cannot be more than 8 levels deep.");
 
             var path = this;
             path.length++;
@@ -387,8 +385,7 @@ namespace Rnet
         /// <returns></returns>
         public RnetPath GetParent()
         {
-            if (length == 0)
-                throw new IndexOutOfRangeException("Path is already at the top level.");
+            Contract.Requires(Length != 0, "Path is already at the top level.");
 
             var path = this;
             path.length--;
@@ -452,7 +449,7 @@ namespace Rnet
         public byte[] ToArray()
         {
             var a = new byte[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < a.Length; i++)
                 a[i] = Get(i);
             return a;
         }
@@ -462,7 +459,7 @@ namespace Rnet
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        int IComparable<RnetPath>.CompareTo(RnetPath other)
+        public int CompareTo(RnetPath other)
         {
             for (int i = 0; i < length; i++)
                 if (Get(i).CompareTo(other.Get(i)) != 0)

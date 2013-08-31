@@ -23,7 +23,7 @@ namespace Rnet.Service.Devices
         internal DeviceService(RnetBus bus)
             : base(bus)
         {
-
+            Contract.Requires<ArgumentNullException>(bus != null);
         }
 
         /// <summary>
@@ -53,6 +53,7 @@ namespace Rnet.Service.Devices
         public void BadControllerPath(string controllerId, string uri)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
+            Contract.Requires<ArgumentNullException>(uri != null);
 
             var controller = Bus.Controllers[int.Parse(controllerId)];
             if (controller == null)
@@ -74,6 +75,10 @@ namespace Rnet.Service.Devices
         [WebGet(UriTemplate = "{controllerId}.{zoneId}.{keypadId}")]
         Device GetDevice(string controllerId, string zoneId, string keypadId)
         {
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
+
             return RnetDeviceToInfo(GetRnetDevice(controllerId, zoneId, keypadId));
         }
 
@@ -89,7 +94,11 @@ namespace Rnet.Service.Devices
         [WebGet(UriTemplate = "{controllerId}.{zoneId}.{keypadId}/data/{*path}")]
         public async Task<byte[]> GetDeviceData(string controllerId, string zoneId, string keypadId, string path)
         {
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
+
             return await GetDeviceData(GetRnetDevice(controllerId, zoneId, keypadId), path);
         }
 
@@ -103,10 +112,15 @@ namespace Rnet.Service.Devices
         /// <param name="path"></param>
         /// <returns></returns>
         [OperationContract]
-        [WebInvoke(Method = "PUT", UriTemplate = "{controllerId}/{zoneId}/{keypadId}/data/{*path}")]
+        [WebInvoke(Method = "PUT", UriTemplate = "{controllerId}.{zoneId}.{keypadId}/data/{*path}")]
         public async Task PutDeviceData(byte[] data, string controllerId, string zoneId, string keypadId, string path)
         {
+            Contract.Requires<ArgumentNullException>(data != null);
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
+
             await PutDeviceData(GetRnetDevice(controllerId, zoneId, keypadId), path, data);
         }
 
@@ -147,7 +161,7 @@ namespace Rnet.Service.Devices
         async Task<byte[]> GetDeviceData(RnetDevice device, string path)
         {
             Contract.Requires<ArgumentNullException>(device != null);
-            Contract.Requires<ArgumentNullException>(path != null);
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
 
             var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
             if (handle == null)
@@ -181,7 +195,8 @@ namespace Rnet.Service.Devices
         async Task PutDeviceData(RnetDevice device, string path, byte[] data)
         {
             Contract.Requires<ArgumentNullException>(device != null);
-            Contract.Requires<ArgumentNullException>(path != null);
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
+            Contract.Requires<ArgumentNullException>(data != null);
 
             var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
             if (handle == null)

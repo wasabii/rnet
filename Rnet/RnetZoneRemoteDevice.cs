@@ -19,10 +19,21 @@ namespace Rnet
             : base(zone.Controller.Bus)
         {
             Contract.Requires<ArgumentNullException>(zone != null);
+            Contract.Requires<ArgumentNullException>(zone.Controller != null);
+            Contract.Requires<ArgumentNullException>(zone.Controller.Bus != null);
 
             Zone = zone;
             Id = keypadId;
         }
+
+        [ContractInvariantMethod]
+        private void ObjectInvariant()
+        {
+            Contract.Invariant(Zone != null);
+            Contract.Invariant(Zone.Controller != null);
+            Contract.Invariant(Zone.Devices != null);
+        }
+
 
         /// <summary>
         /// Gets the zone in which this device resides.

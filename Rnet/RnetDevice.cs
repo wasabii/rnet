@@ -11,7 +11,7 @@ namespace Rnet
     public abstract class RnetDevice : RnetBusObject
     {
 
-        Dictionary<RnetPath, WeakReference<RnetDataHandle>> handles =
+        readonly Dictionary<RnetPath, WeakReference<RnetDataHandle>> handles =
             new Dictionary<RnetPath, WeakReference<RnetDataHandle>>();
 
         /// <summary>

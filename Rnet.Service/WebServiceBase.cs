@@ -80,6 +80,8 @@ namespace Rnet.Service
         /// <returns></returns>
         protected static Uri GetDeviceUri(RnetDevice device)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+
             return new Uri(BaseUri, string.Format("{0}.{1}.{2}",
                 (int)device.DeviceId.ControllerId,
                 (int)device.DeviceId.ZoneId,
