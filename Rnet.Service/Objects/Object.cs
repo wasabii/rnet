@@ -9,7 +9,7 @@ namespace Rnet.Service.Objects
     {
 
         [DataMember]
-        public Uri Id { get; set; }
+        public Uri Href { get; set; }
 
         [DataMember]
         public string Name { get; set; }

@@ -12,7 +12,7 @@ namespace Rnet.Profiles.Media
         /// <summary>
         /// Whether the zone is powered on or off.
         /// </summary>
-        [ValueAttribute("Power")]
+        [Value("Power")]
         Power Power { get; set; }
 
         /// <summary>
@@ -36,6 +36,7 @@ namespace Rnet.Profiles.Media
         /// <remarks>
         /// 0:100 = data 0:50
         /// </remarks>
+        [Value("Volume")]
         int Volume { get; set; }
 
         /// <summary>
@@ -56,6 +57,7 @@ namespace Rnet.Profiles.Media
         /// <remarks>
         /// -10:+10 data 0:20
         /// </remarks>
+        [Value("Bass")]
         int Bass { get; set; }
 
         /// <summary>
@@ -74,6 +76,7 @@ namespace Rnet.Profiles.Media
         /// <remarks>
         /// -10:+10 data 0:20
         /// </remarks>
+        [Value("Treble")]
         int Treble { get; set; }
 
         /// <summary>
@@ -92,6 +95,7 @@ namespace Rnet.Profiles.Media
         /// <remarks>
         /// -10:+10 data 0:20 (left to right)
         /// </remarks>
+        [Value("Balance")]
         int Balance { get; set; }
 
         /// <summary>

@@ -11,6 +11,7 @@ using System.Xml.Linq;
 
 using Rnet.Drivers;
 using Rnet.Profiles;
+using Rnet.Profiles.Metadata;
 
 namespace Rnet.Service.Objects
 {
@@ -22,6 +23,7 @@ namespace Rnet.Service.Objects
     {
 
         const string PROFILE_PREFIX = "~";
+        const string PROFILE_METADATA_XMLNS = "urn:rnet:profiles:metadata";
 
         /// <summary>
         /// Initializes a new instance.
@@ -41,6 +43,8 @@ namespace Rnet.Service.Objects
         [WebGet(UriTemplate = "{*uri}")]
         [ServiceKnownType(typeof(ObjectRefCollection))]
         [ServiceKnownType(typeof(Object))]
+        [ServiceKnownType(typeof(ProfileRefCollection))]
+        [ServiceKnownType(typeof(Profile))]
         public async Task<Message> Get(string uri)
         {
             if (string.IsNullOrWhiteSpace(uri))
@@ -56,6 +60,10 @@ namespace Rnet.Service.Objects
             // ended up at a profile
             if (target is Profile)
                 return await GetProfile((Profile)target);
+
+            // ended up at profile metadata
+            if (target is ProfileDescriptor)
+                return await GetProfileMetadata((ProfileDescriptor)target);
 
             // no idea what we ended up at
             throw new WebFaultException(HttpStatusCode.BadRequest);
@@ -73,7 +81,7 @@ namespace Rnet.Service.Objects
             foreach (var i in Bus.Controllers)
                 c.Add(new ObjectRef()
                 {
-                    Id = await GetObjectUri(i),
+                    Href = await GetObjectUri(i),
                     Name = await GetObjectName(i),
                 });
 
@@ -159,7 +167,7 @@ namespace Rnet.Service.Objects
 
             var r = new Object()
             {
-                Id = await GetObjectUri(o),
+                Href = await GetObjectUri(o),
                 Name = await GetObjectName(o),
                 Objects = await GetObjectRefs(o),
                 Profiles = await GetProfileRefs(o),
@@ -185,7 +193,7 @@ namespace Rnet.Service.Objects
             foreach (var i in p)
                 c.Add(new ObjectRef()
                 {
-                    Id = await GetObjectUri(i),
+                    Href = await GetObjectUri(i),
                     Name = await GetObjectName(i),
                 });
 
@@ -257,8 +265,8 @@ namespace Rnet.Service.Objects
             foreach (var i in p)
                 c.Add(new ProfileRef()
                 {
-                    Id = await GetProfileUri(i),
-                    Name = await GetProfileName(i),
+                    Href = await GetProfileUri(i),
+                    Id = i.Metadata.Id,
                 });
 
             return c;
@@ -275,7 +283,7 @@ namespace Rnet.Service.Objects
 
             // url ends with profile path
             var l = new List<string>();
-            l.Add(PROFILE_PREFIX + await GetProfileName(profile));
+            l.Add(PROFILE_PREFIX + profile.Metadata.Id);
 
             // begin from target object
             var target = profile.Target;
@@ -301,18 +309,6 @@ namespace Rnet.Service.Objects
         }
 
         /// <summary>
-        /// Returns the name of the profile.
-        /// </summary>
-        /// <param name="profile"></param>
-        /// <returns></returns>
-        Task<string> GetProfileName(Profile profile)
-        {
-            Contract.Requires<ArgumentNullException>(profile != null);
-
-            return Task.FromResult<string>(profile.Metadata.Namespace + ":" + profile.Metadata.Name);
-        }
-
-        /// <summary>
         /// Navigate at a profile path.
         /// </summary>
         /// <param name="components"></param>
@@ -331,10 +327,10 @@ namespace Rnet.Service.Objects
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
             // full profile name
-            var name = components[position++].Remove(0, PROFILE_PREFIX.Length);
+            var id = components[position++].Remove(0, PROFILE_PREFIX.Length);
 
             // first profile with metadata that corresponds with full profile name
-            var profile = profiles.FirstOrDefault(i => i.Metadata.Namespace + ":" + i.Metadata.Name == name);
+            var profile = profiles.FirstOrDefault(i => i.Metadata.Id == id);
             if (profile == null)
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
@@ -342,7 +338,12 @@ namespace Rnet.Service.Objects
             if (position >= components.Length)
                 return profile;
 
-            // cannot go deeper than a profile
+            // possibly can request metadata
+            var next = components[position++];
+            if (next == "metadata")
+                return profile.Metadata;
+
+            // as far as we can go
             throw new WebFaultException(HttpStatusCode.NotFound);
         }
 
@@ -355,7 +356,7 @@ namespace Rnet.Service.Objects
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
-            return Context.CreateXmlResponse(ProfileToXml(profile));
+            return Context.CreateXmlResponse(await GetProfileXml(profile));
         }
 
         /// <summary>
@@ -363,20 +364,62 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="profile"></param>
         /// <returns></returns>
-        async Task<XDocument> ProfileToXml(Profile profile)
+        Task<XDocument> GetProfileXml(Profile profile)
         {
             // default namespace of profile
-            var ns = (XNamespace)profile.Metadata.Namespace;
+            var md = profile.Metadata;
+            var ns = md.Xmlns;
 
             // build XML document out of properties
             var xml = new XDocument(
-                new XElement(ns + profile.Metadata.Name,
-                    profile.Metadata.ValueDescriptors
-                        .Select(i =>
-                            new XElement(ns + i.Name,
-                                i.PropertyInfo.GetValue(profile.Instance)))));
+                new XElement(ns + md.Name,
+                    md.Values.Select(i =>
+                        new XElement(ns + i.Name,
+                            i.GetValue(profile.Instance)))));
 
-            return xml;
+            return Task.FromResult(xml);
+        }
+
+        /// <summary>
+        /// Transforms the profile metadata into output.
+        /// </summary>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        async Task<Message> GetProfileMetadata(ProfileDescriptor metadata)
+        {
+            Contract.Requires<ArgumentNullException>(metadata != null);
+
+            return Context.CreateXmlResponse(await GetProfileMetadataXml(metadata));
+        }
+
+        /// <summary>
+        /// Transforms the <see cref="Profile"/> into an output document.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        Task<XDocument> GetProfileMetadataXml(ProfileDescriptor metadata)
+        {
+            // default namespace of profile
+            var ns = (XNamespace)PROFILE_METADATA_XMLNS;
+
+            // build XML document out of properties
+            var xml = new XDocument(
+                new XElement(ns + "Profile",
+                    new XElement(ns + "Namespace", metadata.Namespace),
+                    new XElement(ns + "Name", metadata.Name),
+                    new XElement(ns + "Id", metadata.Id),
+                    new XElement(ns + "Xmlns", metadata.Xmlns),
+                    new XElement(ns + "Contract", metadata.Contract.FullName),
+                    new XElement(ns + "Values",
+                        metadata.Values.Select(i =>
+                            new XElement(ns + "Value",
+                                i.Name))),
+                    new XElement(ns + "Operations",
+                        metadata.Operations.Select(i =>
+                            new XElement(ns + "Operation",
+                                i.Name)))));
+
+            return Task.FromResult(xml);
         }
 
     }

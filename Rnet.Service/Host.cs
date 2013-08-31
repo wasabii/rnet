@@ -36,24 +36,14 @@ namespace Rnet.Service
             bus = new RnetBus(uri);
             await bus.Start();
 
-            // configures protocol settings
-            var webHttp = new RnetWebHttpBehavior()
-            {
-                //AutomaticFormatSelectionEnabled = true,
-                //DefaultBodyStyle = WebMessageBodyStyle.Bare,
-                //DefaultOutgoingResponseFormat = WebMessageFormat.Xml,
-                //FaultExceptionEnabled = true,
-                //HelpEnabled = true,
-            };
-
             deviceHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
             deviceHost.AddServiceEndpoint(typeof(Devices.DeviceService), new WebHttpBinding(), "")
-                .EndpointBehaviors.Add(webHttp);
+                .EndpointBehaviors.Add(new RnetWebHttpBehavior());
             deviceHost.Open();
 
             objectHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
             objectHost.AddServiceEndpoint(typeof(Objects.ObjectService), new WebHttpBinding(), "")
-                .EndpointBehaviors.Add(webHttp);
+                .EndpointBehaviors.Add(new RnetWebHttpBehavior());
             objectHost.Open();
         }
 

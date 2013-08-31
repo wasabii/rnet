@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Xml.Linq;
 
 namespace Rnet.Profiles.Metadata
 {
@@ -24,9 +25,11 @@ namespace Rnet.Profiles.Metadata
 
             Namespace = ns;
             Name = name;
+            Id = ns + "::" + name;
+            Xmlns = ns + "::" + name;
             Contract = type;
-            ValueDescriptors = new ValueDescriptorCollection(type);
-            OperationDescriptors = new OperationDescriptorCollection(type);
+            Values = new ValueDescriptorCollection(type);
+            Operations = new OperationDescriptorCollection(type);
         }
 
         /// <summary>
@@ -40,6 +43,16 @@ namespace Rnet.Profiles.Metadata
         public string Name { get; private set; }
 
         /// <summary>
+        /// Full name of the profile.
+        /// </summary>
+        public string Id { get; private set; }
+
+        /// <summary>
+        /// Xmlns of of the profile's return data.
+        /// </summary>
+        public XNamespace Xmlns { get; private set; }
+
+        /// <summary>
         /// Interface which provides the profile contract.
         /// </summary>
         public Type Contract { get; private set; }
@@ -47,12 +60,12 @@ namespace Rnet.Profiles.Metadata
         /// <summary>
         /// Gets the set of <see cref="ValueDescriptor"/>s that describe available values on the contract.
         /// </summary>
-        public ValueDescriptorCollection ValueDescriptors { get; private set; }
+        public ValueDescriptorCollection Values { get; private set; }
 
         /// <summary>
         /// Gets the set of <see cref="OperationDescriptor"/>s that describe available operations on the contract.
         /// </summary>
-        public OperationDescriptorCollection OperationDescriptors { get; private set; }
+        public OperationDescriptorCollection Operations { get; private set; }
 
     }
 
