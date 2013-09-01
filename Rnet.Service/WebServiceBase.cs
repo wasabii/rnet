@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net.Mime;
+using System.Reflection;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 
@@ -16,6 +17,16 @@ namespace Rnet.Service
     /// </summary>
     abstract class WebServiceBase
     {
+
+        /// <summary>
+        /// Returns the set of types which are allowed to be returned from the services.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public static IEnumerable<Type> GetKnownTypes(ICustomAttributeProvider provider)
+        {
+            return typeof(WebServiceBase).Assembly.GetTypes();
+        }
 
         /// <summary>
         /// Gets the current <see cref="WebOperationContext"/>.

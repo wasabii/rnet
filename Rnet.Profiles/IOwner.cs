@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace Rnet.Profiles
 {
@@ -7,7 +8,8 @@ namespace Rnet.Profiles
     /// Provides functionality for devices that own other bus objects. This is usually implemented along with
     /// <see cref="IContainer"/> to provide information to nested objects.
     /// </summary>
-    [Contract("urn:rnet:profiles", "Owner")]
+    [ProfileContract("Owner")]
+    [XmlRoot(Namespace = "urn:rnet:profiles::Owner", ElementName = "Owner")]
     public interface IOwner
     {
 

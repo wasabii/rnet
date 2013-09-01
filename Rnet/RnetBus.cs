@@ -330,9 +330,21 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        RnetDevice this[RnetDeviceId id]
+        public RnetDevice this[RnetDeviceId id]
         {
             get { return GetOrCreateDevice(id); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the device given the specified device id.
+        /// </summary>
+        /// <param name="controllerId"></param>
+        /// <param name="zoneId"></param>
+        /// <param name="keypadId"></param>
+        /// <returns></returns>
+        public RnetDevice this[RnetControllerId controllerId, RnetZoneId zoneId, RnetKeypadId keypadId]
+        {
+            get { return GetOrCreateDevice(new RnetDeviceId(controllerId, zoneId, keypadId)); }
         }
 
         /// <summary>

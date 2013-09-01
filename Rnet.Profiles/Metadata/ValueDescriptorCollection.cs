@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Reflection;
 
 namespace Rnet.Profiles.Metadata
@@ -11,19 +10,15 @@ namespace Rnet.Profiles.Metadata
     public sealed class ValueDescriptorCollection : IEnumerable<ValueDescriptor>
     {
 
-        Dictionary<string, ValueDescriptor> items =
+        readonly Dictionary<string, ValueDescriptor> values =
             new Dictionary<string, ValueDescriptor>();
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="type"></param>
-        internal ValueDescriptorCollection(Type type)
+        internal ValueDescriptorCollection()
         {
-            items = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(i => new { Property = i, Attribute = i.GetCustomAttribute<ValueAttribute>() })
-                .Where(i => i.Attribute != null)
-                .ToDictionary(i => i.Attribute.Name, i => new ValueDescriptor(i.Property, i.Attribute.Name));
+
         }
 
         /// <summary>
@@ -36,7 +31,7 @@ namespace Rnet.Profiles.Metadata
             get
             {
                 Contract.Requires<ArgumentNullException>(propertyInfo != null);
-                return items[propertyInfo.Name]; 
+                return this[propertyInfo.Name]; 
             }
         }
 
@@ -47,12 +42,38 @@ namespace Rnet.Profiles.Metadata
         /// <returns></returns>
         public ValueDescriptor this[string propertyName]
         {
-            get { return items[propertyName]; }
+            get
+            {
+                Contract.Requires<ArgumentNullException>(propertyName != null);
+                ValueDescriptor value;
+                return values.TryGetValue(propertyName, out value) ? value : null;
+            }
+        }
+
+        /// <summary>
+        /// Adds the descriptor.
+        /// </summary>
+        /// <param name="descriptor"></param>
+        internal void Add(ValueDescriptor descriptor)
+        {
+            Contract.Requires<ArgumentNullException>(descriptor != null);
+            values[descriptor.PropertyInfo.Name] = descriptor;
+        }
+
+        /// <summary>
+        /// Removes the descriptor.
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        internal bool Remove(ValueDescriptor descriptor)
+        {
+            Contract.Requires<ArgumentNullException>(descriptor != null);
+            return values.Remove(descriptor.PropertyInfo.Name);
         }
 
         public IEnumerator<ValueDescriptor> GetEnumerator()
         {
-            return items.Values.GetEnumerator();
+            return values.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Rnet.Profiles
 {
@@ -6,7 +7,8 @@ namespace Rnet.Profiles
     /// <summary>
     /// Base interface for operating against a <see cref="RnetZone"/>.
     /// </summary>
-    [Contract("urn:rnet:profiles", "Zone")]
+    [ProfileContract("Zone")]
+    [XmlRoot(Namespace = "urn:rnet:profiles::Zone", ElementName = "Zone")]
     public interface IZone : IObject
     {
 

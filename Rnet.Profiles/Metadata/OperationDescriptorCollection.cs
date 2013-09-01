@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Reflection;
 
 namespace Rnet.Profiles.Metadata
@@ -11,19 +10,15 @@ namespace Rnet.Profiles.Metadata
     public sealed class OperationDescriptorCollection : IEnumerable<OperationDescriptor>
     {
 
-        Dictionary<string, OperationDescriptor> items =
+        readonly Dictionary<string, OperationDescriptor> operations =
             new Dictionary<string, OperationDescriptor>();
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="type"></param>
-        internal OperationDescriptorCollection(Type type)
+        internal OperationDescriptorCollection()
         {
-            items = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Select(i => new { Method = i, Attribute = i.GetCustomAttribute<OperationAttribute>() })
-                .Where(i => i.Attribute != null)
-                .ToDictionary(i => i.Attribute.Name, i => new OperationDescriptor(i.Method, i.Attribute.Name));
+
         }
 
         /// <summary>
@@ -36,7 +31,7 @@ namespace Rnet.Profiles.Metadata
             get
             {
                 Contract.Requires<ArgumentNullException>(methodInfo != null);
-                return items[methodInfo.Name];
+                return this[methodInfo.Name];
             }
         }
 
@@ -47,12 +42,38 @@ namespace Rnet.Profiles.Metadata
         /// <returns></returns>
         public OperationDescriptor this[string methodName]
         {
-            get { return items[methodName]; }
+            get
+            {
+                Contract.Requires<ArgumentNullException>(methodName != null);
+                OperationDescriptor operation;
+                return operations.TryGetValue(methodName, out operation) ? operation : null;
+            }
+        }
+
+        /// <summary>
+        /// Adds the descriptor.
+        /// </summary>
+        /// <param name="descriptor"></param>
+        internal void Add(OperationDescriptor descriptor)
+        {
+            Contract.Requires<ArgumentNullException>(descriptor != null);
+            operations[descriptor.MethodInfo.Name] = descriptor;
+        }
+
+        /// <summary>
+        /// Removes the descriptor.
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        internal bool Remove(OperationDescriptor descriptor)
+        {
+            Contract.Requires<ArgumentNullException>(descriptor != null);
+            return operations.Remove(descriptor.MethodInfo.Name);
         }
 
         public IEnumerator<OperationDescriptor> GetEnumerator()
         {
-            return items.Values.GetEnumerator();
+            return operations.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

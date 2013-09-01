@@ -8,9 +8,9 @@ namespace Rnet.Drivers.Russound
 {
 
     /// <summary>
-    /// Implements <see cref="IAudio"/> for a zone on a Russound controller.
+    /// Implements <see cref="IEqualization"/> for a zone on a Russound controller.
     /// </summary>
-    class ZoneAudio : ZoneBase, IAudio
+    class ZoneAudio : ZoneBase, IEqualization
     {
 
         RnetDataHandle runHandle;

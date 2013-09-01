@@ -180,11 +180,13 @@ namespace Rnet.Drivers
         {
             Contract.Requires(contract != null);
 
-            var attr = contract.GetCustomAttribute<ContractAttribute>();
+            var attr = contract.GetCustomAttribute<ProfileContractAttribute>();
             if (attr == null)
                 return null;
 
-            return new ProfileDescriptor(attr.Namespace, attr.Name, contract);
+            var d = new ProfileDescriptor();
+            d.Load(contract);
+            return d;
         }
 
         /// <summary>

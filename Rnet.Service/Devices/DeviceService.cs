@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -13,6 +15,7 @@ namespace Rnet.Service.Devices
     [ServiceContract(Namespace = "urn:rnet:service", Name = "devices")]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = true)]
     [FormatServiceBehavior]
+    [ServiceKnownType("GetKnownTypes", typeof(WebServiceBase))]
     class DeviceService : WebServiceBase
     {
 
@@ -92,7 +95,7 @@ namespace Rnet.Service.Devices
         /// <returns></returns>
         [OperationContract]
         [WebGet(UriTemplate = "{controllerId}.{zoneId}.{keypadId}/data/{*path}")]
-        public async Task<byte[]> GetDeviceData(string controllerId, string zoneId, string keypadId, string path)
+        public async Task<Stream> GetDeviceData(string controllerId, string zoneId, string keypadId, string path)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
@@ -137,19 +140,7 @@ namespace Rnet.Service.Devices
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
 
-            var controller = Bus.Controllers[int.Parse(controllerId)];
-            if (controller == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            var zone = controller.Zones[int.Parse(zoneId)];
-            if (zone == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            var device = zone.Devices[int.Parse(keypadId)] as RnetZoneRemoteDevice;
-            if (device == null)
-                throw new WebFaultException(HttpStatusCode.NotFound);
-
-            return device;
+            return Bus[byte.Parse(controllerId), byte.Parse(zoneId), byte.Parse(keypadId)];
         }
 
         /// <summary>
@@ -158,7 +149,7 @@ namespace Rnet.Service.Devices
         /// <param name="device"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        async Task<byte[]> GetDeviceData(RnetDevice device, string path)
+        async Task<Stream> GetDeviceData(RnetDevice device, string path)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
@@ -182,7 +173,7 @@ namespace Rnet.Service.Devices
                 throw new WebFaultException(HttpStatusCode.NotFound);
 
             OutgoingResponse.LastModified = handle.Timestamp;
-            return data;
+            return new MemoryStream(data);
         }
 
         /// <summary>

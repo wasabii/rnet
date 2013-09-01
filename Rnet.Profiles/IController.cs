@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Rnet.Profiles
 {
@@ -6,7 +7,8 @@ namespace Rnet.Profiles
     /// <summary>
     /// Basic interface for operating against a <see cref="RnetController"/>.
     /// </summary>
-    [Contract("urn:rnet:profiles", "Controller")]
+    [ProfileContract("Controller")]
+    [XmlRoot(Namespace = "urn:rnet:profiles::Controller", ElementName = "Controller")]
     public interface IController : IDevice
     {
 

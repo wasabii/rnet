@@ -60,12 +60,29 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Profiles\ProfileDescriptorTests.cs" />
     <Compile Include="RnetHandshakeMessageTests.cs" />
     <Compile Include="RnetEventMessageTests.cs" />
     <Compile Include="RnetMessageWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rnet.Drivers.Russound\Rnet.Drivers.Russound.csproj">
+      <Project>{5ed2a90a-cdf8-4923-add5-e0056b468213}</Project>
+      <Name>Rnet.Drivers.Russound</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
+      <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
+      <Name>Rnet.Drivers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rnet.Profiles\Rnet.Profiles.csproj">
+      <Project>{a12246ac-a28f-4c52-8eab-cdd6f0b2896e}</Project>
+      <Name>Rnet.Profiles</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rnet.Service\Rnet.Service.csproj">
+      <Project>{4da6cff7-9afd-472b-8127-029857576a43}</Project>
+      <Name>Rnet.Service</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
       <Name>Rnet</Name>

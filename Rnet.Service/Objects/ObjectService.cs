@@ -22,7 +22,7 @@ namespace Rnet.Service.Objects
     class ObjectService : WebServiceBase
     {
 
-        const string PROFILE_PREFIX = "~";
+        const string PROFILE_PREFIX = "+";
         const string PROFILE_METADATA_XMLNS = "urn:rnet:profiles:metadata";
 
         /// <summary>
@@ -380,13 +380,12 @@ namespace Rnet.Service.Objects
 
             // default namespace of profile
             var md = profile.Metadata;
-            var ns = md.Xmlns;
 
             // build XML document out of properties
             var xml = new XDocument(
-                new XElement(ns + md.Name,
+                new XElement(md.XmlName,
                     md.Values.Select(i =>
-                        new XElement(ns + i.Name,
+                        new XElement(i.XmlName,
                             i.GetValue(profile.Instance)))));
 
             return Task.FromResult(xml);
@@ -419,10 +418,9 @@ namespace Rnet.Service.Objects
             // build XML document out of properties
             var xml = new XDocument(
                 new XElement(ns + "Profile",
-                    new XElement(ns + "Namespace", metadata.Namespace),
-                    new XElement(ns + "Name", metadata.Name),
                     new XElement(ns + "Id", metadata.Id),
-                    new XElement(ns + "Xmlns", metadata.Xmlns),
+                    new XElement(ns + "XmlNamespace", metadata.XmlName.NamespaceName),
+                    new XElement(ns + "XmlName", metadata.XmlName.LocalName),
                     new XElement(ns + "Contract", metadata.Contract.FullName),
                     new XElement(ns + "Values",
                         metadata.Values.Select(i =>
