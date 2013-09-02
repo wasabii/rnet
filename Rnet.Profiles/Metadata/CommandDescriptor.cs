@@ -14,7 +14,6 @@ namespace Rnet.Profiles.Metadata
         ProfileDescriptor profile;
         MethodInfo methodInfo;
         string name;
-        Type type;
         ParameterDescriptorCollection parameters;
 
         /// <summary>
@@ -37,7 +36,6 @@ namespace Rnet.Profiles.Metadata
 
             Contract.Invariant(methodInfo == null || methodInfo.DeclaringType == profile.Contract);
             Contract.Invariant(methodInfo == null || !string.IsNullOrWhiteSpace(name));
-            Contract.Invariant(methodInfo == null || type != null);
         }
 
         /// <summary>
@@ -65,14 +63,6 @@ namespace Rnet.Profiles.Metadata
         }
 
         /// <summary>
-        /// Type returned from the operation.
-        /// </summary>
-        public Type Type
-        {
-            get { return type; }
-        }
-
-        /// <summary>
         /// Parameters to be passed to the operation.
         /// </summary>
         public ParameterDescriptorCollection Parameters
@@ -90,7 +80,6 @@ namespace Rnet.Profiles.Metadata
             Contract.Requires<ArgumentNullException>(methodInfo.DeclaringType == Profile.Contract);
             Contract.Ensures(methodInfo != null);
             Contract.Ensures(name != null);
-            Contract.Ensures(type != null);
 
             this.methodInfo = methodInfo;
 

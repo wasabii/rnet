@@ -78,7 +78,7 @@ namespace Rnet.Profiles.Metadata
         /// <summary>
         /// Gets the set of <see cref="PropertyDescriptor"/>s that describe available values on the contract.
         /// </summary>
-        public PropertyDescriptorCollection Values
+        public PropertyDescriptorCollection Properties
         {
             get { return values; }
         }

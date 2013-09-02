@@ -28,8 +28,8 @@ namespace Rnet.Service.Devices
             Get[@"/(?<ControllerId>\d+)"] = x => BadControllerPath(x.ControllerId, "");
             Get[@"/(?<ControllerId>\d+)/{Uri*}"] = x => BadControllerPath(x.ControllerId, x.Uri);
             Get[@"/(?<ControllerId>\d+)\.(?<ZoneId>\d+)\.(?<KeypadId>\d+)"] = x => GetDevice(x.ControllerId, x.ZoneId, x.KeypadId);
-            Get[@"/{ControllerId}.{ZoneId}.{KeypadId}/data/{*Path}"] = x => GetDeviceData(x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
-            Put[@"/{ControllerId}.{ZoneId}.{KeypadId}/data/{*Path}", true] = (x, ct) => PutDeviceData(Request.Body, x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
+            Get[@"/(?<ControllerId>\d+)\.(?<ZoneId>\d+)\.(?<KeypadId>\d+)/data/{*Path}"] = x => GetDeviceData(x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
+            Put[@"/(?<ControllerId>\d+)\.(?<ZoneId>\d+)\.(?<KeypadId>\d+)/data/{*Path}", true] = (x, ct) => PutDeviceData(Request.Body, x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
         }
 
         /// <summary>
@@ -38,13 +38,13 @@ namespace Rnet.Service.Devices
         /// <returns></returns>
         dynamic GetDevices()
         {
-            return Response.AsXml(new DeviceCollection(Bus.Controllers
+            return new DeviceCollection(Bus.Controllers
                 .SelectMany(i => i.Zones)
                 .SelectMany(i => i.Devices)
                 .Cast<RnetDevice>()
                 .Concat(Bus.Controllers)
                 .OrderBy(i => i.DeviceId)
-                .Select(i => RnetDeviceToInfo(i))));
+                .Select(i => RnetDeviceToInfo(i)));
         }
 
         /// <summary>
@@ -61,7 +61,9 @@ namespace Rnet.Service.Devices
             if (controller == null)
                 throw new HttpException(HttpStatusCode.NotFound);
 
-            return Response.AsRedirect(new Uri(GetDeviceUri(controller), uri).ToString(), RedirectResponse.RedirectType.Permanent);
+            // redirect to normalized url
+            return Response
+                .AsRedirect(new Uri(GetDeviceUri(controller), uri).ToString(), RedirectResponse.RedirectType.Permanent);
         }
 
         /// <summary>

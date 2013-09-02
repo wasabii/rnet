@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,25 +9,29 @@ using Nancy;
 
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
+using Rnet.Profiles.Metadata;
 
 namespace Rnet.Service.Objects
 {
 
+    [Export(typeof(INancyModule))]
     public sealed class ObjectModule : NancyModuleBase
     {
 
-        const string PROFILE_URI_PREFIX = "+";
+        const string PROFILE_URI_PREFIX = "~";
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
+        [ImportingConstructor]
         public ObjectModule(RnetBus bus)
             : base(bus, "/objects")
         {
             Contract.Requires<ArgumentNullException>(bus != null);
 
-            Get["/{*Uri}", true] = async (x, ct) => await GetUri(x.Uri);
+            Get["/", true] = async (x, ct) => await GetUri("");
+            Get["/{Uri*}", true] = async (x, ct) => await GetUri(x.Uri);
         }
 
         /// <summary>
@@ -41,16 +46,18 @@ namespace Rnet.Service.Objects
             if (Bus.State != RnetBusState.Started ||
                 Bus.Client.State != RnetClientState.Started ||
                 Bus.Client.Connection.State != RnetConnectionState.Open)
-                throw new HttpException(HttpStatusCode.ServiceUnavailable);
+                return HttpStatusCode.ServiceUnavailable;
 
             // an attempt to browse the root
             if (uri == "")
-                return await GetObjectRefs();
+                return Negotiate
+                    .WithStatusCode(HttpStatusCode.OK)
+                    .WithModel(await GetObjectRefs());
 
             // navigate down hierarchy until the end
             var target = await Resolve(uri.Split('/'), 0, Bus.Controllers);
             if (target == null)
-                return new Response() { StatusCode = HttpStatusCode.BadRequest };
+                return HttpStatusCode.BadRequest;
 
             return target;
         }
@@ -59,7 +66,7 @@ namespace Rnet.Service.Objects
         /// Gets references for every root object.
         /// </summary>
         /// <returns></returns>
-        async Task<dynamic> GetObjectRefs()
+        async Task<ObjectRefCollection> GetObjectRefs()
         {
             var c = new ObjectRefCollection();
 
@@ -98,7 +105,7 @@ namespace Rnet.Service.Objects
                 {
                     // cannot do this if no current object known
                     if (o == null)
-                        throw new HttpException(HttpStatusCode.BadRequest);
+                        return HttpStatusCode.BadRequest;
 
                     // begin navigating from current object
                     return await ResolveProfile(components, i, o);
@@ -107,7 +114,7 @@ namespace Rnet.Service.Objects
                 // find object with matching ID
                 o = await FindObject(objects, components[i]);
                 if (o == null)
-                    throw new HttpException(HttpStatusCode.NotFound);
+                    return HttpStatusCode.NotFound;
 
                 // next container to work on is this one
                 objects = await o.GetProfile<IContainer>();
@@ -115,16 +122,18 @@ namespace Rnet.Service.Objects
 
             // item not found; at end of path
             if (o == null)
-                throw new HttpException(HttpStatusCode.NotFound);
+                return HttpStatusCode.NotFound;
 
             // return the object we ended at, wrapped
-            return new Object()
-            {
-                Href = await GetObjectUri(o),
-                Name = await GetObjectName(o),
-                Objects = await GetObjectRefs(o),
-                Profiles = await GetProfileRefs(o),
-            };
+            return Negotiate
+                .WithStatusCode(HttpStatusCode.OK)
+                .WithModel(new ObjectData()
+                {
+                    Href = await GetObjectUri(o),
+                    Name = await GetObjectName(o),
+                    Objects = await GetObjectRefs(o),
+                    Profiles = await GetProfileRefs(o),
+                });
         }
 
         /// <summary>
@@ -147,24 +156,6 @@ namespace Rnet.Service.Objects
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Transforms the bus object into output.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<Object> WrapObject(RnetBusObject o)
-        {
-            Contract.Requires(o != null);
-
-            return new Object()
-            {
-                Href = await GetObjectUri(o),
-                Name = await GetObjectName(o),
-                Objects = await GetObjectRefs(o),
-                Profiles = await GetProfileRefs(o),
-            };
         }
 
         /// <summary>
@@ -306,7 +297,7 @@ namespace Rnet.Service.Objects
         /// <param name="position"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        async Task<object> ResolveProfile(string[] components, int position, RnetBusObject target)
+        async Task<dynamic> ResolveProfile(string[] components, int position, RnetBusObject target)
         {
             Contract.Requires<ArgumentNullException>(components != null);
             Contract.Requires<ArgumentOutOfRangeException>(position >= 1);
@@ -315,7 +306,7 @@ namespace Rnet.Service.Objects
             // find matching profile
             var profiles = await target.GetProfiles();
             if (profiles == null)
-                throw new HttpException(HttpStatusCode.NotFound);
+                return HttpStatusCode.NotFound;
 
             // full profile name
             var id = components[position++].Remove(0, PROFILE_URI_PREFIX.Length);
@@ -323,19 +314,59 @@ namespace Rnet.Service.Objects
             // first profile with metadata that corresponds with full profile name
             var profile = profiles.FirstOrDefault(i => i.Metadata.Id == id);
             if (profile == null)
-                throw new HttpException(HttpStatusCode.NotFound);
+                return HttpStatusCode.NotFound;
 
             // are we at the end?
             if (position >= components.Length)
-                return profile;
+                return await GetProfileData(profile);
 
             // possibly can request metadata
             var next = components[position++];
             if (next == "metadata")
-                return profile.Metadata;
+                return Negotiate
+                    .WithStatusCode(HttpStatusCode.OK)
+                    .WithModel(profile.Metadata);
 
             // as far as we can go
-            throw new HttpException(HttpStatusCode.NotFound);
+            return HttpStatusCode.NotFound;
+        }
+
+        /// <summary>
+        /// Transforms a <see cref="Profile"/> into a <see cref="ProfileData"/> instance suitable for output.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        async Task<ProfileData> GetProfileData(Profile profile)
+        {
+            var data = new ProfileData()
+            {
+                Href = await GetProfileUri(profile),
+                Id = profile.Metadata.Id,
+                Properties = new ProfilePropertyDataCollection(),
+            };
+
+            foreach (var property in profile.Metadata.Properties)
+                data.Properties.Add(new ProfilePropertyData()
+                {
+                    Href = await GetProfilePropertyUri(profile, property),
+                    Name = property.Name,
+                    Value = property.GetValue(profile.Instance),
+                });
+
+            return data;
+        }
+
+        /// <summary>
+        /// Gets the Uri of the profile.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<Uri> GetProfilePropertyUri(Profile profile, PropertyDescriptor property)
+        {
+            Contract.Requires<ArgumentNullException>(profile != null);
+            Contract.Requires<ArgumentNullException>(property != null);
+
+            return (await GetProfileUri(profile)).UriCombine(property.Name);
         }
 
     }

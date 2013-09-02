@@ -89,12 +89,7 @@ namespace Rnet.Service
             {
                 return NancyInternalConfiguration.WithOverrides(c =>
                 {
-                    c.Serializers.Remove(typeof(DefaultJsonSerializer));
-                    c.Serializers.Insert(c.Serializers.Count, typeof(JsonNetSerializer));
-
                     c.ResponseProcessors.Remove(typeof(ViewProcessor));
-                    c.ResponseProcessors.Remove(typeof(JsonProcessor));
-                    c.ResponseProcessors.Insert(c.ResponseProcessors.Count, typeof(JsonProcessor));
                 });
             }
         }

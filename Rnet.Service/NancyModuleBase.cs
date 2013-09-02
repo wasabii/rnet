@@ -42,7 +42,18 @@ namespace Rnet.Service
         /// <returns></returns>
         protected Uri BaseUri
         {
-            get { return base.Request.Url; }
+            get { return GetBaseUri(); }
+        }
+
+        /// <summary>
+        /// Implements the getter for BaseUri.
+        /// </summary>
+        /// <returns></returns>
+        Uri GetBaseUri()
+        {
+            var u = Request.Url.Clone();
+            u.Path = ModulePath;
+            return u;
         }
 
         /// <summary>
