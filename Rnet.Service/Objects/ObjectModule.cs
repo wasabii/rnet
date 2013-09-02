@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,30 +12,28 @@ using Rnet.Profiles.Core;
 namespace Rnet.Service.Objects
 {
 
-    [Export(typeof(INancyModule))]
     public sealed class ObjectModule : NancyModuleBase
     {
 
         const string PROFILE_URI_PREFIX = "+";
-        
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
-        [ImportingConstructor]
         public ObjectModule(RnetBus bus)
             : base(bus, "/objects")
         {
             Contract.Requires<ArgumentNullException>(bus != null);
 
-            Get["/{*uri}", true] = async (x, ct) => await GetUri(x.uri);
+            Get["/{*Uri}", true] = async (x, y) => await GetUri(x.Uri);
         }
 
         /// <summary>
         /// Gets the bus descriptor.
         /// </summary>
         /// <returns></returns>
-        public async Task<dynamic> GetUri(string uri)
+        async Task<dynamic> GetUri(string uri)
         {
             Contract.Requires<ArgumentNullException>(uri != null);
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -11,7 +10,6 @@ using Nancy.Responses;
 namespace Rnet.Service.Devices
 {
 
-    [Export(typeof(INancyModule))]
     public sealed class DeviceModule : NancyModuleBase
     {
 
@@ -19,7 +17,6 @@ namespace Rnet.Service.Devices
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
-        [ImportingConstructor]
         public DeviceModule(RnetBus bus)
             : base(bus, "/devices")
         {

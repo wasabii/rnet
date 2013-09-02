@@ -5,6 +5,9 @@ using System.ComponentModel.Composition.AttributedModel;
 using System.Diagnostics.Contracts;
 using Nancy.Hosting.Self;
 using System.ComponentModel.Composition.Registration;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Rnet.Service
 {
@@ -28,50 +31,64 @@ namespace Rnet.Service
         RnetBus bus;
         NancyHost nancyHost;
 
+        public Host()
+        {
+            sync.UnhandledException += sync_UnhandledException;
+        }
+
+        /// <summary>
+        /// Invoked when there is a unhandled exception.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        void sync_UnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            if (Debugger.IsAttached)
+                Debugger.Break();
+        }
+
         public void OnStart()
         {
-            sync.Post(i => OnStartAsync(), null);
+            // configure the application container
+            container = new CompositionContainer(
+                catalog = new AggregateCatalog(applicationCatalog = new ApplicationCatalog()),
+                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService);
+
+            // configure bus
+            bus = new RnetBus(uri);
+            container.ComposeExportedValue<RnetBus>(bus);
+
+            // configure nancy
+            nancyHost = new NancyHost(new NancyBootstrapper(container), new Uri("http://localhost:12292/rnet/"));
+            nancyHost.Start();
+
+            sync.Post(async i => await OnStartAsync(), null);
             sync.Start();
         }
 
         /// <summary>
         /// Starts the service, from within synchronization context.
         /// </summary>
-        async void OnStartAsync()
+        async Task OnStartAsync()
         {
-            Contract.Requires(container == null);
-            Contract.Requires(bus == null);
-            Contract.Requires(nancyHost == null);
-
-            // configure the application container
-            container = new CompositionContainer(
-                catalog = new AggregateCatalog(applicationCatalog = new ApplicationCatalog()),
-                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService);
-
-
-
-            // configure bus
-            bus = new RnetBus(uri);
             await bus.Start();
-            container.ComposeExportedValue<RnetBus>(bus);
-
-            // configure nancy
-            nancyHost = new NancyHost(new NancyBootstrapper(container), new Uri("http://localhost:12292/rnet/"));
-            nancyHost.Start();
         }
 
+        /// <summary>
+        /// Stops the service.
+        /// </summary>
         public void OnStop()
         {
             Contract.Assert(sync != null);
 
-            sync.Post(i => OnStopAsync(), null);
+            sync.Post(async i => await OnStopAsync(), null);
             sync.Stop();
         }
 
         /// <summary>
         /// Stops the service, from within synchronization context.
         /// </summary>
-        async void OnStopAsync()
+        async Task OnStopAsync()
         {
             if (container != null)
             {

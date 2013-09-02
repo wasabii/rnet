@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
 using System.ComponentModel.Composition.Registration;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -17,11 +18,49 @@ namespace Rnet.Service
     public class NancyBootstrapper : NancyBootstrapperWithRequestContainerBase<CompositionContainer>
     {
 
+        class FuncFactory
+        {
+
+            /// <summary>
+            /// Reference to the hosting container.
+            /// </summary>
+            public CompositionContainer Container { get; set; }
+
+        }
+
+        /// <summary>
+        /// Provides a TinyIoC-like factory implementation for Func imports.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        [Export]
+        class FuncFactory<T> : FuncFactory
+        {
+
+            [Export]
+            class FuncFactoryFactory<T>
+            {
+
+                [Import]
+                public ExportFactory<T> Factory { get; set; }
+
+            }
+
+            /// <summary>
+            /// Implements the TinyIoC factory method.
+            /// </summary>
+            /// <returns></returns>
+            [Export]
+            public T CreateExport()
+            {
+                return Container.GetExportedValue<FuncFactoryFactory<T>>().Factory.CreateExport().Value;
+            }
+
+        }
+
         static readonly HashSet<Type> interfaces = new HashSet<Type>(
             typeof(INancyEngine).Assembly.GetTypes()
                 .Where(i => i.IsInterface)
                 .Distinct());
-
 
         CompositionContainer parent;
 
@@ -42,9 +81,127 @@ namespace Rnet.Service
         protected override CompositionContainer GetApplicationContainer()
         {
             var c = new CompositionContainer(new AggregateCatalog(parent.Catalog), parent);
-            //RegisterAssembly(c, typeof(Nancy.INancyEngine).Assembly);
             RegisterAssembly(c, typeof(Nancy.Hosting.Self.NancyHost).Assembly);
             return c;
+        }
+
+        /// <summary>
+        /// Registers the given types with the container.
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="types"></param>
+        /// <param name="builder"></param>
+        RegistrationBuilder RegisterAssemblyWithBuilder(CompositionContainer container, Assembly assembly, RegistrationBuilder builder)
+        {
+            ((AggregateCatalog)container.Catalog).Catalogs.Add(new AssemblyCatalog(assembly, builder));
+            return builder;
+        }
+
+        /// <summary>
+        /// Registers the given types with the container.
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="types"></param>
+        /// <param name="builder"></param>
+        RegistrationBuilder RegisterTypesWithBuilder(CompositionContainer container, IEnumerable<Type> types, RegistrationBuilder builder)
+        {
+            if (types.Any())
+                ((AggregateCatalog)container.Catalog).Catalogs.Add(new TypeCatalog(types, builder));
+            return builder;
+        }
+
+        /// <summary>
+        /// Configures the <see cref="ImportBuilder"/> for the given parameter.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="b"></param>
+        ImportBuilder BuildImportConstructorParameter(CompositionContainer container, ImportBuilder b, ParameterInfo p)
+        {
+            var name = p.ParameterType.FullName;
+
+            Type importManyType = null;
+            if (p.ParameterType.IsGenericType() &&
+                p.ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                importManyType = p.ParameterType.GetGenericArguments()[0];
+            if (p.ParameterType.IsArray)
+                importManyType = p.ParameterType.GetElementType();
+            if (importManyType != null)
+            {
+                b.AsMany(true);
+                b.AsContractType(importManyType);
+                return b;
+            }
+
+            Type funcType = null;
+            if (p.ParameterType.IsGenericType() &&
+                p.ParameterType.GetGenericTypeDefinition() == typeof(Func<>))
+                funcType = p.ParameterType.GetGenericArguments()[0];
+
+            if (funcType != null)
+            {
+                // generate a func factory and compose it
+                var t = typeof(FuncFactory<>).MakeGenericType(funcType);
+                var f = (FuncFactory)container.GetExports(t, null, null).Select(i => i.Value).FirstOrDefault();
+                if (f == null)
+                {
+                    f = (FuncFactory)Activator.CreateInstance(t);
+                    f.Container = container;
+                    container.ComposeParts(f);
+                }
+
+                // parameter contract type should now properly find the function
+                b.AsMany(false);
+                b.AsContractType(p.ParameterType);
+                return b;
+            }
+
+            // fall back to normal method
+            b.AsMany(false);
+            b.AsContractType(p.ParameterType);
+            return b;
+        }
+
+        /// <summary>
+        /// Configures the <see cref="RegistrationBuilder"/> to export the given type under all of the supported
+        /// contracts given.
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="implementationType"></param>
+        /// <param name="contractTypes"></param>
+        RegistrationBuilder BuildTypeContracts(CompositionContainer container, RegistrationBuilder b, Type implementationType, IEnumerable<Type> contractTypes)
+        {
+            var p = b.ForType(implementationType)
+                .SelectConstructor(x => x.Length > 0 ? x[0] : null, (x, y) => BuildImportConstructorParameter(container, y, x));
+            foreach (var contractType in contractTypes)
+                if (contractType.IsAssignableFrom(implementationType))
+                    p.Export(x => x.AsContractType(contractType));
+            return b;
+        }
+
+        /// <summary>
+        /// Configures the <see cref="RegistrationBuilder"/> to export the given type under multiple contracts.
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="implementationType"></param>
+        /// <param name="contractTypes"></param>
+        RegistrationBuilder BuildTypeContracts(CompositionContainer container, RegistrationBuilder b, Type implementationType, params Type[] contractTypes)
+        {
+            return BuildTypeContracts(container, b, implementationType, (IEnumerable<Type>)contractTypes);
+        }
+
+        /// <summary>
+        /// Configures the <see cref="RegistrationBuilder"/> to export the given implementation types under any
+        /// supported contract type that is specified.
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="implementationTypes"></param>
+        /// <param name="contractTypes"></param>
+        /// <returns></returns>
+        RegistrationBuilder BuildTypeContracts(CompositionContainer container, RegistrationBuilder b, IEnumerable<Type> implementationTypes, IEnumerable<Type> contractTypes)
+        {
+            foreach (var implementationType in implementationTypes)
+                BuildTypeContracts(container, b, implementationType, contractTypes);
+            return b;
         }
 
         /// <summary>
@@ -53,15 +210,11 @@ namespace Rnet.Service
         /// <param name="assembly"></param>
         public void RegisterAssembly(CompositionContainer container, Assembly assembly)
         {
-            // scan for all types that derive from one of the Nancy interfaces
-            var b = new RegistrationBuilder();
-            foreach (var i in interfaces)
-                foreach (var t in assembly.GetTypes())
-                    if (i.IsAssignableFrom(t))
-                        b.ForType(t)
-                            .Export(x => x.AsContractType(i));
+            Contract.Requires<ArgumentNullException>(container != null);
+            Contract.Requires<ArgumentNullException>(assembly != null);
 
-            ((AggregateCatalog)container.Catalog).Catalogs.Add(new AssemblyCatalog(assembly, b));
+            RegisterAssemblyWithBuilder(container, assembly,
+                BuildTypeContracts(container, new RegistrationBuilder(), assembly.GetTypes(), interfaces));
         }
 
         /// <summary>
@@ -87,21 +240,11 @@ namespace Rnet.Service
             foreach (var typeRegistration in typeRegistrations)
             {
                 t.Add(typeRegistration.ImplementationType);
-                t.Add(typeRegistration.RegistrationType);
-                b.ForType(typeRegistration.ImplementationType)
-                    .SelectConstructor(x => x[0], (x, y) =>
-                    {
-                        var importManyType = x.ParameterType;
-                        if (x.ParameterType.IsGenericType() &&
-                            x.ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                            y.AsMany(true);
-                        if (x.ParameterType.IsArray)
-                            y.AsMany(true);
-                    })
-                    .Export(x => x.AsContractType(typeRegistration.RegistrationType));
+                BuildTypeContracts(container, b, typeRegistration.ImplementationType, typeRegistration.RegistrationType);
             }
 
-            ((AggregateCatalog)container.Catalog).Catalogs.Add(new TypeCatalog(t, b));
+            if (t.Count > 0)
+                RegisterTypesWithBuilder(container, t, b);
         }
 
         /// <summary>
@@ -116,17 +259,15 @@ namespace Rnet.Service
             var b = new RegistrationBuilder();
             foreach (var collectionTypeRegistration in collectionTypeRegistrations)
             {
-                t.Add(collectionTypeRegistration.RegistrationType);
                 foreach (var implementationType in collectionTypeRegistration.ImplementationTypes)
                 {
                     t.Add(implementationType);
-                    b.ForType(implementationType)
-                        .SelectConstructor(x => x[0])
-                        .Export(x => x.AsContractType(collectionTypeRegistration.RegistrationType));
+                    BuildTypeContracts(container, b, implementationType, collectionTypeRegistration.RegistrationType);
                 }
             }
 
-            ((AggregateCatalog)container.Catalog).Catalogs.Add(new TypeCatalog(t, b));
+            if (t.Count > 0)
+                RegisterTypesWithBuilder(container, t, b);
         }
 
         /// <summary>
@@ -136,8 +277,16 @@ namespace Rnet.Service
         /// <param name="instanceRegistrations">Instance registration types</param>
         protected override void RegisterInstances(CompositionContainer container, IEnumerable<InstanceRegistration> instanceRegistrations)
         {
+            var b = new CompositionBatch();
             foreach (var instanceRegistration in instanceRegistrations)
-                container.ComposeExportedValue(instanceRegistration.RegistrationType, instanceRegistration.Implementation);
+            {
+                var m = new Dictionary<string, object> 
+                {
+                    { "ExportTypeIdentity", AttributedModelServices.GetTypeIdentity(instanceRegistration.Implementation.GetType()) }
+                };
+                b.AddExport(new Export(AttributedModelServices.GetContractName(instanceRegistration.RegistrationType), m, () => instanceRegistration.Implementation));
+            }
+            container.Compose(b);
         }
 
         /// <summary>
@@ -209,12 +358,10 @@ namespace Rnet.Service
             foreach (var moduleRegistrationType in moduleRegistrationTypes)
             {
                 t.Add(moduleRegistrationType.ModuleType);
-                b.ForType(moduleRegistrationType.ModuleType)
-                    .SelectConstructor(i => i[0])
-                    .Export<INancyModule>();
+                BuildTypeContracts(container, b, moduleRegistrationType.ModuleType, typeof(INancyModule));
             }
 
-            ((AggregateCatalog)container.Catalog).Catalogs.Add(new TypeCatalog(t, b));
+            RegisterTypesWithBuilder(container, t, b);
         }
 
     }

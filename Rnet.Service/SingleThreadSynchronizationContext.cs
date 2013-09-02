@@ -35,6 +35,7 @@ namespace Rnet.Service
             if (thread == null)
             {
                 thread = new Thread(Main);
+                thread.IsBackground = true;
                 thread.Start();
             }
         }
@@ -72,13 +73,29 @@ namespace Rnet.Service
                 }
                 catch (Exception e)
                 {
-                    // unknown
+                    OnUnhandledException(new UnhandledExceptionEventArgs(e, false));
                 }
                 finally
                 {
                     SynchronizationContext.SetSynchronizationContext(prev);
                 }
+                
             }
+        }
+
+        /// <summary>
+        /// Raised when an unhandled exception occurs.
+        /// </summary>
+        public event UnhandledExceptionEventHandler UnhandledException;
+
+        /// <summary>
+        /// Raises the UnhandledException event.
+        /// </summary>
+        /// <param name="args"></param>
+        void OnUnhandledException(UnhandledExceptionEventArgs args)
+        {
+            if (UnhandledException != null)
+                UnhandledException(this, args);
         }
 
         /// <summary>
