@@ -11,6 +11,10 @@ using System.Reflection;
 using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.Diagnostics;
+using Nancy.Conventions;
+using Nancy.Responses;
+using Nancy.Serialization.JsonNet;
+using Nancy.Responses.Negotiation;
 
 namespace Rnet.Service
 {
@@ -18,7 +22,10 @@ namespace Rnet.Service
     public class NancyBootstrapper : NancyBootstrapperWithRequestContainerBase<CompositionContainer>
     {
 
-        class FuncFactory
+        /// <summary>
+        /// Base class so we can set the container easily.
+        /// </summary>
+        abstract class FuncFactory
         {
 
             /// <summary>
@@ -29,7 +36,9 @@ namespace Rnet.Service
         }
 
         /// <summary>
-        /// Provides a TinyIoC-like factory implementation for Func imports.
+        /// Provides a TinyIoC-like factory implementation for Func imports. MEF doesn't support resolving Funcs
+        /// directly into a factory, so this class exports a Func signature and delays import of a MEF ExportFactory
+        /// until its actually used.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         [Export]
@@ -74,6 +83,22 @@ namespace Rnet.Service
             this.parent = parent;
         }
 
+        protected override Nancy.Bootstrapper.NancyInternalConfiguration InternalConfiguration
+        {
+            get
+            {
+                return NancyInternalConfiguration.WithOverrides(c =>
+                {
+                    c.Serializers.Remove(typeof(DefaultJsonSerializer));
+                    c.Serializers.Insert(c.Serializers.Count, typeof(JsonNetSerializer));
+
+                    c.ResponseProcessors.Remove(typeof(ViewProcessor));
+                    c.ResponseProcessors.Remove(typeof(JsonProcessor));
+                    c.ResponseProcessors.Insert(c.ResponseProcessors.Count, typeof(JsonProcessor));
+                });
+            }
+        }
+
         /// <summary>
         /// Create a default, unconfigured, container
         /// </summary>
@@ -82,6 +107,7 @@ namespace Rnet.Service
         {
             var c = new CompositionContainer(new AggregateCatalog(parent.Catalog), parent);
             RegisterAssembly(c, typeof(Nancy.Hosting.Self.NancyHost).Assembly);
+            RegisterAssembly(c, typeof(Nancy.Serialization.JsonNet.JsonNetBodyDeserializer).Assembly);
             return c;
         }
 
@@ -139,7 +165,7 @@ namespace Rnet.Service
 
             if (funcType != null)
             {
-                // generate a func factory and compose it
+                // FuncFactory exports Func and dispatches it to an ExportFactory composed once
                 var t = typeof(FuncFactory<>).MakeGenericType(funcType);
                 var f = (FuncFactory)container.GetExports(t, null, null).Select(i => i.Value).FirstOrDefault();
                 if (f == null)
@@ -270,6 +296,8 @@ namespace Rnet.Service
                 RegisterTypesWithBuilder(container, t, b);
         }
 
+        
+
         /// <summary>
         /// Bind the given instances into the container
         /// </summary>
@@ -295,7 +323,7 @@ namespace Rnet.Service
         /// <returns>An <see cref="IDiagnostics"/> implementation</returns>
         protected override IDiagnostics GetDiagnostics()
         {
-            return ApplicationContainer.GetExportedValueOrDefault<IDiagnostics>();
+            return ApplicationContainer.GetExportedValue<IDiagnostics>();
         }
 
         /// <summary>
@@ -322,7 +350,7 @@ namespace Rnet.Service
         /// <returns>An <see cref="INancyEngine"/> implementation</returns>
         protected override sealed INancyEngine GetEngineInternal()
         {
-            return ApplicationContainer.GetExportedValueOrDefault<INancyEngine>();
+            return ApplicationContainer.GetExportedValue<INancyEngine>();
         }
 
         /// <summary>
@@ -343,7 +371,11 @@ namespace Rnet.Service
         /// <returns>An <see cref="INancyModule"/> instance</returns>
         protected override INancyModule GetModule(CompositionContainer container, Type moduleType)
         {
-            return container.GetExportedValueOrDefault<INancyModule>(moduleType);
+            var module = container.GetExportedValues<INancyModule>().FirstOrDefault(i => i.GetType() == moduleType);
+            if (module == null)
+                throw new Exception("Module not found.");
+
+            return module;
         }
 
         protected override CompositionContainer CreateRequestContainer()

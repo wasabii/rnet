@@ -1,15 +1,16 @@
 ﻿using System;
+using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Nancy;
 using Nancy.Responses;
 
 namespace Rnet.Service.Devices
 {
 
+    [Export(typeof(INancyModule))]
     public sealed class DeviceModule : NancyModuleBase
     {
 
@@ -17,31 +18,33 @@ namespace Rnet.Service.Devices
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
+        [ImportingConstructor]
         public DeviceModule(RnetBus bus)
             : base(bus, "/devices")
         {
             Contract.Requires<ArgumentNullException>(bus != null);
 
-            Get["/"] = x => GetDevices();
-            Get["/{ControllerId}/{*Uri}"] = x => BadControllerPath(x.ControllerId, x.Uri);
-            Get["/{ControllerId}.{ZoneId}.{KeypadId}"] = x => GetDevice(x.ControllerId, x.ZoneId, x.KeypadId);
-            Get["/{ControllerId}.{ZoneId}.{KeypadId}/data/{*Path}"] = x => GetDeviceData(x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
-            Put["/{ControllerId}.{ZoneId}.{KeypadId}/data/{*Path}", true] = (x, ct) => PutDeviceData(Request.Body, x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
+            Get[@"/"] = x => GetDevices();
+            Get[@"/(?<ControllerId>\d+)"] = x => BadControllerPath(x.ControllerId, "");
+            Get[@"/(?<ControllerId>\d+)/{Uri*}"] = x => BadControllerPath(x.ControllerId, x.Uri);
+            Get[@"/(?<ControllerId>\d+)\.(?<ZoneId>\d+)\.(?<KeypadId>\d+)"] = x => GetDevice(x.ControllerId, x.ZoneId, x.KeypadId);
+            Get[@"/{ControllerId}.{ZoneId}.{KeypadId}/data/{*Path}"] = x => GetDeviceData(x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
+            Put[@"/{ControllerId}.{ZoneId}.{KeypadId}/data/{*Path}", true] = (x, ct) => PutDeviceData(Request.Body, x.ControllerId, x.ZoneId, x.KeypadId, x.Path);
         }
 
         /// <summary>
         /// Gets all the available devices.
         /// </summary>
         /// <returns></returns>
-        DeviceCollection GetDevices()
+        dynamic GetDevices()
         {
-            return new DeviceCollection(Bus.Controllers
+            return Response.AsXml(new DeviceCollection(Bus.Controllers
                 .SelectMany(i => i.Zones)
                 .SelectMany(i => i.Devices)
                 .Cast<RnetDevice>()
                 .Concat(Bus.Controllers)
                 .OrderBy(i => i.DeviceId)
-                .Select(i => RnetDeviceToInfo(i)));
+                .Select(i => RnetDeviceToInfo(i))));
         }
 
         /// <summary>

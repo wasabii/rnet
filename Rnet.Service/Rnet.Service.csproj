@@ -103,6 +103,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nancy.Hosting.Self.0.20.0-Beta4\lib\net40\Nancy.Hosting.Self.dll</HintPath>
     </Reference>
+    <Reference Include="Nancy.Serialization.JsonNet">
+      <HintPath>..\packages\Nancy.Serialization.JsonNet.0.18.0\lib\net40\Nancy.Serialization.JsonNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.Composition.Registration" />
@@ -144,6 +150,7 @@
     <Compile Include="Host.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="NancyModuleBase.cs" />
+    <Compile Include="TsetModule.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>

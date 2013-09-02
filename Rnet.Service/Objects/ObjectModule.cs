@@ -26,7 +26,7 @@ namespace Rnet.Service.Objects
         {
             Contract.Requires<ArgumentNullException>(bus != null);
 
-            Get["/{*Uri}", true] = async (x, y) => await GetUri(x.Uri);
+            Get["/{*Uri}", true] = async (x, ct) => await GetUri(x.Uri);
         }
 
         /// <summary>
