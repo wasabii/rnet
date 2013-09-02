@@ -8,13 +8,18 @@ namespace Rnet.Profiles
     /// <summary>
     /// Provides metadata regarding a profile contract.
     /// </summary>
-    public interface IContractMetadata
+    public interface IProfileContractMetadata
     {
 
         /// <summary>
-        /// Id of the profile.
+        /// Name of the profile.
         /// </summary>
-        string Id { get; }
+        string Namespace { get; }
+
+        /// <summary>
+        /// Name of the profile.
+        /// </summary>
+        string Name { get; }
 
     }
 
@@ -23,25 +28,33 @@ namespace Rnet.Profiles
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
     [MetadataAttribute]
-    public sealed class ProfileContractAttribute : ExportAttribute, IContractMetadata
+    public sealed class ProfileContractAttribute : ExportAttribute, IProfileContractMetadata
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="id"></param>
-        public ProfileContractAttribute(string id)
+        /// <param name="ns"></param>
+        /// <param name="name"></param>
+        public ProfileContractAttribute(string ns, string name)
             : base(typeof(IProfile).FullName)
         {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(id));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(ns));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name));
 
-            Id = id;
+            Namespace = ns;
+            Name = name;
         }
 
         /// <summary>
-        /// Id of the profile.
+        /// Name of the profile.
         /// </summary>
-        public string Id { get; private set; }
+        public string Namespace { get; private set; }
+
+        /// <summary>
+        /// Name of the profile.
+        /// </summary>
+        public string Name { get; private set; }
 
     }
 

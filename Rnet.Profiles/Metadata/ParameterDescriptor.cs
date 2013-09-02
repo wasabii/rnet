@@ -11,7 +11,7 @@ namespace Rnet.Profiles.Metadata
     public sealed class ParameterDescriptor
     {
 
-        OperationDescriptor operation;
+        CommandDescriptor operation;
         ParameterInfo parameterInfo;
         string name;
         Type type;
@@ -21,7 +21,7 @@ namespace Rnet.Profiles.Metadata
         /// Initializes a new instance.
         /// </summary>
         /// <param name="operation"></param>
-        internal ParameterDescriptor(OperationDescriptor operation)
+        internal ParameterDescriptor(CommandDescriptor operation)
         {
             Contract.Requires<ArgumentNullException>(operation != null);
 
@@ -41,7 +41,7 @@ namespace Rnet.Profiles.Metadata
         /// <summary>
         /// Associated <see cref="Operation"/>.
         /// </summary>
-        public OperationDescriptor Operation
+        public CommandDescriptor Operation
         {
             get { return operation; }
         }

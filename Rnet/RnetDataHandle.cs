@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -116,6 +117,24 @@ namespace Rnet
         /// <param name="?"></param>
         /// <returns></returns>
         public abstract Task<byte[]> Write(byte[] data, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Writes the data to the device and returns the data after the write was completed.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public Task<Stream> Write(Stream data)
+        {
+            return Write(data, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Writes the data to the device and returns the data after the write was completed.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public abstract Task<Stream> Write(Stream data, CancellationToken cancellationToken);
 
         /// <summary>
         /// Sends an event to the path on the device and returns the value after the event was received.

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Nito.AsyncEx;
 
 namespace Rnet.Drivers
@@ -64,6 +64,7 @@ namespace Rnet.Drivers
         /// <returns></returns>
         public static Task<Driver> GetDriver(this RnetDevice device)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
             return device.Context.GetOrCreate<Task<Driver>>(() => CreateDriver(device));
         }
 

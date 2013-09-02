@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Rnet.Profiles.Media;
+
+using Rnet.Profiles.Media.Audio;
 using Rnet.Profiles.Metadata;
 
 namespace Rnet.Tests.Profiles

@@ -1,5 +1,4 @@
-﻿using System.ServiceModel.Web;
-using System.ServiceProcess;
+﻿using System.ServiceProcess;
 
 namespace Rnet.Service
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using Rnet.Profiles;
+using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers.Default
 {
@@ -29,11 +29,6 @@ namespace Rnet.Drivers.Default
         public string DisplayName
         {
             get { return "Zone " + (Zone.Id + 1); }
-        }
-
-        public IEnumerable<RnetDevice> Devices
-        {
-            get { return Zone.Devices; }
         }
 
     }

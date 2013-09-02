@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Rnet.Drivers.Default;
-using Rnet.Profiles;
+using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers.Russound
 {

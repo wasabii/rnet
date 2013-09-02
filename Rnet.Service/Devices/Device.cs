@@ -5,7 +5,7 @@ namespace Rnet.Service.Devices
 {
 
     [DataContract(Namespace = "urn:rnet:devices")]
-    class Device
+    public class Device
     {
 
         [DataMember(Order = 0)]

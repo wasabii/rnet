@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
-using System.ServiceModel;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace Rnet.Profiles.Metadata
 {
@@ -14,22 +13,23 @@ namespace Rnet.Profiles.Metadata
     public sealed class ProfileDescriptor
     {
 
-        const string UNKNOWN_ID_PREFIX = "unknown.";
-        const string DEFAULT_NS_PREFIX = "urn:rnet:profiles::";
+        public const string PROFILE_XMLNS_PREFIX = "urn:rnet:profiles::";
+        public const string PROFILE_METADATA_XMLNS = "urn:rnet:profiles:metadata";
 
         Type contract;
         string id;
-        XName xmlName;
-        ValueDescriptorCollection values;
-        OperationDescriptorCollection operations;
+        string ns;
+        string name;
+        PropertyDescriptorCollection values;
+        CommandDescriptorCollection operations;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         public ProfileDescriptor()
         {
-            values = new ValueDescriptorCollection();
-            operations = new OperationDescriptorCollection();
+            values = new PropertyDescriptorCollection();
+            operations = new CommandDescriptorCollection();
         }
 
         [ContractInvariantMethod]
@@ -39,7 +39,8 @@ namespace Rnet.Profiles.Metadata
             System.Diagnostics.Contracts.Contract.Invariant(operations != null);
 
             System.Diagnostics.Contracts.Contract.Invariant(contract == null || !string.IsNullOrWhiteSpace(id));
-            System.Diagnostics.Contracts.Contract.Invariant(contract == null || xmlName != null);
+            System.Diagnostics.Contracts.Contract.Invariant(contract == null || !string.IsNullOrWhiteSpace(ns));
+            System.Diagnostics.Contracts.Contract.Invariant(contract == null || !string.IsNullOrWhiteSpace(name));
         }
 
         /// <summary>
@@ -51,7 +52,7 @@ namespace Rnet.Profiles.Metadata
         }
 
         /// <summary>
-        /// Full name of the profile.
+        /// Full name of the profile. Generally appears in the URL.
         /// </summary>
         public string Id
         {
@@ -59,25 +60,33 @@ namespace Rnet.Profiles.Metadata
         }
 
         /// <summary>
-        /// Element name to use when returning profile information as XML.
+        /// Namespace of the profile.
         /// </summary>
-        public XName XmlName
+        public string Namespace
         {
-            get { return xmlName; }
+            get { return ns; }
         }
 
         /// <summary>
-        /// Gets the set of <see cref="ValueDescriptor"/>s that describe available values on the contract.
+        /// Name of the profile.
         /// </summary>
-        public ValueDescriptorCollection Values
+        public string Name
+        {
+            get { return name; }
+        }
+
+        /// <summary>
+        /// Gets the set of <see cref="PropertyDescriptor"/>s that describe available values on the contract.
+        /// </summary>
+        public PropertyDescriptorCollection Values
         {
             get { return values; }
         }
 
         /// <summary>
-        /// Gets the set of <see cref="OperationDescriptor"/>s that describe available operations on the contract.
+        /// Gets the set of <see cref="CommandDescriptor"/>s that describe available operations on the contract.
         /// </summary>
-        public OperationDescriptorCollection Operations
+        public CommandDescriptorCollection Operations
         {
             get { return operations; }
         }
@@ -85,78 +94,29 @@ namespace Rnet.Profiles.Metadata
         /// <summary>
         /// Loads the profile from the given type.
         /// </summary>
-        /// <param name="type"></param>
-        internal void Load(Type type)
-        {
-            System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(type != null);
-            System.Diagnostics.Contracts.Contract.Requires<ArgumentException>(type.IsInterface);
-
-            contract = type;
-
-            LoadType();
-            LoadProfileContract();
-            LoadServiceContract();
-            LoadXmlAttributes();
-            LoadDataAnnotations();
-
-            LoadValues();
-            LoadOperations();
-        }
-
-        /// <summary>
-        /// Loads information from the type itself.
-        /// </summary>
-        void LoadType()
+        /// <param name="contract"></param>
+        internal void Load(Type contract)
         {
             System.Diagnostics.Contracts.Contract.Requires<ArgumentNullException>(contract != null);
+            System.Diagnostics.Contracts.Contract.Requires<ArgumentException>(contract.IsInterface);
             System.Diagnostics.Contracts.Contract.Ensures(!string.IsNullOrWhiteSpace(id));
-            System.Diagnostics.Contracts.Contract.Ensures(xmlName != null && !string.IsNullOrWhiteSpace(xmlName.LocalName));
+            System.Diagnostics.Contracts.Contract.Ensures(!string.IsNullOrWhiteSpace(ns));
+            System.Diagnostics.Contracts.Contract.Ensures(!string.IsNullOrWhiteSpace(name));
 
-            id = UNKNOWN_ID_PREFIX + contract.Name;
-            xmlName = XName.Get(contract.Name, DEFAULT_NS_PREFIX + id);
-        }
+            this.contract = contract;
 
-        /// <summary>
-        /// Loads information from the <see cref="ProfileContractAttribute"/>.
-        /// </summary>
-        void LoadProfileContract()
-        {
+            // configure from attribute
             var attr = contract.GetCustomAttribute<ProfileContractAttribute>();
             if (attr == null)
                 return;
 
-            id = attr.Id;
-            xmlName = XName.Get(xmlName.LocalName, DEFAULT_NS_PREFIX + id);
-        }
+            id = attr.Namespace + "." + attr.Name;
+            ns = attr.Namespace;
+            name = attr.Name;
 
-        /// <summary>
-        /// Loads information from the ServiceContract attributes.
-        /// </summary>
-        void LoadServiceContract()
-        {
-            var attr = contract.GetCustomAttribute<ServiceContractAttribute>();
-            if (attr == null)
-                return;
-
-            if (!string.IsNullOrWhiteSpace(attr.Name))
-                xmlName = XName.Get(attr.Name, xmlName.NamespaceName);
-            if (!string.IsNullOrWhiteSpace(attr.Namespace))
-                xmlName = XName.Get(xmlName.LocalName, attr.Namespace);
-        }
-
-        /// <summary>
-        /// Loads information from the XML serialization attributes.
-        /// </summary>
-        void LoadXmlAttributes()
-        {
-            var attr = contract.GetCustomAttribute<XmlRootAttribute>();
-            if (attr == null)
-                return;
-
-            if (!string.IsNullOrWhiteSpace(attr.ElementName))
-                xmlName = XName.Get(attr.ElementName, xmlName.NamespaceName);
-            if (!string.IsNullOrWhiteSpace(attr.Namespace))
-                xmlName = XName.Get(xmlName.LocalName, attr.Namespace);
+            LoadDataAnnotations();
+            LoadValues();
+            LoadOperations();
         }
 
         /// <summary>
@@ -186,12 +146,11 @@ namespace Rnet.Profiles.Metadata
 
             var descriptor = values[property];
             if (descriptor == null)
-                descriptor = new ValueDescriptor(this);
+                descriptor = new PropertyDescriptor(this);
 
             descriptor.Load(property);
             values.Remove(descriptor);
-            if (!descriptor.Ignore)
-                values.Add(descriptor);
+            values.Add(descriptor);
         }
 
         /// <summary>
@@ -200,7 +159,8 @@ namespace Rnet.Profiles.Metadata
         void LoadOperations()
         {
             foreach (var method in contract.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-                LoadOperation(method);
+                if (!method.IsSpecialName)
+                    LoadOperation(method);
         }
 
         /// <summary>
@@ -213,11 +173,37 @@ namespace Rnet.Profiles.Metadata
 
             var descriptor = operations[method];
             if (descriptor == null)
-                descriptor = new OperationDescriptor(this);
+                descriptor = new CommandDescriptor(this);
 
             descriptor.Load(method);
             operations.Remove(descriptor);
             operations.Add(descriptor);
+        }
+
+        public XDocument ToXml()
+        {
+            // default namespace of profile
+            var ns = (XNamespace)PROFILE_METADATA_XMLNS;
+
+            // build XML document out of properties
+            var xml = new XDocument(
+                new XElement(ns + "Profile",
+                    new XElement(ns + "Id", id),
+                    new XElement(ns + "Namespace", ns),
+                    new XElement(ns + "Name", name),
+                    new XElement(ns + "XmlNamespace", PROFILE_XMLNS_PREFIX + id),
+                    new XElement(ns + "XmlElementName", Name),
+                    new XElement(ns + "Contract", Contract.FullName),
+                    new XElement(ns + "Properties",
+                        values.Select(i =>
+                            new XElement(ns + "Property",
+                                i.Name))),
+                    new XElement(ns + "Commands",
+                        operations.Select(i =>
+                            new XElement(ns + "Command",
+                                i.Name)))));
+
+            return xml;
         }
 
         public XDocument ToXsd()

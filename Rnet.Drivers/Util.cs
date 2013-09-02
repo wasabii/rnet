@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using Rnet.Profiles;
+using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers
 {

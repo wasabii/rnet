@@ -1,4 +1,4 @@
-﻿using System.Xml.Serialization;
+﻿using Rnet.Profiles.Core;
 
 namespace Rnet.Profiles.Media.Audio
 {
@@ -6,8 +6,7 @@ namespace Rnet.Profiles.Media.Audio
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
-    [ProfileContract("media.audio.Equalization")]
-    [XmlRoot(Namespace = "urn:rnet:profiles::media.audio.Equalization", ElementName = "Equalization")]
+    [ProfileContract("media.audio", "Equalization")]
     public interface IEqualization
     {
 

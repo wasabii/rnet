@@ -1,11 +1,15 @@
 ﻿using System;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.AttributedModel;
 using System.Diagnostics.Contracts;
-using System.ServiceModel.Web;
+using Nancy.Hosting.Self;
+using System.ComponentModel.Composition.Registration;
 
 namespace Rnet.Service
 {
 
-    class Host
+    class Host : IDisposable
     {
 
         /// <summary>
@@ -18,9 +22,11 @@ namespace Rnet.Service
 
         SingleThreadSynchronizationContext sync = new SingleThreadSynchronizationContext();
         Uri uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
+        ApplicationCatalog applicationCatalog;
+        AggregateCatalog catalog;
+        CompositionContainer container;
         RnetBus bus;
-        WebServiceHost deviceHost;
-        WebServiceHost objectHost;
+        NancyHost nancyHost;
 
         public void OnStart()
         {
@@ -33,23 +39,25 @@ namespace Rnet.Service
         /// </summary>
         async void OnStartAsync()
         {
-            if (bus == null)
-            {
-                bus = new RnetBus(uri);
-                await bus.Start();
-            }
+            Contract.Requires(container == null);
+            Contract.Requires(bus == null);
+            Contract.Requires(nancyHost == null);
 
-            if (deviceHost == null)
-            {
-                deviceHost = new WebServiceHost(new Devices.DeviceService(bus), new Uri("http://localhost:12292/rnet/devices/"));
-                deviceHost.Open();
-            }
+            // configure the application container
+            container = new CompositionContainer(
+                catalog = new AggregateCatalog(applicationCatalog = new ApplicationCatalog()),
+                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService);
 
-            if (objectHost == null)
-            {
-                objectHost = new WebServiceHost(new Objects.ObjectService(bus), new Uri("http://localhost:12292/rnet/objects/"));
-                objectHost.Open();
-            }
+
+
+            // configure bus
+            bus = new RnetBus(uri);
+            await bus.Start();
+            container.ComposeExportedValue<RnetBus>(bus);
+
+            // configure nancy
+            nancyHost = new NancyHost(new NancyBootstrapper(container), new Uri("http://localhost:12292/rnet/"));
+            nancyHost.Start();
         }
 
         public void OnStop()
@@ -65,20 +73,29 @@ namespace Rnet.Service
         /// </summary>
         async void OnStopAsync()
         {
-            if (deviceHost != null)
+            if (container != null)
             {
-                deviceHost.Close();
-                deviceHost = null;
+                container.Dispose();
+                container = null;
             }
 
-            if (objectHost != null)
+            if (nancyHost != null)
             {
-                objectHost.Close();
-                objectHost = null;
+                nancyHost.Stop();
+                nancyHost.Dispose();
+                nancyHost = null;
             }
 
-            // allow bus to stay alive, just shut it down
-            await bus.Stop();
+            if (bus != null)
+            {
+                await bus.Stop();
+                bus = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            OnStop();
         }
 
     }

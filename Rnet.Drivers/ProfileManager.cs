@@ -5,7 +5,9 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Rnet.Profiles;
+using Rnet.Profiles.Core;
 using Rnet.Profiles.Metadata;
 
 namespace Rnet.Drivers

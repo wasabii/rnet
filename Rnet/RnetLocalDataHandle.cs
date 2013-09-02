@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,6 +74,17 @@ namespace Rnet
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public override Task<byte[]> Write(byte[] data, CancellationToken cancellationToken)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <summary>
+        /// Writes the data to the device and returns the data after the write was completed.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override Task<Stream> Write(Stream data, CancellationToken cancellationToken)
         {
             throw new System.NotImplementedException();
         }

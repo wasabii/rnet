@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -155,6 +156,20 @@ namespace Rnet
                     return buffer;
                 }
             }, cancellationToken, Device.WriteTimeoutCancellationToken);
+        }
+
+        /// <summary>
+        /// Writes the byte to the device and returns the new value. The new value may be different from what was
+        /// written.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task<Stream> Write(Stream data, CancellationToken cancellationToken)
+        {
+            var stm1 = new MemoryStream();
+            await data.CopyToAsync(stm1, 4096, cancellationToken);
+            return new MemoryStream(await Write(stm1.ToArray(), cancellationToken));
         }
 
         /// <summary>

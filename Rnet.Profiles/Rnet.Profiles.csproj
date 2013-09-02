@@ -87,27 +87,28 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Metadata\ParameterDescriptorCollection.cs" />
-    <Compile Include="Metadata\OperationDescriptorCollection.cs" />
-    <Compile Include="Metadata\OperationDescriptor.cs" />
+    <Compile Include="Metadata\CommandDescriptorCollection.cs" />
+    <Compile Include="Metadata\CommandDescriptor.cs" />
     <Compile Include="Metadata\ParameterDescriptor.cs" />
-    <Compile Include="Metadata\ValueDescriptorCollection.cs" />
-    <Compile Include="Metadata\ValueDescriptor.cs" />
-    <Compile Include="IContainer.cs" />
-    <Compile Include="IOwner.cs" />
+    <Compile Include="Metadata\PropertyDescriptorCollection.cs" />
+    <Compile Include="Metadata\PropertyDescriptor.cs" />
+    <Compile Include="Core\IContainer.cs" />
+    <Compile Include="Core\IOwner.cs" />
     <Compile Include="IContainerContext.cs" />
-    <Compile Include="IController.cs" />
-    <Compile Include="IDevice.cs" />
-    <Compile Include="IObject.cs" />
-    <Compile Include="IZone.cs" />
+    <Compile Include="Core\IController.cs" />
+    <Compile Include="Core\IDevice.cs" />
+    <Compile Include="Core\IObject.cs" />
+    <Compile Include="Core\IZone.cs" />
     <Compile Include="Media\Audio\DoNotDisturbMode.cs" />
     <Compile Include="Media\Audio\IEqualization.cs" />
     <Compile Include="IProfile.cs" />
     <Compile Include="Media\Audio\Loudness.cs" />
     <Compile Include="Media\Audio\PartyMode.cs" />
-    <Compile Include="Power.cs" />
+    <Compile Include="Core\Power.cs" />
     <Compile Include="ProfileContractAttribute.cs" />
     <Compile Include="Metadata\ProfileDescriptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\NumericValue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet\Rnet.csproj">

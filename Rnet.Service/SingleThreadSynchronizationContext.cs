@@ -28,7 +28,7 @@ namespace Rnet.Service
         }
 
         /// <summary>
-        /// Entry point into the synchronization context.
+        /// Starts the synchronization context.
         /// </summary>
         public void Start()
         {
@@ -40,7 +40,7 @@ namespace Rnet.Service
         }
 
         /// <summary>
-        /// Finishes the synchronization context.
+        /// Stops the synchronization context.
         /// </summary>
         public void Stop()
         {
@@ -56,25 +56,28 @@ namespace Rnet.Service
         /// </summary>
         void Main()
         {
-            var prev = SynchronizationContext.Current;
+            while (!queue.IsCompleted)
+            {
+                var prev = SynchronizationContext.Current;
 
-            try
-            {
-                // enter new context
-                SynchronizationContext.SetSynchronizationContext(this);
+                try
+                {
+                    // enter new context
+                    SynchronizationContext.SetSynchronizationContext(this);
 
-                // process outstanding actions until the queue ends
-                KeyValuePair<SendOrPostCallback, object> work;
-                while (queue.TryTake(out work, Timeout.Infinite))
-                    work.Key(work.Value);
-            }
-            catch (Exception e)
-            {
-                // unknown
-            }
-            finally
-            {
-                SynchronizationContext.SetSynchronizationContext(prev);
+                    // process outstanding actions until the queue ends
+                    KeyValuePair<SendOrPostCallback, object> work;
+                    while (queue.TryTake(out work, Timeout.Infinite))
+                        work.Key(work.Value);
+                }
+                catch (Exception e)
+                {
+                    // unknown
+                }
+                finally
+                {
+                    SynchronizationContext.SetSynchronizationContext(prev);
+                }
             }
         }
 

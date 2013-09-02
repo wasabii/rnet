@@ -2,7 +2,8 @@
 using System.Threading.Tasks;
 
 using Rnet.Drivers.Default;
-using Rnet.Profiles.Media;
+using Rnet.Profiles.Core;
+using Rnet.Profiles.Media.Audio;
 
 namespace Rnet.Drivers.Russound
 {

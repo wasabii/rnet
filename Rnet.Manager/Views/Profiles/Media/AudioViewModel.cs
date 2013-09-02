@@ -1,6 +1,6 @@
 ﻿using Microsoft.Practices.Prism.Commands;
 using Rnet.Drivers;
-using Rnet.Profiles.Media;
+using Rnet.Profiles.Media.Audio;
 
 namespace Rnet.Manager.Profiles.Media
 {

@@ -1,4 +1,4 @@
-﻿using Rnet.Profiles;
+﻿using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers.Default
 {

@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 
-using Rnet.Profiles;
+using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers.Default
 {
 
     /// <summary>
-    /// Provides a default implementation of 
+    /// Provides a default implementation of <see cref="IController"/> for a controller.
     /// </summary>
     public class Controller : ControllerBase, IController
     {

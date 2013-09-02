@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Threading.Tasks;
 
-using Rnet.Profiles;
+using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers.Default
 {
