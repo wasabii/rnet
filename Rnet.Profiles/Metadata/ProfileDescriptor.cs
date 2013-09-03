@@ -76,6 +76,14 @@ namespace Rnet.Profiles.Metadata
         }
 
         /// <summary>
+        /// Gets the XML namespace for the profile.
+        /// </summary>
+        public XNamespace XmlNamespace
+        {
+            get { return PROFILE_XMLNS_PREFIX + id; }
+        }
+
+        /// <summary>
         /// Gets the set of <see cref="PropertyDescriptor"/>s that describe available values on the contract.
         /// </summary>
         public PropertyDescriptorCollection Properties

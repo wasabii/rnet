@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace Rnet.Service.Objects
 {
 
-    class ProfilePropertyDataCollectionJsonConverter : JsonConverter
+    public class ProfilePropertyDataCollectionJsonConverter : JsonConverter
     {
 
         public override bool CanConvert(Type objectType)
@@ -21,8 +21,18 @@ namespace Rnet.Service.Objects
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var o = (ProfilePropertyDataCollection)value;
-            serializer.Serialize(writer, o.ToDictionary(i => i.Name, i => i));
+            writer.WriteStartObject();
+            foreach (var property in (ProfilePropertyDataCollection)value)
+            {
+                writer.WritePropertyName(property.Name);
+                writer.WriteStartObject();
+                writer.WritePropertyName("Href");
+                writer.WriteValue(property.Href);
+                writer.WritePropertyName("Value");
+                serializer.Serialize(writer, property.Value);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndObject();
         }
 
     }

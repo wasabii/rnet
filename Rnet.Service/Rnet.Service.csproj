@@ -129,16 +129,20 @@
     <Compile Include="Devices\DeviceModule.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Formatting\XmlNetSerializer.cs" />
-    <Compile Include="Formatting\JsonNetSerializer.cs" />
-    <Compile Include="Objects\ProfilePropertyDataCollectionJsonConverter.cs" />
+    <Compile Include="Formatting\XmlSerializer.cs" />
+    <Compile Include="Formatting\ProfileJsonProcessor.cs" />
+    <Compile Include="Formatting\ProfileXmlProcessor.cs" />
+    <Compile Include="Formatting\JsonSerializer.cs" />
     <Compile Include="HttpException.cs" />
     <Compile Include="NancyBootstrapper.cs" />
-    <Compile Include="Objects\ProfilePropertyData.cs" />
-    <Compile Include="Objects\ProfilePropertyDataCollection.cs" />
+    <Compile Include="Objects\ProfileRefCollectionJsonConverter.cs" />
+    <Compile Include="Objects\ObjectRefCollectionJsonConverter.cs" />
     <Compile Include="Objects\ObjectModule.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Objects\ProfilePropertyData.cs" />
+    <Compile Include="Objects\ProfilePropertyDataCollection.cs" />
+    <Compile Include="Objects\ProfilePropertyDataCollectionJsonConverter.cs" />
     <Compile Include="Objects\ProfileRef.cs" />
     <Compile Include="Objects\ObjectRef.cs" />
     <Compile Include="Objects\ProfileRefCollection.cs" />

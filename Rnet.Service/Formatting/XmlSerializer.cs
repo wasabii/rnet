@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Runtime.Serialization;
-using System.Xml;
+using System.Linq;
+using System.Xml.Linq;
 
 using Nancy;
-using Nancy.IO;
 
 namespace Rnet.Service.Formatting
 {
 
     /// <summary>
-    /// Provides serialization to XML using DataContract serialization.
+    /// Provides serialization to XML, and adds formatting.
     /// </summary>
     [Export(typeof(ISerializer))]
-    public class XmlNetSerializer : ISerializer
+    public class XmlSerializer : ISerializer
     {
 
         public static bool IsXmlType(string contentType)
@@ -28,16 +27,11 @@ namespace Rnet.Service.Formatting
                 str.Equals("text/xml", StringComparison.InvariantCultureIgnoreCase))
                 return true;
 
+            if (str.StartsWith("application/vnd", StringComparison.InvariantCultureIgnoreCase) &&
+                str.EndsWith("+xml", StringComparison.InvariantCultureIgnoreCase))
+                return true;
+
             return false;
-        }
-
-        /// <summary>
-        /// Initializes a new instance.
-        /// </summary>
-        [ImportingConstructor]
-        public XmlNetSerializer()
-        {
-
         }
 
         public IEnumerable<string> Extensions
@@ -52,12 +46,13 @@ namespace Rnet.Service.Formatting
 
         public void Serialize<TModel>(string contentType, TModel model, Stream outputStream)
         {
-            var serializer = new DataContractSerializer(model.GetType());
-            using (var wrt = new XmlTextWriter(new StreamWriter(new UnclosableStreamWrapper(outputStream))))
-            {
-                wrt.Formatting = System.Xml.Formatting.Indented;
-                serializer.WriteObject(wrt, model);
-            }
+            var xml = new XDocument();
+            var srs = new System.Xml.Serialization.XmlSerializer(model.GetType());
+            using (var wrt = xml.CreateWriter())
+                srs.Serialize(wrt, model);
+
+            xml.Descendants().Attributes().Where(i => i.IsNamespaceDeclaration).Remove();
+            xml.Save(outputStream, SaveOptions.OmitDuplicateNamespaces);
         }
 
     }

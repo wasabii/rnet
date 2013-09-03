@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
 namespace Rnet.Service.Devices
 {
 
-    [CollectionDataContract(Name = "Devices", Namespace = "urn:rnet:devices")]
-    [KnownType(typeof(Controller))]
-    [KnownType(typeof(Device))]
-    class DeviceCollection : List<Device>
+    [XmlRoot("Devices", Namespace = "urn:rnet:devices")]
+    public class DeviceCollection : List<Device>, IXmlSerializable
     {
+
+        static readonly string ns = "urn:rnet:devices";
 
         /// <summary>
         /// Initializes a new instance.
@@ -27,6 +29,22 @@ namespace Rnet.Service.Devices
             : base(devices)
         {
 
+        }
+
+        XmlSchema IXmlSerializable.GetSchema()
+        {
+            return null;
+        }
+
+        void IXmlSerializable.ReadXml(XmlReader reader)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        void IXmlSerializable.WriteXml(XmlWriter writer)
+        {
+            foreach (var device in this)
+                new XmlSerializer(device.GetType()).Serialize(writer, device);
         }
 
     }

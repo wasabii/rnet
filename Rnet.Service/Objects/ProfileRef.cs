@@ -1,18 +1,24 @@
 ﻿using System;
-using System.Runtime.Serialization;
+using System.Xml.Serialization;
 
 namespace Rnet.Service.Objects
 {
 
-    [DataContract(Namespace = "urn:rnet:objects")]
-    class ProfileRef
+    public class ProfileRef
     {
 
-        [DataMember]
+        [XmlIgnore]
         public Uri Href { get; set; }
-        
-        [DataMember]
-        public string Id { get;set;}
+
+        [XmlAttribute("Href")]
+        public string _Href
+        {
+            get { return Href.ToString(); }
+            set { Href = new Uri(value); }
+        }
+
+        [XmlAttribute("Id")]
+        public string Id { get; set; }
 
     }
 

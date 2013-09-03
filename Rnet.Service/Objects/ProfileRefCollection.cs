@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Xml.Serialization;
+
+using Newtonsoft.Json;
 
 namespace Rnet.Service.Objects
 {
 
-    [CollectionDataContract(Name = "Profiles", Namespace = "urn:rnet:objects", ItemName = "ProfileRef")]
-    class ProfileRefCollection : List<ProfileRef>
+    [XmlRoot(ElementName = "Profiles", Namespace = "urn:rnet:objects")]
+    [JsonConverter(typeof(ProfileRefCollectionJsonConverter))]
+    public class ProfileRefCollection : List<ProfileRef>
     {
 
         /// <summary>

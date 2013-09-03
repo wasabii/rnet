@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 
+using Nancy;
+
 namespace Rnet.Service
 {
 
@@ -19,6 +21,18 @@ namespace Rnet.Service
             Contract.Requires<ArgumentNullException>(relativeUri != null);
 
             return new Uri(new Uri(baseUri.ToString().TrimEnd('/') + "/"), relativeUri.Trim('/'));
+        }
+
+        /// <summary>
+        /// Gets the base URI for the given <see cref="NancyContext"/>.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static Uri GetBaseUri(this NancyContext context)
+        {
+            var u = context.Request.Url.Clone();
+            u.Path = context.NegotiationContext.ModulePath;
+            return u;
         }
 
     }

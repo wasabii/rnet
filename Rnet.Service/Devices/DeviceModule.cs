@@ -142,14 +142,14 @@ namespace Rnet.Service.Devices
         /// <param name="device"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        async Task<Response> GetDeviceData(RnetDevice device, string path)
+        async Task<dynamic> GetDeviceData(RnetDevice device, string path)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
 
             var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
             if (handle == null)
-                throw new HttpException(HttpStatusCode.NotFound);
+                return HttpStatusCode.NotFound;
 
             //// check for cache lifetime
             //IncomingRequest.CheckConditionalRetrieve(handle.Timestamp);
@@ -163,7 +163,7 @@ namespace Rnet.Service.Devices
             // read data
             var data = await handle.Read();
             if (data == null)
-                throw new HttpException(HttpStatusCode.NotFound);
+                return HttpStatusCode.NotFound;
 
             return Response.FromStream(new MemoryStream(data), "application/octet-stream")
                 .WithHeader("Last-Modified", handle.Timestamp.ToString("R"));
@@ -176,7 +176,7 @@ namespace Rnet.Service.Devices
         /// <param name="path"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        async Task PutDeviceData(RnetDevice device, string path, Stream data)
+        async Task<dynamic> PutDeviceData(RnetDevice device, string path, Stream data)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
@@ -184,9 +184,10 @@ namespace Rnet.Service.Devices
 
             var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
             if (handle == null)
-                throw new HttpException(HttpStatusCode.NotFound);
+                return HttpStatusCode.NotFound;
 
-            await handle.Write(data);
+            return Response.FromStream(await handle.Write(data), "application/octet-stream")
+                .WithHeader("Last-Modified", handle.Timestamp.ToString("R"));
         }
 
     }

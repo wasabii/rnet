@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using System.Xml.Serialization;
 
 namespace Rnet.Service.Objects
 {
 
-    [DataContract(Namespace = "urn:rnet:objects")]
-    class ObjectRef
+    public class ObjectRef
     {
 
-        [DataMember]
+        [XmlIgnore]
         public Uri Href { get; set; }
-        
-        [DataMember]
-        public string Name { get;set;}
+
+        [XmlAttribute("Href")]
+        public string _Href
+        {
+            get { return Href.ToString(); }
+            set { Href = new Uri(value); }
+        }
+
+        [XmlAttribute("Name")]
+        public string Name { get; set; }
 
     }
 

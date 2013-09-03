@@ -1,23 +1,17 @@
 ﻿using System;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace Rnet.Service.Objects
 {
 
-    [DataContract(Namespace = "urn:rnet:objects", Name = "Profile")]
-    [KnownType(typeof(ProfilePropertyData))]
-    [JsonObject("Profile")]
+    [JsonObject]
     class ProfileData
     {
 
-        [DataMember]
-        public Uri Href { get; set; }
-
-        [DataMember]
+        [JsonProperty]
         public string Id { get; set; }
 
-        [DataMember]
+        [JsonProperty]
         public ProfilePropertyDataCollection Properties { get; set; }
 
     }

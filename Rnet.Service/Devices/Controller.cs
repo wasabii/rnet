@@ -1,10 +1,10 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace Rnet.Service.Devices
 {
 
-    [DataContract(Name = "Controller", Namespace = "urn:rnet:devices")]
-    class Controller : Device
+    [XmlRoot("Controller", Namespace="urn:rnet:devices")]
+    public class Controller : Device
     {
 
 

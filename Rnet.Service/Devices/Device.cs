@@ -1,18 +1,29 @@
 ﻿using System;
-using System.Runtime.Serialization;
+using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace Rnet.Service.Devices
 {
 
-    [DataContract(Namespace = "urn:rnet:devices")]
+    [XmlRoot("Device", Namespace = "urn:rnet:devices")]
+    [XmlInclude(typeof(Controller))]
     public class Device
     {
 
-        [DataMember(Order = 0)]
-        public Uri Id { get; set; }
+        [XmlIgnore]
+        [JsonProperty]
+        public Uri Href { get; set; }
 
-        [DataMember(Order = 1)]
-        public string DeviceId { get; set; }
+        [XmlAttribute("Href")]
+        [JsonIgnore]
+        public string _Href
+        {
+            get { return Href.ToString(); }
+            set { Href = new Uri(value); }
+        }
+
+        [XmlAttribute("Id")]
+        public string Id { get; set; }
 
     }
 

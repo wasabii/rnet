@@ -50,9 +50,7 @@ namespace Rnet.Service.Objects
 
             // an attempt to browse the root
             if (uri == "")
-                return Negotiate
-                    .WithStatusCode(HttpStatusCode.OK)
-                    .WithModel(await GetObjectRefs());
+                return await GetObjectRefs();
 
             // navigate down hierarchy until the end
             var target = await Resolve(uri.Split('/'), 0, Bus.Controllers);
@@ -74,7 +72,7 @@ namespace Rnet.Service.Objects
             foreach (var i in Bus.Controllers)
                 c.Add(new ObjectRef()
                 {
-                    Href = await GetObjectUri(i),
+                    Href = MakeRelativeUri(await GetObjectUri(i)),
                     Name = await GetObjectName(i),
                 });
 
@@ -125,15 +123,13 @@ namespace Rnet.Service.Objects
                 return HttpStatusCode.NotFound;
 
             // return the object we ended at, wrapped
-            return Negotiate
-                .WithStatusCode(HttpStatusCode.OK)
-                .WithModel(new ObjectData()
-                {
-                    Href = await GetObjectUri(o),
-                    Name = await GetObjectName(o),
-                    Objects = await GetObjectRefs(o),
-                    Profiles = await GetProfileRefs(o),
-                });
+            return new ObjectData()
+            {
+                Id = await o.GetId(),
+                Name = await GetObjectName(o),
+                Objects = await GetObjectRefs(o),
+                Profiles = await GetProfileRefs(o),
+            };
         }
 
         /// <summary>
@@ -175,7 +171,7 @@ namespace Rnet.Service.Objects
             foreach (var i in p)
                 c.Add(new ObjectRef()
                 {
-                    Href = await GetObjectUri(i),
+                    Href = MakeRelativeUri(await GetObjectUri(i)),
                     Name = await GetObjectName(i),
                 });
 
@@ -247,7 +243,7 @@ namespace Rnet.Service.Objects
             foreach (var i in p)
                 c.Add(new ProfileRef()
                 {
-                    Href = await GetProfileUri(i),
+                    Href = MakeRelativeUri(await GetProfileUri(i)),
                     Id = i.Metadata.Id,
                 });
 
@@ -318,55 +314,25 @@ namespace Rnet.Service.Objects
 
             // are we at the end?
             if (position >= components.Length)
-                return await GetProfileData(profile);
+                return profile;
 
             // possibly can request metadata
             var next = components[position++];
             if (next == "metadata")
-                return Negotiate
-                    .WithStatusCode(HttpStatusCode.OK)
-                    .WithModel(profile.Metadata);
+                return profile.Metadata;
 
             // as far as we can go
             return HttpStatusCode.NotFound;
         }
 
         /// <summary>
-        /// Transforms a <see cref="Profile"/> into a <see cref="ProfileData"/> instance suitable for output.
+        /// Makes the specified <see cref="Uri"/> relative to the request.
         /// </summary>
-        /// <param name="profile"></param>
+        /// <param name="uri"></param>
         /// <returns></returns>
-        async Task<ProfileData> GetProfileData(Profile profile)
+        Uri MakeRelativeUri(Uri uri)
         {
-            var data = new ProfileData()
-            {
-                Href = await GetProfileUri(profile),
-                Id = profile.Metadata.Id,
-                Properties = new ProfilePropertyDataCollection(),
-            };
-
-            foreach (var property in profile.Metadata.Properties)
-                data.Properties.Add(new ProfilePropertyData()
-                {
-                    Href = await GetProfilePropertyUri(profile, property),
-                    Name = property.Name,
-                    Value = property.GetValue(profile.Instance),
-                });
-
-            return data;
-        }
-
-        /// <summary>
-        /// Gets the Uri of the profile.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<Uri> GetProfilePropertyUri(Profile profile, PropertyDescriptor property)
-        {
-            Contract.Requires<ArgumentNullException>(profile != null);
-            Contract.Requires<ArgumentNullException>(property != null);
-
-            return (await GetProfileUri(profile)).UriCombine(property.Name);
+            return new Uri(Request.Url.ToString().TrimEnd('/') + '/').MakeRelativeUri(uri);
         }
 
     }

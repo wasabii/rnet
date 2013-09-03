@@ -104,14 +104,14 @@ namespace Rnet.Service
             if (controller != null)
                 return new Controller()
                 {
-                    Id = GetDeviceUri(device),
-                    DeviceId = GetDeviceIdAsString(device.DeviceId),
+                    Href = GetDeviceUri(device),
+                    Id = GetDeviceIdAsString(device.DeviceId),
                 };
 
             return new Device()
             {
-                Id = GetDeviceUri(device),
-                DeviceId = GetDeviceIdAsString(device.DeviceId),
+                Href = GetDeviceUri(device),
+                Id = GetDeviceIdAsString(device.DeviceId),
             };
         }
 

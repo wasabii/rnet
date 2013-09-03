@@ -1,23 +1,20 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace Rnet.Service.Objects
 {
 
-    [DataContract(Namespace = "urn:rnet:objects")]
-    class ObjectData
+    [XmlRoot("Object")]
+    public class ObjectData
     {
 
-        [DataMember]
-        public Uri Href { get; set; }
+        [XmlAttribute]
+        public string Id { get; set; }
 
-        [DataMember]
+        [XmlAttribute]
         public string Name { get; set; }
 
-        [DataMember]
         public ObjectRefCollection Objects { get; set; }
 
-        [DataMember]
         public ProfileRefCollection Profiles { get; set; }
 
     }
