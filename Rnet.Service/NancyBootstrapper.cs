@@ -11,9 +11,6 @@ using System.Reflection;
 using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.Diagnostics;
-using Nancy.Conventions;
-using Nancy.Responses;
-using Nancy.Serialization.JsonNet;
 using Nancy.Responses.Negotiation;
 
 namespace Rnet.Service
@@ -29,7 +26,7 @@ namespace Rnet.Service
         {
 
             /// <summary>
-            /// Reference to the hosting container.
+            /// Reference to the hosting service.
             /// </summary>
             public CompositionContainer Container { get; set; }
 
@@ -71,16 +68,16 @@ namespace Rnet.Service
                 .Where(i => i.IsInterface)
                 .Distinct());
 
-        CompositionContainer parent;
+        CompositionContainer container;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public NancyBootstrapper(CompositionContainer parent)
+        public NancyBootstrapper(CompositionContainer container)
             : base()
         {
-            Contract.Requires(parent != null);
-            this.parent = parent;
+            Contract.Requires(container != null);
+            this.container = container;
         }
 
         protected override Nancy.Bootstrapper.NancyInternalConfiguration InternalConfiguration
@@ -100,7 +97,11 @@ namespace Rnet.Service
         /// <returns>Container instance</returns>
         protected override CompositionContainer GetApplicationContainer()
         {
-            var c = new CompositionContainer(new AggregateCatalog(parent.Catalog), parent);
+            var c = new CompositionContainer(
+                new AggregateCatalog(container.Catalog),
+                CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
+                container);
+            c.ComposeExportedValue<ICompositionService>(new CompositionService(c));
             RegisterAssembly(c, typeof(Nancy.Hosting.Self.NancyHost).Assembly);
             RegisterAssembly(c, typeof(Nancy.Serialization.JsonNet.JsonNetBodyDeserializer).Assembly);
             return c;
@@ -291,8 +292,6 @@ namespace Rnet.Service
                 RegisterTypesWithBuilder(container, t, b);
         }
 
-        
-
         /// <summary>
         /// Bind the given instances into the container
         /// </summary>
@@ -375,7 +374,12 @@ namespace Rnet.Service
 
         protected override CompositionContainer CreateRequestContainer()
         {
-            return new CompositionContainer(new AggregateCatalog(ApplicationContainer.Catalog), ApplicationContainer);
+            var c = new CompositionContainer(
+                new AggregateCatalog(ApplicationContainer.Catalog),
+                CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
+                ApplicationContainer);
+            c.ComposeExportedValue<ICompositionService>(new CompositionService(c));
+            return c;
         }
 
         protected override void RegisterRequestContainerModules(CompositionContainer container, IEnumerable<ModuleRegistration> moduleRegistrationTypes)

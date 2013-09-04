@@ -74,54 +74,6 @@ namespace Rnet.Service.Objects
         }
 
         /// <summary>
-        /// Gets the child objects refs for the given object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        public static async Task<ObjectRefCollection> GetObjectRefs(this RnetBusObject o, NancyContext context)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            // load container
-            var p = await o.GetProfile<IContainer>() ?? Enumerable.Empty<RnetBusObject>();
-            var c = new ObjectRefCollection();
-
-            // assembly references
-            foreach (var i in p)
-                c.Add(new ObjectRef()
-                {
-                    Href = (await i.GetObjectUri(context)).MakeRelativeUri(context),
-                    Name = await i.GetObjectName(context),
-                });
-
-            return c;
-        }
-
-        /// <summary>
-        /// Gets the profile refs for the given object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        public static async Task<ProfileRefCollection> GetProfileRefs(this RnetBusObject o, NancyContext context)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            // load container
-            var p = await o.GetProfiles() ?? Enumerable.Empty<Profile>();
-            var c = new ProfileRefCollection();
-
-            // assembly references
-            foreach (var i in p)
-                c.Add(new ProfileRef()
-                {
-                    Href = (await i.GetProfileUri(context)).MakeRelativeUri(context),
-                    Id = i.Metadata.Id,
-                });
-
-            return c;
-        }
-
-        /// <summary>
         /// Gets the Uri of the profile.
         /// </summary>
         /// <param name="o"></param>
@@ -155,6 +107,32 @@ namespace Rnet.Service.Objects
                 uri = uri.UriCombine(i);
 
             return uri;
+        }
+
+        /// <summary>
+        /// Converts the given <see cref="RnetDeviceId"/> into a string.
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public static string GetDeviceIdAsString(this RnetDevice device)
+        {
+            return string.Format("{0}.{1}.{2}", 
+                (int)device.DeviceId.ControllerId,
+                (int)device.DeviceId.ZoneId,
+                (int)device.DeviceId.KeypadId);
+        }
+
+        /// <summary>
+        /// Gets the URL for the given <see cref="RnetDevice"/>.
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public static Uri GetDeviceUri(this RnetDevice device, NancyContext context)
+        {
+            Contract.Requires<ArgumentNullException>(device != null);
+
+            return context.GetBaseUri()
+                .UriCombine(":" + device.GetDeviceIdAsString());
         }
 
     }

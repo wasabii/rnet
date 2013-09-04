@@ -47,19 +47,6 @@ namespace Rnet.Service
 
         public void OnStart()
         {
-            // configure the application container
-            container = new CompositionContainer(
-                catalog = new AggregateCatalog(applicationCatalog = new ApplicationCatalog()),
-                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService);
-
-            // configure bus
-            bus = new RnetBus(uri);
-            container.ComposeExportedValue<RnetBus>(bus);
-
-            // configure nancy
-            nancyHost = new NancyHost(new NancyBootstrapper(container), new Uri("http://localhost:12292/rnet/"));
-            nancyHost.Start();
-
             sync.Post(async i => await OnStartAsync(), null);
             sync.Start();
         }
@@ -69,6 +56,21 @@ namespace Rnet.Service
         /// </summary>
         async Task OnStartAsync()
         {
+            // configure the application container
+            container = new CompositionContainer(
+                catalog = new AggregateCatalog(applicationCatalog = new ApplicationCatalog()),
+                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService);
+            container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
+
+            // configure bus
+            bus = new RnetBus(uri);
+            container.ComposeExportedValue<RnetBus>(bus);
+
+            // configure nancy
+            nancyHost = new NancyHost(new NancyBootstrapper(container), new Uri("http://localhost:12292/rnet/"));
+            nancyHost.Start();
+
+            // start the bus
             await bus.Start();
         }
 
