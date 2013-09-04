@@ -88,6 +88,9 @@
     <StartupObject>Rnet.Service.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LinqToAwait">
+      <HintPath>..\packages\LinqToAwait.1.0.0\lib\net45\LinqToAwait.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Threading.Tasks, Version=1.0.12.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Bcl.Async.1.0.16\lib\net45\Microsoft.Threading.Tasks.dll</HintPath>
@@ -114,6 +117,21 @@
     <Reference Include="System.ComponentModel.Composition.Registration" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=f300afd708cefcd3, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\LinqToAwait.1.0.0\lib\net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=f300afd708cefcd3, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\LinqToAwait.1.0.0\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=f300afd708cefcd3, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\LinqToAwait.1.0.0\lib\net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\LinqToAwait.1.0.0\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reflection.Context" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
@@ -129,9 +147,19 @@
     <Compile Include="Devices\DeviceModule.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Objects\ProfileCommandDataCollectionJsonConverter.cs" />
+    <Compile Include="Objects\ProfileCommandData.cs" />
+    <Compile Include="Objects\ProfileCommandDataCollection.cs" />
+    <Compile Include="Objects\Extensions.cs" />
+    <Compile Include="Objects\ProfileGetRequestProcessor.cs" />
+    <Compile Include="Processors\GenericRequestProcessor.cs" />
+    <Compile Include="Processors\IRequestProcessor.cs" />
+    <Compile Include="Objects\ObjectGetRequestProcessor.cs" />
+    <Compile Include="Processors\RequestProcessorAttribute.cs" />
     <Compile Include="Formatting\XmlSerializer.cs" />
-    <Compile Include="Formatting\ProfileJsonProcessor.cs" />
-    <Compile Include="Formatting\ProfileXmlProcessor.cs" />
+    <Compile Include="Objects\ObjectRefCollectionResponseProcessor.cs" />
+    <Compile Include="Objects\ProfileJsonResponseProcessor.cs" />
+    <Compile Include="Objects\ProfileXmlResponseProcessor.cs" />
     <Compile Include="Formatting\JsonSerializer.cs" />
     <Compile Include="HttpException.cs" />
     <Compile Include="NancyBootstrapper.cs" />
@@ -160,7 +188,6 @@
     <Compile Include="Host.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="NancyModuleBase.cs" />
-    <Compile Include="TsetModule.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>

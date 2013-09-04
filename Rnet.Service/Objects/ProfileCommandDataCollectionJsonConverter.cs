@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Linq;
 
 using Newtonsoft.Json;
 
 namespace Rnet.Service.Objects
 {
 
-    class ObjectRefCollectionJsonConverter : JsonConverter
+    public class ProfileCommandDataCollectionJsonConverter : JsonConverter
     {
 
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(ObjectRefCollection);
+            return objectType == typeof(ProfileCommandDataCollection);
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -21,17 +20,13 @@ namespace Rnet.Service.Objects
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var objects = (ObjectRefCollection)value;
-
             writer.WriteStartObject();
-            foreach (var o in objects)
+            foreach (var command in (ProfileCommandDataCollection)value)
             {
-                writer.WritePropertyName(o.Id);
+                writer.WritePropertyName(command.Name);
                 writer.WriteStartObject();
                 writer.WritePropertyName("Href");
-                writer.WriteValue(o.Href);
-                writer.WritePropertyName("Name");
-                writer.WriteValue(o.Name);
+                writer.WriteValue(command.Href);
                 writer.WriteEndObject();
             }
             writer.WriteEndObject();

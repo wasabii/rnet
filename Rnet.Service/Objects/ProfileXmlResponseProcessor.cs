@@ -10,11 +10,11 @@ using Nancy.Responses.Negotiation;
 using Rnet.Drivers;
 using Rnet.Profiles.Metadata;
 
-namespace Rnet.Service.Formatting
+namespace Rnet.Service.Objects
 {
 
     [Export(typeof(IResponseProcessor))]
-    public class ProfileXmlProcessor : IResponseProcessor
+    public class ProfileXmlResponseProcessor : IResponseProcessor
     {
 
         public IEnumerable<Tuple<string, MediaRange>> ExtensionMappings

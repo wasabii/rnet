@@ -8,13 +8,13 @@ using Nancy.Responses;
 using Nancy.Responses.Negotiation;
 
 using Rnet.Drivers;
-using Rnet.Service.Objects;
+using Rnet.Service.Formatting;
 
-namespace Rnet.Service.Formatting
+namespace Rnet.Service.Objects
 {
 
     [Export(typeof(IResponseProcessor))]
-    public class ProfileJsonProcessor : IResponseProcessor
+    public class ProfileJsonResponseProcessor : IResponseProcessor
     {
 
         public IEnumerable<Tuple<string, MediaRange>> ExtensionMappings
@@ -45,12 +45,13 @@ namespace Rnet.Service.Formatting
             return new JsonResponse<ProfileData>(new ProfileData()
             {
                 Id = profile.Metadata.Id,
-                Properties = new ProfilePropertyDataCollection(profile.Metadata.Properties.Select(i => new ProfilePropertyData()
-                {
-                    Href = new Uri(i.Name, UriKind.Relative),
-                    Name = i.Name,
-                    Value = i.GetValue(profile.Instance),
-                }))
+                Properties = new ProfilePropertyDataCollection(profile.Metadata.Properties
+                    .Select(i => new ProfilePropertyData()
+                    {
+                        Href = new Uri(i.Name, UriKind.Relative),
+                        Name = i.Name,
+                        Value = i.GetValue(profile.Instance),
+                    })),
             }, new JsonSerializer());
         }
 

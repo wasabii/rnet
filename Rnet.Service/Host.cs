@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
-using System.ComponentModel.Composition.AttributedModel;
-using System.Diagnostics.Contracts;
-using Nancy.Hosting.Self;
-using System.ComponentModel.Composition.Registration;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
+
+using Nancy.Hosting.Self;
 
 namespace Rnet.Service
 {

@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Xml.Serialization;
 
+using Newtonsoft.Json;
+
 namespace Rnet.Service.Objects
 {
 
-    public class ObjectRef
+    [JsonObject("Command")]
+    public class ProfileCommandData
     {
 
-        [XmlAttribute("Id")]
-        public string Id { get; set; }
-
         [XmlIgnore]
+        [JsonProperty]
         public Uri Href { get; set; }
 
         [XmlAttribute("Href")]
+        [JsonIgnore]
         public string _Href
         {
             get { return Href.ToString(); }
             set { Href = new Uri(value); }
         }
 
-        [XmlAttribute("Name")]
+        [JsonIgnore]
         public string Name { get; set; }
 
     }

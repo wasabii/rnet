@@ -1,11 +1,10 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Rnet.Service.Objects
 {
 
     [JsonObject]
-    class ProfileData
+    public class ProfileData
     {
 
         [JsonProperty]
@@ -13,6 +12,9 @@ namespace Rnet.Service.Objects
 
         [JsonProperty]
         public ProfilePropertyDataCollection Properties { get; set; }
+
+        [JsonProperty]
+        public ProfileCommandDataCollection Commands { get; set; }
 
     }
 

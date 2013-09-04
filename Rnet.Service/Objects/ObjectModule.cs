@@ -3,133 +3,231 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
+
+using LinqToAwait;
 
 using Nancy;
 
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 using Rnet.Profiles.Metadata;
+using Rnet.Service.Processors;
 
 namespace Rnet.Service.Objects
 {
 
+    /// <summary>
+    /// Serves requests under the objects URL.
+    /// </summary>
     [Export(typeof(INancyModule))]
     public sealed class ObjectModule : NancyModuleBase
     {
 
-        const string PROFILE_URI_PREFIX = "~";
+        IEnumerable<Lazy<IRequestProcessor>> processors;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
         [ImportingConstructor]
-        public ObjectModule(RnetBus bus)
+        public ObjectModule(
+            [Import] RnetBus bus,
+            [ImportMany] IEnumerable<Lazy<IRequestProcessor>> processors)
             : base(bus, "/objects")
         {
             Contract.Requires<ArgumentNullException>(bus != null);
+            Contract.Requires<ArgumentNullException>(processors != null);
 
-            Get["/", true] = async (x, ct) => await GetUri("");
-            Get["/{Uri*}", true] = async (x, ct) => await GetUri(x.Uri);
+            this.processors = processors;
+
+            Get["/", true] = async (x, ct) => await GetRequest("");
+            Get["/{Uri*}", true] = async (x, ct) => await GetRequest(x.Uri);
         }
 
         /// <summary>
-        /// Gets the bus descriptor.
+        /// Implements a GET request.
         /// </summary>
         /// <returns></returns>
-        async Task<dynamic> GetUri(string uri)
+        async Task<object> GetRequest(string path)
         {
-            Contract.Requires<ArgumentNullException>(uri != null);
+            Contract.Requires<ArgumentNullException>(path != null);
 
+            // split and clean up uri
+            var uri = path.Split('/')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToArray();
+
+            // resolve targeted object
+            var o = await Resolve(Bus, uri, 0);
+            if (o == null)
+                return HttpStatusCode.NotFound;
+
+            // process request
+            return await processors.ToObservable()
+                .WhereAsync(i => i.Value.CanProcess(Context, "GET", uri, o))
+                .SelectAsync(i => i.Value.Process(Context, "GET", uri, o))
+                .Where(i => i != null)
+                .FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// Resolves the given Uri segment from the point of view of the specified object.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="uri"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        async Task<object> Resolve(object o, string[] uri, int position)
+        {
+            if (o is RnetBus)
+                return await Resolve((RnetBus)o, uri, position);
+            if (o is RnetBusObject)
+                return await Resolve((RnetBusObject)o, uri, position);
+            if (o is Profile)
+                return await Resolve((Profile)o, uri, position);
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves the given url segment from the bus.
+        /// </summary>
+        /// <param name="bus"></param>
+        /// <param name="uri"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        async Task<object> Resolve(RnetBus bus, string[] uri, int position)
+        {
             // if bus is down, so are we
             if (Bus.State != RnetBusState.Started ||
                 Bus.Client.State != RnetClientState.Started ||
                 Bus.Client.Connection.State != RnetConnectionState.Open)
                 return HttpStatusCode.ServiceUnavailable;
 
-            // an attempt to browse the root
-            if (uri == "")
-                return await GetObjectRefs();
+            // end of uri, request is for bus itself
+            if (position >= uri.Length)
+                return bus.Controllers;
 
-            // navigate down hierarchy until the end
-            var target = await Resolve(uri.Split('/'), 0, Bus.Controllers);
-            if (target == null)
-                return HttpStatusCode.BadRequest;
+            // resolve controller
+            var o = await FindObject(bus.Controllers, uri[position]);
+            if (o != null)
+                return await Resolve(o, uri, position + 1);
 
-            return target;
+            return null;
         }
 
         /// <summary>
-        /// Gets references for every root object.
+        /// Resolves the given url segment from the given bus object.
         /// </summary>
-        /// <returns></returns>
-        async Task<ObjectRefCollection> GetObjectRefs()
-        {
-            var c = new ObjectRefCollection();
-
-            // assembly references
-            foreach (var i in Bus.Controllers)
-                c.Add(new ObjectRef()
-                {
-                    Href = MakeRelativeUri(await GetObjectUri(i)),
-                    Name = await GetObjectName(i),
-                });
-
-            return c;
-        }
-
-        /// <summary>
-        /// Begins navigating down the URL components starting from a set of objects.
-        /// </summary>
-        /// <param name="components"></param>
+        /// <param name="target"></param>
+        /// <param name="uri"></param>
         /// <param name="position"></param>
-        /// <param name="objects"></param>
         /// <returns></returns>
-        async Task<dynamic> Resolve(string[] components, int position, IEnumerable<RnetBusObject> objects)
+        async Task<object> Resolve(RnetBusObject target, string[] uri, int position)
         {
-            Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position >= 0);
-            Contract.Requires<ArgumentNullException>(objects != null);
-            Contract.ForAll(components, i => i != null && i.Length > 0);
+            // end of uri, request is for object itself
+            if (position >= uri.Length)
+                return target;
 
-            var o = (RnetBusObject)null;
+            // referring to a profile
+            if (uri[position].StartsWith(Util.PROFILE_URI_PREFIX))
+                return await ResolveProfile(target, uri, position, uri[position].Substring(Util.PROFILE_URI_PREFIX.Length));
 
-            // repeat for each path item
-            for (int i = position; i < components.Length; i++)
+            // object contains other objects
+            var c = await target.GetProfile<IContainer>();
+            if (c != null)
             {
-                // component refers to a profile
-                if (components[i].StartsWith(PROFILE_URI_PREFIX))
-                {
-                    // cannot do this if no current object known
-                    if (o == null)
-                        return HttpStatusCode.BadRequest;
-
-                    // begin navigating from current object
-                    return await ResolveProfile(components, i, o);
-                }
-
-                // find object with matching ID
-                o = await FindObject(objects, components[i]);
-                if (o == null)
-                    return HttpStatusCode.NotFound;
-
-                // next container to work on is this one
-                objects = await o.GetProfile<IContainer>();
+                // find contained object with specified id
+                var o = await FindObject(c, uri[position]);
+                if (o != null)
+                    return await Resolve(o, uri, position + 1);
             }
 
-            // item not found; at end of path
-            if (o == null)
-                return HttpStatusCode.NotFound;
+            return null;
+        }
 
-            // return the object we ended at, wrapped
-            return new ObjectData()
-            {
-                Id = await o.GetId(),
-                Name = await GetObjectName(o),
-                Objects = await GetObjectRefs(o),
-                Profiles = await GetProfileRefs(o),
-            };
+        /// <summary>
+        /// Navigate at a profile path.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="position"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        async Task<object> ResolveProfile(RnetBusObject target, string[] uri, int position, string id)
+        {
+            // find matching profile
+            var profiles = await target.GetProfiles();
+            if (profiles == null)
+                return null;
+
+            // first profile with metadata that corresponds with uri
+            var profile = profiles.FirstOrDefault(i => i.Metadata.Id == id);
+            if (profile != null)
+                return await Resolve(profile, uri, position + 1);
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves the given url segment from the given profile.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="uri"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        async Task<object> Resolve(Profile profile, string[] uri, int position)
+        {
+            // end of uri, request is for object itself
+            if (position >= uri.Length)
+                return profile;
+
+            // resolve property
+            var property = profile.Metadata.Properties
+                .FirstOrDefault(i => i.Name == uri[position]);
+            if (property != null)
+                return await Resolve(profile, property, uri, position);
+
+            // resolve command
+            var command = profile.Metadata.Operations
+                .FirstOrDefault(i => i.Name == uri[position]);
+            if (command != null)
+                return await Resolve(profile, command, uri, position);
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves the given url segment from the given property.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="property"></param>
+        /// <param name="uri"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        Task<object> Resolve(Profile profile, PropertyDescriptor property, string[] uri, int position)
+        {
+            if (position >= uri.Length)
+                return Task.FromResult<object>(property);
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves the given url segment from the given command.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="command"></param>
+        /// <param name="uri"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        Task<object> Resolve(Profile profile, CommandDescriptor command, string[] uri, int position)
+        {
+            if (position >= uri.Length)
+                return Task.FromResult<object>(command);
+
+            return null;
         }
 
         /// <summary>
@@ -152,187 +250,6 @@ namespace Rnet.Service.Objects
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Gets the child objects refs for the given object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<ObjectRefCollection> GetObjectRefs(RnetBusObject o)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            // load container
-            var p = await o.GetProfile<IContainer>() ?? Enumerable.Empty<RnetBusObject>();
-            var c = new ObjectRefCollection();
-
-            // assembly references
-            foreach (var i in p)
-                c.Add(new ObjectRef()
-                {
-                    Href = MakeRelativeUri(await GetObjectUri(i)),
-                    Name = await GetObjectName(i),
-                });
-
-            return c;
-        }
-
-        /// <summary>
-        /// Gets the Uri of the object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<Uri> GetObjectUri(RnetBusObject o)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            var l = new List<string>();
-
-            do
-            {
-                // obtain ID of current item
-                var i = await o.GetId();
-                Contract.Assert(i != null);
-
-                // add to list and recurse
-                l.Add(i);
-                o = o.GetContainer();
-            }
-            while (o != null);
-
-            // assemble Url from components backwards
-            var uri = BaseUri;
-            foreach (var i in l.Reverse<string>())
-                uri = uri.UriCombine(i);
-
-            return uri;
-        }
-
-        /// <summary>
-        /// Returns the name of the object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<string> GetObjectName(RnetBusObject o)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            // obtain object profile
-            var p = await o.GetProfile<IObject>();
-            if (p == null)
-                return await o.GetId();
-
-            return p.DisplayName;
-        }
-
-        /// <summary>
-        /// Gets the profile refs for the given object.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<ProfileRefCollection> GetProfileRefs(RnetBusObject o)
-        {
-            Contract.Requires<ArgumentNullException>(o != null);
-
-            // load container
-            var p = await o.GetProfiles() ?? Enumerable.Empty<Profile>();
-            var c = new ProfileRefCollection();
-
-            // assembly references
-            foreach (var i in p)
-                c.Add(new ProfileRef()
-                {
-                    Href = MakeRelativeUri(await GetProfileUri(i)),
-                    Id = i.Metadata.Id,
-                });
-
-            return c;
-        }
-
-        /// <summary>
-        /// Gets the Uri of the profile.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        async Task<Uri> GetProfileUri(Profile profile)
-        {
-            Contract.Requires<ArgumentNullException>(profile != null);
-
-            // url ends with profile path
-            var l = new List<string>();
-            l.Add(PROFILE_URI_PREFIX + profile.Metadata.Id);
-
-            // begin from target object
-            var target = profile.Target;
-
-            do
-            {
-                // obtain ID of current item
-                var id = await target.GetId();
-                Contract.Assert(id != null);
-
-                // add to list and recurse
-                l.Add(id);
-                target = target.GetContainer();
-            }
-            while (target != null);
-
-            // assemble Url from components backwards
-            var uri = BaseUri;
-            foreach (var i in l.Reverse<string>())
-                uri = uri.UriCombine(i);
-
-            return uri;
-        }
-
-        /// <summary>
-        /// Navigate at a profile path.
-        /// </summary>
-        /// <param name="components"></param>
-        /// <param name="position"></param>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        async Task<dynamic> ResolveProfile(string[] components, int position, RnetBusObject target)
-        {
-            Contract.Requires<ArgumentNullException>(components != null);
-            Contract.Requires<ArgumentOutOfRangeException>(position >= 1);
-            Contract.Requires<ArgumentNullException>(target != null);
-
-            // find matching profile
-            var profiles = await target.GetProfiles();
-            if (profiles == null)
-                return HttpStatusCode.NotFound;
-
-            // full profile name
-            var id = components[position++].Remove(0, PROFILE_URI_PREFIX.Length);
-
-            // first profile with metadata that corresponds with full profile name
-            var profile = profiles.FirstOrDefault(i => i.Metadata.Id == id);
-            if (profile == null)
-                return HttpStatusCode.NotFound;
-
-            // are we at the end?
-            if (position >= components.Length)
-                return profile;
-
-            // possibly can request metadata
-            var next = components[position++];
-            if (next == "metadata")
-                return profile.Metadata;
-
-            // as far as we can go
-            return HttpStatusCode.NotFound;
-        }
-
-        /// <summary>
-        /// Makes the specified <see cref="Uri"/> relative to the request.
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <returns></returns>
-        Uri MakeRelativeUri(Uri uri)
-        {
-            return new Uri(Request.Url.ToString().TrimEnd('/') + '/').MakeRelativeUri(uri);
         }
 
     }
