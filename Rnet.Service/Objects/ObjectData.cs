@@ -7,21 +7,19 @@ namespace Rnet.Service.Objects
 {
 
     [XmlRoot("Object", Namespace = "urn:rnet")]
-    [XmlInclude(typeof(DeviceData))]
-    [XmlInclude(typeof(ControllerData))]
     public class ObjectData
     {
 
         [XmlIgnore]
         [JsonProperty]
-        public Uri Href { get; set; }
+        public Uri Uri { get; set; }
 
-        [XmlAttribute("Href")]
+        [XmlAttribute("Uri")]
         [JsonIgnore]
-        public string _Href
+        public string _Uri
         {
-            get { return Href.ToString(); }
-            set { Href = new Uri(value); }
+            get { return Uri != null ? Uri.ToString() : null; }
+            set { Uri = new Uri(value); }
         }
 
         [XmlAttribute]
@@ -30,8 +28,14 @@ namespace Rnet.Service.Objects
         [XmlAttribute]
         public string Name { get; set; }
 
+        [XmlArray]
+        [XmlArrayItem("Controller", typeof(ControllerData))]
+        [XmlArrayItem("Device", typeof(DeviceData))]
+        [XmlArrayItem("Object", typeof(ObjectData))]
         public ObjectDataCollection Objects { get; set; }
 
+        [XmlArray]
+        [XmlArrayItem("ProfileRef")]
         public ProfileRefCollection Profiles { get; set; }
 
     }

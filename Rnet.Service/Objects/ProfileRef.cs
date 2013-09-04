@@ -8,13 +8,13 @@ namespace Rnet.Service.Objects
     {
 
         [XmlIgnore]
-        public Uri Href { get; set; }
+        public Uri Uri { get; set; }
 
-        [XmlAttribute("Href")]
-        public string _Href
+        [XmlAttribute("Uri")]
+        public string _Uri
         {
-            get { return Href.ToString(); }
-            set { Href = new Uri(value); }
+            get { return Uri != null ? Uri.ToString() : null; }
+            set { Uri = new Uri(value); }
         }
 
         [XmlAttribute("Id")]

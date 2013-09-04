@@ -26,7 +26,7 @@ namespace Rnet.Service.Objects
                 writer.WritePropertyName(command.Name);
                 writer.WriteStartObject();
                 writer.WritePropertyName("Href");
-                writer.WriteValue(command.Href);
+                writer.WriteValue(command.Uri);
                 writer.WriteEndObject();
             }
             writer.WriteEndObject();

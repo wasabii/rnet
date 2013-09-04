@@ -22,7 +22,7 @@ namespace Rnet.Service.Objects
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var o = (ProfileRefCollection)value;
-            serializer.Serialize(writer, o.ToDictionary(i => i.Id, i => i.Href));
+            serializer.Serialize(writer, o.ToDictionary(i => i.Id, i => i.Uri));
         }
 
     }

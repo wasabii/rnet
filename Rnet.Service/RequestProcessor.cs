@@ -1,9 +1,9 @@
 ﻿using System;
-using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Nancy;
+
 using Rnet.Service.Objects;
 
 namespace Rnet.Service.Processors
@@ -19,7 +19,7 @@ namespace Rnet.Service.Processors
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="target"></param>
+        /// <param name="module"></param>
         protected RequestProcessor(
             ObjectModule module)
         {
@@ -42,34 +42,57 @@ namespace Rnet.Service.Processors
         protected ObjectModule Module { get; private set; }
 
         /// <summary>
-        /// Separated path of the target.
+        /// Resolves a new target from the given target.
         /// </summary>
-        protected string[] Path
-        {
-            get { return Module.Target.Path; }
-        }
+        /// <returns></returns>
+        public abstract Task<object> Resolve(T target, string[] path);
 
         /// <summary>
-        /// Gets the object being targetted by the request.
+        /// Implements IRequestProcessor.Resolve.
         /// </summary>
-        protected T Object
+        /// <returns></returns>
+        Task<object> IRequestProcessor.Resolve(object target, string[] path)
         {
-            get { return (T)Module.Target.Object; }
+            if (path.Length == 0)
+                return Task.FromResult(target);
+            else
+                return Resolve((T)target, path);
         }
 
         /// <summary>
         /// Implements a GET request.
         /// </summary>
         /// <returns></returns>
-        public abstract Task<object> Get();
+        public virtual Task<object> Get(T target)
+        {
+            return Task.FromResult<object>(null);
+        }
 
         /// <summary>
         /// Implements IRequestProcessor.Get.
         /// </summary>
         /// <returns></returns>
-        Task<object> IRequestProcessor.Get()
+        Task<object> IRequestProcessor.Get(object target)
         {
-            return Get();
+            return Get((T)target);
+        }
+
+        /// <summary>
+        /// Implements a PUT request.
+        /// </summary>
+        /// <returns></returns>
+        public virtual Task<object> Put(T target)
+        {
+            return Task.FromResult<object>(null);
+        }
+
+        /// <summary>
+        /// Implements IRequestProcessor.Put.
+        /// </summary>
+        /// <returns></returns>
+        Task<object> IRequestProcessor.Put(object target)
+        {
+            return Put((T)target);
         }
 
     }

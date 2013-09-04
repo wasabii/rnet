@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using Nancy;
-using Nancy.Responses;
+
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
-using Rnet.Profiles.Metadata;
 using Rnet.Service.Processors;
 
 namespace Rnet.Service.Objects
@@ -25,7 +24,7 @@ namespace Rnet.Service.Objects
     {
 
         ICompositionService composition;
-        IEnumerable<ExportFactory<IRequestProcessor, IRequestProcessorMetadata>> processors;
+        IEnumerable<Lazy<IRequestProcessor, IRequestProcessorMetadata>> processors;
 
         /// <summary>
         /// Initializes a new instance.
@@ -35,7 +34,7 @@ namespace Rnet.Service.Objects
         public ObjectModule(
             [Import] ICompositionService composition,
             [Import] RnetBus bus,
-            [ImportMany] IEnumerable<ExportFactory<IRequestProcessor, IRequestProcessorMetadata>> processors)
+            [ImportMany] IEnumerable<Lazy<IRequestProcessor, IRequestProcessorMetadata>> processors)
             : base(bus, "/")
         {
             Contract.Requires<ArgumentNullException>(composition != null);
@@ -45,288 +44,118 @@ namespace Rnet.Service.Objects
             this.composition = composition;
             this.processors = processors;
 
-            Get[@"/", c => !c.Request.Url.Path.StartsWith("/:"), true] = async (x, ct) => await GetRequest("");
-            Get[@"/{Uri*}", c => !c.Request.Url.Path.StartsWith("/:"), true] = async (x, ct) => await GetRequest(x.Uri);
-        }
-
-        /// <summary>
-        /// Discovered target.
-        /// </summary>
-        [Export]
-        public RequestTarget Target { get; private set; }
-
-        /// <summary>
-        /// Gets the device description.
-        /// </summary>
-        /// <param name="controllerId"></param>
-        /// <param name="zoneId"></param>
-        /// <param name="keypadId"></param>
-        /// <returns></returns>
-        Task<DeviceData> GetDevice(string controllerId, string zoneId, string keypadId)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
-
-            return DeviceToData(GetRnetDevice(controllerId, zoneId, keypadId));
-        }
-
-        /// <summary>
-        /// Gets the device data.
-        /// </summary>
-        /// <param name="controllerId"></param>
-        /// <param name="zoneId"></param>
-        /// <param name="keypadId"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        async Task<Response> GetDeviceData(string controllerId, string zoneId, string keypadId, string path)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
-
-            return await GetDeviceData(GetRnetDevice(controllerId, zoneId, keypadId), path);
-        }
-
-        /// <summary>
-        /// Gets the <see cref="IRnetZoneDevice"/> given by the IDs.
-        /// </summary>
-        /// <param name="controllerId"></param>
-        /// <param name="zoneId"></param>
-        /// <param name="keypadId"></param>
-        /// <returns></returns>
-        RnetDevice GetRnetDevice(string controllerId, string zoneId, string keypadId)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(controllerId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(zoneId));
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(keypadId));
-
-            return Bus[byte.Parse(controllerId), byte.Parse(zoneId), byte.Parse(keypadId)];
-        }
-
-        /// <summary>
-        /// Gets the data from the given path of the device.
-        /// </summary>
-        /// <param name="device"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        async Task<dynamic> GetDeviceData(RnetDevice device, string path)
-        {
-            Contract.Requires<ArgumentNullException>(device != null);
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(path));
-
-            var handle = device[RnetPath.Parse(path.Replace('/', '.'))];
-            if (handle == null)
-                return HttpStatusCode.NotFound;
-
-            //// check for cache lifetime
-            //IncomingRequest.CheckConditionalRetrieve(handle.Timestamp);
-
-            //// refresh if requested
-            //CacheControlHeaderValue cc;
-            //if (CacheControlHeaderValue.TryParse(IncomingRequest.Headers[HttpRequestHeader.CacheControl], out cc))
-            //    if (cc.MustRevalidate)
-            //        await handle.Refresh();
-
-            // read data
-            var data = await handle.Read();
-            if (data == null)
-                return HttpStatusCode.NotFound;
-
-            return Response.FromStream(new MemoryStream(data), "application/octet-stream")
-                .WithHeader("Last-Modified", handle.Timestamp.ToString("R"));
+            Get[@"/", true] =
+            Get[@"/{Uri*}", true] = async (x, ct) =>
+                await GetRequest(x.Uri ?? "");
         }
 
         /// <summary>
         /// Implements a GET request.
         /// </summary>
         /// <returns></returns>
-        async Task<object> GetRequest(string path)
+        async Task<object> GetRequest(string uri)
         {
-            Contract.Requires<ArgumentNullException>(path != null);
+            Contract.Requires<ArgumentNullException>(uri != null);
 
             // split and clean up uri
-            var uri = path.Split('/')
+            var path = uri.Split('/')
                 .Where(i => !string.IsNullOrWhiteSpace(i))
                 .ToArray();
 
-            // resolve targeted object
-            var o = await Resolve(Bus, uri, 0);
+            // resolve the path into an object
+            var o = await Resolve(Bus, path) ?? HttpStatusCode.NotFound;
+            if (o is HttpStatusCode ||
+                o is Response)
+                return o;
+
+            // handle GET request
+            return await InvokeGet(o) ?? HttpStatusCode.MethodNotAllowed;
+        }
+
+        /// <summary>
+        /// Implements a PUT request.
+        /// </summary>
+        /// <returns></returns>
+        async Task<object> PutRequest(string uri)
+        {
+            Contract.Requires<ArgumentNullException>(uri != null);
+
+            // split and clean up uri
+            var path = uri.Split('/')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToArray();
+
+            // resolve the path into an object
+            var o = await Resolve(Bus, path);
             if (o == null)
                 return HttpStatusCode.NotFound;
 
-            // store target
-            Target = new RequestTarget(uri, o);
-
-            // process request
-            return await processors
-                .Where(i => i.Metadata.Type == o.GetType())
-                .ToObservable()
-                .SelectAsync(i => i.CreateExport().Value.Get(), true)
-                .FirstOrDefaultAsync(i => i != null);
+            // handle GET request
+            return await InvokePut(o) ?? HttpStatusCode.NoContent;
         }
 
         /// <summary>
-        /// Resolves the given Uri segment from the point of view of the specified object.
+        /// Fully resolves the path from the given object.
         /// </summary>
-        /// <param name="o"></param>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
+        /// <param name="source"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
-        async Task<object> Resolve(object o, string[] uri, int position)
+        async Task<object> Resolve(object source, string[] path)
         {
-            if (o is RnetBus)
-                return await Resolve((RnetBus)o, uri, position);
-            if (o is RnetBusObject)
-                return await Resolve((RnetBusObject)o, uri, position);
-            if (o is Profile)
-                return await Resolve((Profile)o, uri, position);
+            var o = await InvokeResolve(source, path);
+            while (o is ResolveResponse)
+                o = await InvokeResolve(((ResolveResponse)o).Object, ((ResolveResponse)o).Path);
 
-            return null;
+            return o;
         }
 
         /// <summary>
-        /// Resolves the given url segment from the bus.
+        /// Invokes the matching <see cref="IRequestProcessor"/> for the given source object, using the provided function.
         /// </summary>
-        /// <param name="bus"></param>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
+        /// <param name="source"></param>
+        /// <param name="invoke"></param>
         /// <returns></returns>
-        async Task<object> Resolve(RnetBus bus, string[] uri, int position)
+        async Task<object> Invoke(object source, Func<IRequestProcessor, Task<object>> invoke)
         {
-            // if bus is down, so are we
-            if (Bus.State != RnetBusState.Started ||
-                Bus.Client.State != RnetClientState.Started ||
-                Bus.Client.Connection.State != RnetConnectionState.Open)
-                return HttpStatusCode.ServiceUnavailable;
+            var o = source;
 
-            // end of uri, request is for bus itself
-            if (position >= uri.Length)
-                return bus;
+            foreach (var p in processors.OrderByDescending(i => i.Metadata.Priority))
+                if (p.Metadata.Type.IsInstanceOfType(source))
+                    if ((o = await invoke(p.Value)) != null)
+                        break;
 
-            // path represents a direct device ID
-            if (uri[position][0] == ':')
-                return GetRnetDevice(uri[position].Substring(1));
-
-            // resolve controller
-            var o = await FindObject(bus.Controllers, uri[position]);
-            if (o != null)
-                return await Resolve(o, uri, position + 1);
-
-            return null;
+            return o;
         }
 
         /// <summary>
-        /// Resolves the given url segment from the given bus object.
+        /// Invokes the request processors in order to resolve one level.
         /// </summary>
-        /// <param name="target"></param>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
+        /// <param name="source"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
-        async Task<object> Resolve(RnetBusObject target, string[] uri, int position)
+        Task<object> InvokeResolve(object source, string[] path)
         {
-            // end of uri, request is for object itself
-            if (position >= uri.Length)
-                return target;
-
-            // referring to a profile
-            if (uri[position].StartsWith(Util.PROFILE_URI_PREFIX))
-                return await ResolveProfile(target, uri, position, uri[position].Substring(Util.PROFILE_URI_PREFIX.Length));
-
-            // object contains other objects
-            var c = await target.GetProfile<IContainer>();
-            if (c != null)
-            {
-                // find contained object with specified id
-                var o = await FindObject(c, uri[position]);
-                if (o != null)
-                    return await Resolve(o, uri, position + 1);
-            }
-
-            return null;
+            return Invoke(source, i => i.Resolve(source, path));
         }
 
         /// <summary>
-        /// Navigate at a profile path.
+        /// Invokes the request processors in order to handle a GET request.
         /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
-        /// <param name="target"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
-        async Task<object> ResolveProfile(RnetBusObject target, string[] uri, int position, string id)
+        Task<object> InvokeGet(object source)
         {
-            // find matching profile
-            var profiles = await target.GetProfiles();
-            if (profiles == null)
-                return null;
-
-            // first profile with metadata that corresponds with uri
-            var profile = profiles.FirstOrDefault(i => i.Metadata.Id == id);
-            if (profile != null)
-                return await Resolve(profile, uri, position + 1);
-
-            return null;
+            return Invoke(source, i => i.Get(source));
         }
 
         /// <summary>
-        /// Resolves the given url segment from the given profile.
+        /// Invokes the request processors in order to handle a PUT request.
         /// </summary>
-        /// <param name="profile"></param>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
-        async Task<object> Resolve(Profile profile, string[] uri, int position)
+        Task<object> InvokePut(object source)
         {
-            // end of uri, request is for object itself
-            if (position >= uri.Length)
-                return profile;
-
-            // resolve property
-            var property = profile.Metadata.Properties
-                .FirstOrDefault(i => i.Name == uri[position]);
-            if (property != null)
-                return await Resolve(profile, property, uri, position);
-
-            // resolve command
-            var command = profile.Metadata.Operations
-                .FirstOrDefault(i => i.Name == uri[position]);
-            if (command != null)
-                return await Resolve(profile, command, uri, position);
-
-            return null;
-        }
-
-        /// <summary>
-        /// Resolves the given url segment from the given property.
-        /// </summary>
-        /// <param name="profile"></param>
-        /// <param name="property"></param>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        Task<object> Resolve(Profile profile, PropertyDescriptor property, string[] uri, int position)
-        {
-            if (position >= uri.Length)
-                return Task.FromResult<object>(property);
-
-            return null;
-        }
-
-        /// <summary>
-        /// Resolves the given url segment from the given command.
-        /// </summary>
-        /// <param name="profile"></param>
-        /// <param name="command"></param>
-        /// <param name="uri"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        Task<object> Resolve(Profile profile, CommandDescriptor command, string[] uri, int position)
-        {
-            if (position >= uri.Length)
-                return Task.FromResult<object>(command);
-
-            return null;
+            return Invoke(source, i => i.Put(source));
         }
 
         /// <summary>
@@ -335,7 +164,7 @@ namespace Rnet.Service.Objects
         /// <param name="source"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        async Task<RnetBusObject> FindObject(IEnumerable<RnetBusObject> source, string id)
+        internal async Task<RnetBusObject> FindObject(IEnumerable<RnetBusObject> source, string id)
         {
             Contract.Requires(source != null);
             Contract.Requires(id != null);
@@ -351,6 +180,11 @@ namespace Rnet.Service.Objects
             return null;
         }
 
+        /// <summary>
+        /// Transforms the given <see cref="RnetBusObject"/> into a <see cref="ObjectData"/> instance.
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
         public async Task<ObjectData> ObjectToData(RnetBusObject d)
         {
             if (d is RnetDevice)
@@ -359,6 +193,21 @@ namespace Rnet.Service.Objects
                 return await FillObjectData(d, new ObjectData());
         }
 
+        async Task<ObjectData> FillObjectData(RnetBusObject o, ObjectData d)
+        {
+            d.Uri = await o.GetUri(Context);
+            d.Id = await o.GetId();
+            d.Name = await o.GetName(Context);
+            d.Objects = await GetObjects(o);
+            d.Profiles = await GetProfileRefs(o);
+            return d;
+        }
+
+        /// <summary>
+        /// Transforms the given <see cref="RnetDevice"/> into a <see cref="DeviceData"/> instance.
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
         public async Task<DeviceData> DeviceToData(RnetDevice d)
         {
             if (d is RnetController)
@@ -367,27 +216,21 @@ namespace Rnet.Service.Objects
                 return await FillDeviceData(d, new DeviceData());
         }
 
-        public async Task<ControllerData> ControllerToData(RnetController d)
-        {
-            return await FillControllerData(d, new ControllerData());
-        }
-
-        async Task<ObjectData> FillObjectData(RnetBusObject o, ObjectData d)
-        {
-            d.Id = await o.GetId();
-            d.Href = await o.GetObjectUri(Context);
-            d.Name = await o.GetObjectName(Context);
-            d.Objects = await GetObjects(o);
-            d.Profiles = await GetProfileRefs(o);
-            return d;
-        }
-
         async Task<DeviceData> FillDeviceData(RnetDevice o, DeviceData d)
         {
             await FillObjectData(o, d);
-            d.DeviceHref = o.GetDeviceUri(Context);
-            d.DeviceId = o.GetDeviceIdAsString();
+            d.RnetId = o.GetId();
             return d;
+        }
+
+        /// <summary>
+        /// Transforms the given <see cref="RnetController"/> into a <see cref="ControllerData"/> instance.
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
+        public async Task<ControllerData> ControllerToData(RnetController d)
+        {
+            return await FillControllerData(d, new ControllerData());
         }
 
         async Task<ControllerData> FillControllerData(RnetController o, ControllerData d)
@@ -428,7 +271,7 @@ namespace Rnet.Service.Objects
         {
             return new ProfileRef()
             {
-                Href = (await profile.GetProfileUri(Context)).MakeRelativeUri(Context),
+                Uri = await profile.GetUri(Context),
                 Id = profile.Metadata.Id,
             };
         }

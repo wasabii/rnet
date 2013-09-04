@@ -10,9 +10,14 @@ namespace Rnet.Service
     {
 
         /// <summary>
-        /// Prefix to be appended to the profile path.
+        /// Prefix to be prepended to the profile path.
         /// </summary>
         public static readonly string PROFILE_URI_PREFIX = "~";
+
+        /// <summary>
+        /// Segment under a device which 
+        /// </summary>
+        public static readonly string DATA_URI_SEGMENT = "_";
 
         /// <summary>
         /// Combines the relative Uri into the base Uri.

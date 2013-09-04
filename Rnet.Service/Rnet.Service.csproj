@@ -139,12 +139,10 @@
     <Compile Include="ICompositionService.cs" />
     <Compile Include="Objects\ControllerData.cs" />
     <Compile Include="Objects\ControllerRequestProcessor.cs" />
+    <Compile Include="Objects\DeviceDataCollectionJsonConverter.cs" />
     <Compile Include="Objects\DeviceDataCollection.cs" />
     <Compile Include="Objects\DeviceRequestProcessor.cs" />
     <Compile Include="Objects\DeviceData.cs" />
-    <None Include="Objects\DeviceModule.cs">
-      <SubType>Code</SubType>
-    </None>
     <Compile Include="Objects\BusData.cs" />
     <Compile Include="Objects\BusRequestProcessor.cs" />
     <Compile Include="Objects\ProfileCommandDataCollectionJsonConverter.cs" />
@@ -152,15 +150,13 @@
     <Compile Include="Objects\ProfileCommandDataCollection.cs" />
     <Compile Include="Objects\Extensions.cs" />
     <Compile Include="Objects\ProfileRequestProcessor.cs" />
-    <Compile Include="Objects\RequestTarget.cs" />
+    <Compile Include="ResolveResponse.cs" />
     <Compile Include="ObservableExtensions.cs" />
     <Compile Include="RequestProcessor.cs" />
     <Compile Include="IRequestProcessor.cs" />
     <Compile Include="Objects\ObjectRequestProcessor.cs" />
     <Compile Include="RequestProcessorAttribute.cs" />
     <Compile Include="Formatting\XmlSerializer.cs" />
-    <Compile Include="Objects\ProfileJsonResponseProcessor.cs" />
-    <Compile Include="Objects\ProfileXmlResponseProcessor.cs" />
     <Compile Include="Formatting\JsonSerializer.cs" />
     <Compile Include="HttpException.cs" />
     <Compile Include="NancyBootstrapper.cs" />

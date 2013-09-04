@@ -46,13 +46,24 @@ namespace Rnet.Service.Formatting
 
         public void Serialize<TModel>(string contentType, TModel model, Stream outputStream)
         {
-            var xml = new XDocument();
-            var srs = new System.Xml.Serialization.XmlSerializer(model.GetType());
-            using (var wrt = xml.CreateWriter())
-                srs.Serialize(wrt, model);
+            try
+            {
+                // output to temporary document
+                var xml = new XDocument();
+                var srs = new System.Xml.Serialization.XmlSerializer(model.GetType());
 
-            xml.Descendants().Attributes().Where(i => i.IsNamespaceDeclaration).Remove();
-            xml.Save(outputStream, SaveOptions.OmitDuplicateNamespaces);
+                // serialize
+                using (var wrt = xml.CreateWriter())
+                    srs.Serialize(wrt, model);
+
+                // clean up
+                xml.Descendants().Attributes().Where(i => i.IsNamespaceDeclaration).Remove();
+                xml.Save(outputStream, SaveOptions.OmitDuplicateNamespaces);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
         }
 
     }

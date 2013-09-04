@@ -3,8 +3,6 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Nancy;
-
 using Rnet.Drivers;
 using Rnet.Profiles.Metadata;
 using Rnet.Service.Processors;
@@ -16,6 +14,11 @@ namespace Rnet.Service.Objects
     public class ProfileRequestProcessor : RequestProcessor<Profile>
     {
 
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="module"></param>
+        [ImportingConstructor]
         public ProfileRequestProcessor(
             ObjectModule module)
             : base(module)
@@ -23,61 +26,64 @@ namespace Rnet.Service.Objects
 
         }
 
-        public Profile Profile
+        public override async Task<object> Resolve(Profile target, string[] path)
         {
-            get { return (Profile)base.Object; }
+            throw new NotImplementedException();
         }
 
-        public override async Task<object> Get()
+        public override async Task<object> Get(Profile profile)
         {
             return new ProfileData()
             {
-                Id = Profile.Metadata.Id,
-                Properties = await GetProperties(Context, Profile),
-                Commands = await GetCommands(Context, Profile),
+                Uri = await profile.GetUri(Context),
+                Id = profile.Metadata.Id,
+                Name = profile.Metadata.Name,
+                Namespace = profile.Metadata.Namespace,
+                Properties = await GetProperties(profile),
+                Commands = await GetCommands(profile),
             };
         }
 
-        async Task<ProfilePropertyDataCollection> GetProperties(NancyContext context, Profile profile)
+        async Task<ProfilePropertyDataCollection> GetProperties(Profile profile)
         {
             return new ProfilePropertyDataCollection((await Task.WhenAll(profile.Metadata.Properties
                 .Select(async i => new
                 {
-                    Href = await GetPropertyUri(context, profile, i),
+                    Uri = await GetPropertyUri(profile, i),
                     Name = i.Name,
                     Value = i.GetValue(profile.Instance),
                 })))
                 .Select(i => new ProfilePropertyData()
                 {
-                    Href = i.Href,
+                    Uri = i.Uri,
                     Name = i.Name,
                     Value = i.Value,
                 }));
         }
 
-        async Task<Uri> GetPropertyUri(NancyContext context, Profile profile, PropertyDescriptor property)
+        async Task<Uri> GetPropertyUri(Profile profile, PropertyDescriptor property)
         {
-            return (await profile.GetProfileUri(context)).UriCombine(property.Name).MakeRelativeUri(context);
+            return (await profile.GetUri(Context)).UriCombine(property.Name);
         }
 
-        async Task<ProfileCommandDataCollection> GetCommands(NancyContext context, Profile profile)
+        async Task<ProfileCommandDataCollection> GetCommands(Profile profile)
         {
             return new ProfileCommandDataCollection((await Task.WhenAll(profile.Metadata.Operations
                 .Select(async i => new
                 {
-                    Href = await GetCommandUri(context, profile, i),
+                    Uri = await GetCommandUri(profile, i),
                     Name = i.Name,
                 })))
                 .Select(i => new ProfileCommandData()
                 {
-                    Href = i.Href,
+                    Uri = i.Uri,
                     Name = i.Name,
                 }));
         }
 
-        async Task<Uri> GetCommandUri(NancyContext context, Profile profile, CommandDescriptor command)
+        async Task<Uri> GetCommandUri(Profile profile, CommandDescriptor command)
         {
-            return (await profile.GetProfileUri(context)).UriCombine(command.Name).MakeRelativeUri(context);
+            return (await profile.GetUri(Context)).UriCombine(command.Name);
         }
 
     }

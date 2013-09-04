@@ -22,7 +22,7 @@ namespace Rnet.Service
         }
 
         SingleThreadSynchronizationContext sync = new SingleThreadSynchronizationContext();
-        Uri uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
+        Uri uri = new Uri("rnet.tcp://70.123.112.92:9999");
         ApplicationCatalog applicationCatalog;
         AggregateCatalog catalog;
         CompositionContainer container;
@@ -67,7 +67,9 @@ namespace Rnet.Service
             container.ComposeExportedValue<RnetBus>(bus);
 
             // configure nancy
-            nancyHost = new NancyHost(new NancyBootstrapper(container), new Uri("http://localhost:12292/rnet/"));
+            nancyHost = new NancyHost(
+                new NancyBootstrapper(container),
+                new Uri("http://localhost:12292/rnet/"));
             nancyHost.Start();
 
             // start the bus

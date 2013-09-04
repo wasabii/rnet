@@ -7,8 +7,15 @@ namespace Rnet.Service.Objects
     public class BusData
     {
 
+        [XmlArray]
+        [XmlArrayItem("Controller", typeof(ControllerData))]
+        [XmlArrayItem("Device", typeof(DeviceData))]
         public DeviceDataCollection Devices { get; set; }
 
+        [XmlArray]
+        [XmlArrayItem("Controller", typeof(ControllerData))]
+        [XmlArrayItem("Device", typeof(DeviceData))]
+        [XmlArrayItem("Object", typeof(ObjectData))]
         public ObjectDataCollection Objects { get; set; }
 
     }

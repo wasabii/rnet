@@ -3,7 +3,7 @@
 namespace Rnet.Service.Objects
 {
 
-    [XmlRoot("Controller", Namespace="urn:rnet")]
+    [XmlRoot("Controller", Namespace = "urn:rnet")]
     public class ControllerData : DeviceData
     {
 

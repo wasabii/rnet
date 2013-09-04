@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace Rnet
 {
@@ -145,6 +146,14 @@ namespace Rnet
         public RnetDataHandle this[byte a, byte b, byte c, byte d, byte e, byte f, byte g, byte h]
         {
             get { return GetOrCreateDataHandle(new RnetPath(a, b, c, d, e, f, g, h)); }
+        }
+
+        /// <summary>
+        /// Gets all the known data handles.
+        /// </summary>
+        public virtual IEnumerable<RnetDataHandle> Data
+        {
+            get { return handles.Values.Select(i => i.GetTargetOrDefault()).ToList(); }
         }
 
         /// <summary>

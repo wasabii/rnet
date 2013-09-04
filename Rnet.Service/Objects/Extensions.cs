@@ -30,7 +30,7 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<string> GetObjectName(this RnetBusObject o, NancyContext context)
+        public static async Task<string> GetName(this RnetBusObject o, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -47,30 +47,20 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetObjectUri(this RnetBusObject o, NancyContext context)
+        public static async Task<Uri> GetUri(this RnetBusObject o, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
-            var l = new List<string>();
+            // obtain device URI for devices
+            if (o is RnetDevice)
+                return ((RnetDevice)o).GetUri(context);
 
-            do
-            {
-                // obtain ID of current item
-                var i = await o.GetId();
-                Contract.Assert(i != null);
+            // combine with URI of owner
+            var p = o.GetOwner();
+            if (p != null)
+                return (await p.GetUri(context)).UriCombine(await o.GetId());
 
-                // add to list and recurse
-                l.Add(i);
-                o = o.GetContainer();
-            }
-            while (o != null);
-
-            // assemble Url from components backwards
-            var uri = context.GetBaseUri();
-            foreach (var i in l.Reverse<string>())
-                uri = uri.UriCombine(i);
-
-            return uri;
+            return null;
         }
 
         /// <summary>
@@ -78,35 +68,15 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetProfileUri(this Profile profile, NancyContext context)
+        public static async Task<Uri> GetUri(this Profile profile, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
-            // url ends with profile path
-            var l = new List<string>();
-            l.Add(Util.PROFILE_URI_PREFIX + profile.Metadata.Id);
+            var u = await profile.Target.GetUri(context);
+            if (u == null)
+                return null;
 
-            // begin from target object
-            var target = profile.Target;
-
-            do
-            {
-                // obtain ID of current item
-                var id = await target.GetId();
-                Contract.Assert(id != null);
-
-                // add to list and recurse
-                l.Add(id);
-                target = target.GetContainer();
-            }
-            while (target != null);
-
-            // assemble Url from components backwards
-            var uri = context.GetBaseUri();
-            foreach (var i in l.Reverse<string>())
-                uri = uri.UriCombine(i);
-
-            return uri;
+            return u.UriCombine(Util.PROFILE_URI_PREFIX + profile.Metadata.Id);
         }
 
         /// <summary>
@@ -114,9 +84,9 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
-        public static string GetDeviceIdAsString(this RnetDevice device)
+        public static string GetId(this RnetDevice device)
         {
-            return string.Format("{0}.{1}.{2}", 
+            return string.Format("{0}.{1}.{2}",
                 (int)device.DeviceId.ControllerId,
                 (int)device.DeviceId.ZoneId,
                 (int)device.DeviceId.KeypadId);
@@ -127,12 +97,12 @@ namespace Rnet.Service.Objects
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
-        public static Uri GetDeviceUri(this RnetDevice device, NancyContext context)
+        public static Uri GetUri(this RnetDevice device, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(device != null);
 
             return context.GetBaseUri()
-                .UriCombine(":" + device.GetDeviceIdAsString());
+                .UriCombine(":" + device.GetId());
         }
 
     }

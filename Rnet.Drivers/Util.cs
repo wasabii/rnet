@@ -16,20 +16,20 @@ namespace Rnet.Drivers
     {
 
         /// <summary>
-        /// Generates unique IDs.
+        /// Generates unique names.
         /// </summary>
-        class IdGenerator
+        class NameGenerator
         {
 
             int next;
 
             /// <summary>
-            /// Gets the next available unique ID.
+            /// Gets the next available unique name.
             /// </summary>
             /// <returns></returns>
-            public GeneratedId Next()
+            public GeneratedName Next()
             {
-                return new GeneratedId("unknown-" + next++);
+                return new GeneratedName("unknown-" + next++);
             }
 
         }
@@ -37,22 +37,22 @@ namespace Rnet.Drivers
         /// <summary>
         /// Stored auto-generated ID.
         /// </summary>
-        class GeneratedId
+        class GeneratedName
         {
 
             /// <summary>
             /// Initializes a new instance.
             /// </summary>
-            /// <param name="id"></param>
-            public GeneratedId(string id)
+            /// <param name="name"></param>
+            public GeneratedName(string name)
             {
-                Id = id;
+                Name = name;
             }
 
             /// <summary>
             /// Generated ID.
             /// </summary>
-            public string Id { get; private set; }
+            public string Name { get; private set; }
 
         }
 
@@ -61,19 +61,19 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        static string GetGeneratedId(this RnetBusObject o)
+        static string GetGeneratedName(this RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
             // cache generated ID on object, and cache ID generator on bus device.
             return
-                o.Context.GetOrCreate<GeneratedId>(() =>
-                    o.Bus.LocalDevice.Context.GetOrCreate<IdGenerator>(() =>
-                        new IdGenerator()).Next()).Id;
+                o.Context.GetOrCreate<GeneratedName>(() =>
+                    o.Bus.LocalDevice.Context.GetOrCreate<NameGenerator>(() =>
+                        new NameGenerator()).Next()).Name;
         }
 
         /// <summary>
-        /// Gets the ID of the given <see cref="RnetBusObject"/>, or generates one.
+        /// Gets the name of the given <see cref="RnetBusObject"/> or generates one.
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
@@ -82,7 +82,7 @@ namespace Rnet.Drivers
             Contract.Requires<ArgumentNullException>(o != null);
 
             var p = await o.GetProfile<IObject>();
-            return p != null && !string.IsNullOrWhiteSpace(p.Id) ? p.Id : GetGeneratedId(o);
+            return p != null && !string.IsNullOrWhiteSpace(p.Id) ? p.Id : GetGeneratedName(o);
         }
 
         /// <summary>

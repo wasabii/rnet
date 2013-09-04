@@ -7,8 +7,8 @@ namespace Rnet.Service.Objects
 {
 
     [XmlRoot("Devices", Namespace = "urn:rnet")]
-    [JsonConverter(typeof(ObjectDataCollectionJsonConverter))]
-    public class DeviceDataCollection : ObjectDataCollection<DeviceData>
+    [JsonConverter(typeof(DeviceDataCollectionJsonConverter))]
+    public class DeviceDataCollection : List<DeviceData>
     {
 
         /// <summary>

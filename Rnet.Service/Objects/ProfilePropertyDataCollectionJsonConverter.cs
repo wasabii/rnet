@@ -27,7 +27,7 @@ namespace Rnet.Service.Objects
                 writer.WritePropertyName(property.Name);
                 writer.WriteStartObject();
                 writer.WritePropertyName("Href");
-                writer.WriteValue(property.Href);
+                writer.WriteValue(property.Uri);
                 writer.WritePropertyName("Value");
                 serializer.Serialize(writer, property.Value);
                 writer.WriteEndObject();

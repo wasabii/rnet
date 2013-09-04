@@ -6,23 +6,24 @@ using Newtonsoft.Json;
 namespace Rnet.Service.Objects
 {
 
+    [XmlRoot("Command")]
     [JsonObject("Command")]
     public class ProfileCommandData
     {
 
         [XmlIgnore]
         [JsonProperty]
-        public Uri Href { get; set; }
+        public Uri Uri { get; set; }
 
-        [XmlAttribute("Href")]
+        [XmlAttribute("Uri")]
         [JsonIgnore]
-        public string _Href
+        public string _Uri
         {
-            get { return Href.ToString(); }
-            set { Href = new Uri(value); }
+            get { return Uri != null ? Uri.ToString() : null; }
+            set { Uri = new Uri(value); }
         }
 
-        [JsonIgnore]
+        [JsonProperty]
         public string Name { get; set; }
 
     }

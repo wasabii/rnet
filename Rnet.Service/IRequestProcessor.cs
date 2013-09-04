@@ -10,10 +10,24 @@ namespace Rnet.Service.Processors
     {
 
         /// <summary>
-        /// Returns the result from the given request.
+        /// Resolves a new object from an existing target. Return value can be another target, or any other type of
+        /// request result.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        Task<object> Resolve(object target, string[] path);
+
+        /// <summary>
+        /// Handles and returns the result of a GET request against the specified target.
         /// </summary>
         /// <returns></returns>
-        Task<object> Get();
+        Task<object> Get(object target);
+
+        /// <summary>
+        /// Handles and returns the result of a PUT request against the specified target.
+        /// </summary>
+        /// <returns></returns>
+        Task<object> Put(object target);
 
     }
 
