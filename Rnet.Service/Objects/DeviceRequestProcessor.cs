@@ -10,7 +10,7 @@ namespace Rnet.Service.Objects
 {
 
     [RequestProcessor(typeof(RnetDevice), -75)]
-    public class DeviceRequestProcessor : ObjectRequestProcessor
+    public class DeviceRequestProcessor : ObjectRequestProcessor<RnetDevice>
     {
 
         /// <summary>
@@ -25,11 +25,11 @@ namespace Rnet.Service.Objects
             Contract.Requires<ArgumentNullException>(module != null);
         }
 
-        public override async Task<object> Resolve(RnetBusObject target, string[] path)
+        public override async Task<object> Resolve(RnetDevice target, string[] path)
         {
             // referring to a data path
             if (path[0] == Util.DATA_URI_SEGMENT)
-                return await ResolveData((RnetDevice)target, path);
+                return await ResolveData(target, path);
 
             return await base.Resolve(target, path);
         }

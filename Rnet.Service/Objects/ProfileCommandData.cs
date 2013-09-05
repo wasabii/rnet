@@ -20,6 +20,7 @@ namespace Rnet.Service.Objects
 
         public string Name { get; set; }
 
+        [JsonProperty("_xmlns", Order = -10)]
         public string XmlNamespace { get; set; }
 
         XmlSchema IXmlSerializable.GetSchema()

@@ -12,7 +12,7 @@ namespace Rnet
     /// <summary>
     /// Provides a durable view of the state of an RNET system.
     /// </summary>
-    public sealed class RnetBus : IDisposable
+    public sealed class RnetBus : RnetObject, IDisposable
     {
 
         /// <summary>

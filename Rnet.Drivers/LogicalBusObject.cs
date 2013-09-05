@@ -1,5 +1,5 @@
-﻿using System.Diagnostics.Contracts;
-using Rnet.Profiles;
+﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Rnet.Drivers
 {
@@ -23,7 +23,7 @@ namespace Rnet.Drivers
         protected LogicalBusObject(RnetDevice owner)
             : base(owner.Bus)
         {
-            Contract.Requires(owner != null);
+            Contract.Requires<ArgumentNullException>(owner != null);
 
             this.SetContainerContext(owner, owner);
         }

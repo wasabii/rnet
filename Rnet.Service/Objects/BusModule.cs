@@ -24,6 +24,7 @@ namespace Rnet.Service.Objects
     {
 
         ICompositionService composition;
+        RnetBus bus;
         IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors;
 
         /// <summary>
@@ -42,18 +43,13 @@ namespace Rnet.Service.Objects
             Contract.Requires<ArgumentNullException>(processors != null);
 
             this.composition = composition;
+            this.bus = bus;
             this.processors = processors;
-            Bus = bus;
 
             Get[@"/", true] =
             Get[@"/{Uri*}", true] = async (x, ct) =>
                 await GetRequest(x.Uri);
         }
-
-        /// <summary>
-        /// Gets the <see cref="RnetBus"/>.
-        /// </summary>
-        protected RnetBus Bus { get; private set; }
 
         /// <summary>
         /// Implements a GET request.
@@ -67,7 +63,7 @@ namespace Rnet.Service.Objects
                 .ToArray() : new string[0];
 
             // resolve the path into an object
-            var o = await Resolve(Bus, path) ?? HttpStatusCode.NotFound;
+            var o = await Resolve(bus, path) ?? HttpStatusCode.NotFound;
             if (o is HttpStatusCode ||
                 o is Response)
                 return o;
@@ -90,7 +86,7 @@ namespace Rnet.Service.Objects
                 .ToArray();
 
             // resolve the path into an object
-            var o = await Resolve(Bus, path);
+            var o = await Resolve(bus, path);
             if (o == null)
                 return HttpStatusCode.NotFound;
 

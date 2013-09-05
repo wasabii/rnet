@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Nancy;
+using Nancy.ModelBinding;
 
 using Rnet.Drivers;
 using Rnet.Service.Processors;

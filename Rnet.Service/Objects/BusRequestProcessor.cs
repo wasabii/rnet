@@ -2,10 +2,10 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+
 using Nancy;
+
 using Rnet.Service.Processors;
 
 namespace Rnet.Service.Objects
@@ -94,6 +94,9 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         async Task<object> ResolveObject(RnetBus bus, string[] path)
         {
+            Contract.Requires<ArgumentNullException>(bus != null);
+            Contract.Requires<ArgumentException>(path != null && path.Length > 0);
+
             // path represents a root object (controller, for now)
             var o = await Module.FindObject(bus.Controllers, path[0]);
             if (o != null)
@@ -105,24 +108,17 @@ namespace Rnet.Service.Objects
         public override async Task<object> Get(RnetBus bus)
         {
             // all devices available on the bus
-            var l = await Observable.Empty<RnetBusObject>()
-                .Concat(bus.Controllers.ToObservable())
-                .Concat(bus.Controllers.ToObservable().SelectMany(i => i.Zones).SelectMany(i => i.Devices))
+            var l = await Task.WhenAll(Enumerable.Empty<RnetBusObject>()
+                .Concat(bus.Controllers)
+                .Concat(bus.Controllers.SelectMany(i => i.Zones).SelectMany(i => i.Devices))
                 .OfType<RnetDevice>()
-                .ToList();
-
-            var devices = await Task.WhenAll(l
-                .OfType<RnetDevice>()
-                .Select(i => Module.DeviceToData(i)));
-
-            var objects = await Task.WhenAll(l
-                .OfType<RnetController>()
                 .Select(i => Module.ObjectToData(i)));
 
             return new BusData()
             {
-                Devices = new DeviceDataCollection(devices),
-                Objects = new ObjectDataCollection(objects),
+                Uri = Context.GetBaseUri(),
+                Devices = new DeviceDataCollection(l.OfType<DeviceData>()),
+                Objects = new ObjectDataCollection(l.OfType<ObjectData>()),
             };
         }
 

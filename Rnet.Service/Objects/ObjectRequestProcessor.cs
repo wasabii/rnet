@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
+using Nancy;
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 using Rnet.Service.Processors;
@@ -11,17 +12,38 @@ namespace Rnet.Service.Objects
 {
 
     /// <summary>
+    /// Serves as a base type for other <see cref="ObjectRequestProcessor"/> types.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    [RequestProcessor(typeof(RnetBusObject))]
+    public sealed class ObjectRequestProcessor : ObjectRequestProcessor<RnetBusObject>
+    {
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="module"></param>
+        [ImportingConstructor]
+        public ObjectRequestProcessor(
+            BusModule module)
+            : base(module)
+        {
+            Contract.Requires<ArgumentNullException>(module != null);
+        }
+
+    }
+
+    /// <summary>
     /// Handles requests for <see cref="RnetBusObject"/> instances.
     /// </summary>
-    [RequestProcessor(typeof(RnetBusObject), -100)]
-    public class ObjectRequestProcessor : RequestProcessor<RnetBusObject>
+    public abstract class ObjectRequestProcessor<T> : RequestProcessor<T>
+        where T : RnetBusObject
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="target"></param>
-        [ImportingConstructor]
         protected ObjectRequestProcessor(
             BusModule module)
             : base(module)
@@ -29,7 +51,7 @@ namespace Rnet.Service.Objects
             Contract.Requires<ArgumentNullException>(module != null);
         }
 
-        public override async Task<object> Resolve(RnetBusObject target, string[] path)
+        public override async Task<object> Resolve(T target, string[] path)
         {
             // referring to a profile
             if (path[0].StartsWith(Util.PROFILE_URI_PREFIX))
@@ -58,8 +80,8 @@ namespace Rnet.Service.Objects
         async Task<object> ResolveProfile(RnetBusObject target, string[] path, string profileId)
         {
             Contract.Requires<ArgumentNullException>(target != null);
-            Contract.Requires<ArgumentNullException>(path != null);
-            Contract.Requires<ArgumentNullException>(profileId != null);
+            Contract.Requires<ArgumentException>(path != null && path.Length > 0);
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(profileId));
 
             // find matching profile
             var profiles = await target.GetProfiles();
@@ -74,15 +96,158 @@ namespace Rnet.Service.Objects
             return null;
         }
 
-        public override async Task<object> Get(RnetBusObject target)
+        public override async Task<object> Get(T target)
         {
-            return await Module.ObjectToData(target);
+            return await ObjectToData(target);
         }
 
-        public override Task<object> Put(RnetBusObject target)
+        public override Task<object> Put(T target)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
+
+        #region Transform To Model
+
+        /// <summary>
+        /// Transforms the given <see cref="RnetBusObject"/> into a <see cref="ObjectData"/> instance.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        protected async Task<ObjectData> ObjectToData(RnetBusObject o)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            if (o is RnetDevice)
+                return await DeviceToData((RnetDevice)o);
+
+            return await FillObjectData(o, new ObjectData());
+        }
+
+        /// <summary>
+        /// Populates the <see cref="ObjectData"/> model.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="d"></param>
+        /// <returns></returns>
+        async Task<ObjectData> FillObjectData(RnetBusObject o, ObjectData d)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(d != null);
+
+            d.Uri = await o.GetUri(Context);
+            d.FriendlyUri = await o.GetFriendlyUri(Context);
+            d.Id = await o.GetId();
+            d.Name = await o.GetName(Context);
+            d.Objects = await GetObjects(o);
+            d.Profiles = await GetProfileRefs(o);
+            return d;
+        }
+
+        /// <summary>
+        /// Transforms the given <see cref="RnetDevice"/> into a <see cref="DeviceData"/> instance.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        protected async Task<DeviceData> DeviceToData(RnetDevice o)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            if (o is RnetController)
+                return await ControllerToData((RnetController)o);
+
+            return await FillDeviceData(o, new DeviceData());
+        }
+
+        /// <summary>
+        /// Populates the <see cref="DeviceData"/> model.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="d"></param>
+        /// <returns></returns>
+        async Task<DeviceData> FillDeviceData(RnetDevice o, DeviceData d)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(d != null);
+
+            await FillObjectData(o, d);
+            d.RnetId = o.GetId();
+            d.DataUri = o.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT);
+            return d;
+        }
+
+        /// <summary>
+        /// Transforms the given <see cref="RnetController"/> into a <see cref="ControllerData"/> instance.
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
+        async Task<ControllerData> ControllerToData(RnetController d)
+        {
+            Contract.Requires<ArgumentNullException>(d != null);
+
+            return await FillControllerData(d, new ControllerData());
+        }
+
+        /// <summary>
+        /// Populates the <see cref="ControllerData"/> model.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="d"></param>
+        /// <returns></returns>
+        async Task<ControllerData> FillControllerData(RnetController o, ControllerData d)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(d != null);
+
+            await FillDeviceData(o, d);
+            return d;
+        }
+
+        /// <summary>
+        /// Transforms all available objects on the <see cref="RnetBusObject"/> into model instances.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<ObjectDataCollection> GetObjects(RnetBusObject o)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            // load container
+            var p = await o.GetProfile<IContainer>() ?? Enumerable.Empty<RnetBusObject>();
+            return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(i))));
+        }
+
+        /// <summary>
+        /// Transforms all available profiles on the <see cref="RnetBusObject"/> into model instances.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        async Task<ProfileRefCollection> GetProfileRefs(RnetBusObject o)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            // load container
+            var p = await o.GetProfiles() ?? Enumerable.Empty<ProfileHandle>();
+            return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(i))));
+        }
+
+        /// <summary>
+        /// Transforms a <see cref="ProfileHandle"/> into a <see cref="ProfileRef"/> model instance.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <returns></returns>
+        async Task<ProfileRef> ProfileToRef(ProfileHandle profile)
+        {
+            Contract.Requires<ArgumentNullException>(profile != null);
+
+            return new ProfileRef()
+            {
+                Uri = await profile.GetUri(Context),
+                FriendlyUri = await profile.GetFriendlyUri(Context),
+                Id = profile.Metadata.Id,
+            };
+        }
+
+        #endregion
 
     }
 

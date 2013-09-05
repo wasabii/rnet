@@ -30,6 +30,7 @@ namespace Rnet.Service.Objects
 
         public string Namespace { get; set; }
 
+        [JsonProperty("_xmlns", Order = -10)]
         public string XmlNamespace { get; set; }
 
         public ProfilePropertyDataCollection Properties { get; set; }

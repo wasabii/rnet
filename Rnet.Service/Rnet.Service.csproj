@@ -155,7 +155,6 @@
     <Compile Include="Objects\ProfileCommandDataCollection.cs" />
     <Compile Include="Objects\Extensions.cs" />
     <Compile Include="Objects\ProfileRequestProcessor.cs" />
-    <Compile Include="Objects\ProfileXmlResponseProcessor.cs" />
     <Compile Include="ResolveResponse.cs" />
     <Compile Include="ObservableExtensions.cs" />
     <Compile Include="RequestProcessor.cs" />

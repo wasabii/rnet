@@ -4,6 +4,8 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
+using Newtonsoft.Json;
+
 namespace Rnet.Service.Objects
 {
 
@@ -19,6 +21,7 @@ namespace Rnet.Service.Objects
 
         public object Value { get; set; }
 
+        [JsonProperty("_xmlns", Order = -10)]
         public string XmlNamespace { get; set; }
 
         public XmlSchema GetSchema()

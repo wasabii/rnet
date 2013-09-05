@@ -4,18 +4,18 @@ namespace Rnet
 {
 
     /// <summary>
-    /// Base class for objects made available on the RNET bus.
+    /// Base class for objects which are underneath the bus.
     /// </summary>
-    public abstract class RnetBusObject
+    public abstract class RnetBusObject : RnetObject
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         internal protected RnetBusObject(RnetBus bus)
+            : base()
         {
             Bus = bus;
-            Context = new RnetContext();
             Timestamp = DateTime.MinValue;
         }
 
@@ -23,11 +23,6 @@ namespace Rnet
         /// Reference to the communications bus.
         /// </summary>
         public RnetBus Bus { get; protected set; }
-
-        /// <summary>
-        /// Gets a set of items associated with this object.
-        /// </summary>
-        public RnetContext Context { get; private set; }
 
         /// <summary>
         /// Time of the last contact with this object.

@@ -106,6 +106,7 @@
     <Compile Include="RnetDevice.cs" />
     <Compile Include="RnetLocalDataHandle.cs" />
     <Compile Include="RnetNumberSixMessage.cs" />
+    <Compile Include="RnetObject.cs" />
     <Compile Include="RnetPriority.cs" />
     <Compile Include="RnetTcpUriParser.cs" />
     <Compile Include="RnetUnknownMessage.cs" />

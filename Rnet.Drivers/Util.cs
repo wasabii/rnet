@@ -68,7 +68,7 @@ namespace Rnet.Drivers
             // cache generated ID on object, and cache ID generator on bus device.
             return
                 o.Context.GetOrCreate<GeneratedName>(() =>
-                    o.Bus.LocalDevice.Context.GetOrCreate<NameGenerator>(() =>
+                    o.Bus.Context.GetOrCreate<NameGenerator>(() =>
                         new NameGenerator()).Next()).Name;
         }
 
@@ -95,7 +95,7 @@ namespace Rnet.Drivers
             Contract.Requires<ArgumentNullException>(source != null);
 
             return source
-                .Select(d => Rnet.RnetDataUtil.GetAsciiString(d));
+                .Select(d => RnetDataUtil.GetAsciiString(d));
         }
 
         /// <summary>
