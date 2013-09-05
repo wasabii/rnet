@@ -134,7 +134,7 @@ namespace Rnet.Profiles.Metadata
         public void SetValue<T>(object instance, T value)
         {
             Contract.Requires<InvalidCastException>(Type.IsAssignableFrom(typeof(T)));
-            SetValue(instance, value);
+            SetValue(instance, (object)value);
         }
 
         /// <summary>

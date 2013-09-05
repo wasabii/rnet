@@ -49,6 +49,10 @@ namespace Rnet.Service.Objects
             Get[@"/", true] =
             Get[@"/{Uri*}", true] = async (x, ct) =>
                 await GetRequest(x.Uri);
+
+            Put[@"/", true] =
+            Put[@"/{Uri*}", true] = async (x, ct) =>
+                await PutRequest(x.Uri);
         }
 
         /// <summary>

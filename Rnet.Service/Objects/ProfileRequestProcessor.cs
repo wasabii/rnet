@@ -3,10 +3,9 @@ using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-
+using System.Xml.Linq;
 using Nancy;
 using Nancy.ModelBinding;
-
 using Rnet.Drivers;
 using Rnet.Service.Processors;
 
@@ -87,6 +86,8 @@ namespace Rnet.Service.Objects
 
         public Task<object> Get(object target)
         {
+            var t = module.Bind();
+
             if (target is ProfileHandle)
                 return Get((ProfileHandle)target);
 
@@ -116,6 +117,22 @@ namespace Rnet.Service.Objects
 
         async Task<object> Get(ProfilePropertyHandle property)
         {
+            dynamic set = null;
+
+            var data = module.Bind<ProfilePropertyData>();
+            if (data != null)
+                if (data.Value != null)
+                    set = data.Value;
+
+            if (module.Request.Query.Value != null)
+                set = module.Request.Query.Value;
+
+            if (set != null)
+                if (set.GetType() == property.Metadata.Type)
+                    property.Set(set);
+                else
+                    property.Set(Convert.ChangeType(set, property.Metadata.Type));
+
             return await PropertyToData(property);
         }
 
@@ -204,6 +221,7 @@ namespace Rnet.Service.Objects
 
         Task<object> Put(ProfilePropertyHandle property)
         {
+            var t = module.Bind<XDocument>();
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
 

@@ -24,17 +24,17 @@ namespace Rnet.Service.Objects
         [JsonProperty("_xmlns", Order = -10)]
         public string XmlNamespace { get; set; }
 
-        public XmlSchema GetSchema()
+        XmlSchema IXmlSerializable.GetSchema()
         {
             return null;
         }
 
-        public void ReadXml(XmlReader reader)
+        void IXmlSerializable.ReadXml(XmlReader reader)
         {
             throw new NotImplementedException();
         }
 
-        public void WriteXml(XmlWriter writer)
+        void IXmlSerializable.WriteXml(XmlWriter writer)
         {
             var ns = (XNamespace)XmlNamespace;
 
