@@ -94,7 +94,7 @@ namespace Rnet.Profiles.Metadata
         /// <summary>
         /// Gets the set of <see cref="CommandDescriptor"/>s that describe available operations on the contract.
         /// </summary>
-        public CommandDescriptorCollection Operations
+        public CommandDescriptorCollection Commands
         {
             get { return operations; }
         }
@@ -186,37 +186,6 @@ namespace Rnet.Profiles.Metadata
             descriptor.Load(method);
             operations.Remove(descriptor);
             operations.Add(descriptor);
-        }
-
-        public XDocument ToXml()
-        {
-            // default namespace of profile
-            var ns = (XNamespace)PROFILE_METADATA_XMLNS;
-
-            // build XML document out of properties
-            var xml = new XDocument(
-                new XElement(ns + "Profile",
-                    new XElement(ns + "Id", id),
-                    new XElement(ns + "Namespace", ns),
-                    new XElement(ns + "Name", name),
-                    new XElement(ns + "XmlNamespace", PROFILE_XMLNS_PREFIX + id),
-                    new XElement(ns + "XmlElementName", Name),
-                    new XElement(ns + "Contract", Contract.FullName),
-                    new XElement(ns + "Properties",
-                        values.Select(i =>
-                            new XElement(ns + "Property",
-                                i.Name))),
-                    new XElement(ns + "Commands",
-                        operations.Select(i =>
-                            new XElement(ns + "Command",
-                                i.Name)))));
-
-            return xml;
-        }
-
-        public XDocument ToXsd()
-        {
-            throw new NotImplementedException();
         }
 
     }

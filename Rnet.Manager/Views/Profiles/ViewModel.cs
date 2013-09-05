@@ -20,7 +20,7 @@ namespace Rnet.Manager.Profiles
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        protected ViewModel(Profile<T> profile)
+        protected ViewModel(ProfileHandle<T> profile)
             : base(profile)
         {
 
@@ -29,9 +29,9 @@ namespace Rnet.Manager.Profiles
         /// <summary>
         /// Reference to the profile object being viewed.
         /// </summary>
-        public new Profile<T> Profile
+        public new ProfileHandle<T> Profile
         {
-            get { return (Profile<T>)base.Profile; }
+            get { return (ProfileHandle<T>)base.Profile; }
         }
 
     }
@@ -47,7 +47,7 @@ namespace Rnet.Manager.Profiles
         /// </summary>
         /// <param name="profile"></param>
         /// <returns></returns>
-        public static ViewModel Create(Profile profile)
+        public static ViewModel Create(ProfileHandle profile)
         {
             var vm = typeof(ViewModel).Assembly.GetTypes()
                 .Where(i => i.IsSubclassOf(typeof(ViewModel)))
@@ -68,7 +68,7 @@ namespace Rnet.Manager.Profiles
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        protected ViewModel(Profile profile)
+        protected ViewModel(ProfileHandle profile)
         {
             Profile = profile;
         }
@@ -76,7 +76,7 @@ namespace Rnet.Manager.Profiles
         /// <summary>
         /// Reference to the profile object being viewed.
         /// </summary>
-        public Profile Profile { get; private set; }
+        public ProfileHandle Profile { get; private set; }
 
         /// <summary>
         /// Provides a method that is invoked when the view model is created.

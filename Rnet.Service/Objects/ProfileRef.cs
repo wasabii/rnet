@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace Rnet.Service.Objects
 {
 
+    [JsonObject("ProfileRef")]
     public class ProfileRef
     {
 
@@ -17,7 +19,18 @@ namespace Rnet.Service.Objects
             set { Uri = new Uri(value); }
         }
 
-        [XmlAttribute("Id")]
+        [XmlIgnore]
+        public Uri FriendlyUri { get; set; }
+
+        [XmlAttribute("FriendlyUri")]
+        [JsonIgnore]
+        public string _FriendlyUri
+        {
+            get { return FriendlyUri != null ? FriendlyUri.ToString() : null; }
+            set { FriendlyUri = new Uri(value); }
+        }
+
+        [XmlAttribute]
         public string Id { get; set; }
 
     }

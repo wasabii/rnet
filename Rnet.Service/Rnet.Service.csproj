@@ -139,17 +139,23 @@
     <Compile Include="ICompositionService.cs" />
     <Compile Include="Objects\ControllerData.cs" />
     <Compile Include="Objects\ControllerRequestProcessor.cs" />
+    <Compile Include="Objects\IProfileCommandHandle.cs" />
+    <Compile Include="Objects\IProfilePropertyHandle.cs" />
+    <Compile Include="Objects\DataHandleData.cs" />
+    <Compile Include="Objects\DataHandleCollection.cs" />
     <Compile Include="Objects\DeviceDataCollectionJsonConverter.cs" />
     <Compile Include="Objects\DeviceDataCollection.cs" />
     <Compile Include="Objects\DeviceRequestProcessor.cs" />
     <Compile Include="Objects\DeviceData.cs" />
     <Compile Include="Objects\BusData.cs" />
     <Compile Include="Objects\BusRequestProcessor.cs" />
+    <Compile Include="Objects\IProfileHandle.cs" />
     <Compile Include="Objects\ProfileCommandDataCollectionJsonConverter.cs" />
     <Compile Include="Objects\ProfileCommandData.cs" />
     <Compile Include="Objects\ProfileCommandDataCollection.cs" />
     <Compile Include="Objects\Extensions.cs" />
     <Compile Include="Objects\ProfileRequestProcessor.cs" />
+    <Compile Include="Objects\ProfileXmlResponseProcessor.cs" />
     <Compile Include="ResolveResponse.cs" />
     <Compile Include="ObservableExtensions.cs" />
     <Compile Include="RequestProcessor.cs" />
@@ -162,7 +168,7 @@
     <Compile Include="NancyBootstrapper.cs" />
     <Compile Include="Objects\ProfileRefCollectionJsonConverter.cs" />
     <Compile Include="Objects\ObjectDataCollectionJsonConverter.cs" />
-    <Compile Include="Objects\ObjectModule.cs">
+    <Compile Include="Objects\BusModule.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Objects\ProfilePropertyData.cs" />
@@ -183,7 +189,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
-    <Compile Include="BusModule.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>

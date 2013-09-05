@@ -2,6 +2,7 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
+using System.Linq;
 
 using Rnet.Service.Processors;
 
@@ -18,10 +19,10 @@ namespace Rnet.Service.Objects
         /// <param name="target"></param>
         [ImportingConstructor]
         protected DeviceRequestProcessor(
-            ObjectModule module)
+            BusModule module)
             : base(module)
         {
-
+            Contract.Requires<ArgumentNullException>(module != null);
         }
 
         public override async Task<object> Resolve(RnetBusObject target, string[] path)
@@ -45,10 +46,25 @@ namespace Rnet.Service.Objects
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(path != null);
 
+            // list of all available data items
             if (path.Length == 1)
-                return Task.FromResult<object>(device.Data);
+                return Task.FromResult<object>(ToDataCollection(device));
 
-            return Task.FromResult<object>(device[path[1]]);
+            return Task.FromResult<object>(ResolveDataItem(device, path[1]));
+        }
+
+        DataHandleCollection ToDataCollection(RnetDevice device)
+        {
+            return new DataHandleCollection(device.Data.Select(i => new DataHandleData()
+            {
+                Uri = device.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT).UriCombine(i.Path.ToString()),
+                Path = i.Path.ToString(),
+            }));
+        }
+
+        DataHandleData ResolveDataItem(RnetDevice device, string path)
+        {
+            return null;
         }
 
     }

@@ -21,10 +21,10 @@ namespace Rnet.Service.Objects
         /// <param name="target"></param>
         [ImportingConstructor]
         protected BusRequestProcessor(
-            ObjectModule module)
+            BusModule module)
             : base(module)
         {
-
+            Contract.Requires<ArgumentNullException>(module != null);
         }
 
         public override async Task<object> Resolve(RnetBus bus, string[] path)
@@ -54,18 +54,36 @@ namespace Rnet.Service.Objects
             Contract.Requires<ArgumentNullException>(path != null);
             Contract.Requires<ArgumentNullException>(deviceId != null);
 
-            var s = deviceId.Split('.');
-            if (s.Length != 3)
-                return null;
-
-            // parse device id
-            var d = new RnetDeviceId(
-                byte.Parse(s[0]),
-                byte.Parse(s[1]),
-                byte.Parse(s[2]));
-
             // return device
-            return new ResolveResponse(bus[d], path.Skip(1).ToArray());
+            return new ResolveResponse(bus[ParseRnetDeviceId(deviceId)], path.Skip(1).ToArray());
+        }
+
+        /// <summary>
+        /// Parses the string into a <see cref="RnetDeviceId"/>.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        RnetDeviceId ParseRnetDeviceId(string t)
+        {
+            Contract.Requires<ArgumentNullException>(t != null);
+
+            var s = t.Split('.');
+
+            // single number: controller
+            if (s.Length == 1)
+                return new RnetDeviceId(
+                    byte.Parse(s[0]),
+                    RnetZoneId.Zone1,
+                    RnetKeypadId.Controller);
+
+            // standard format
+            if (s.Length == 3)
+                return new RnetDeviceId(
+                    byte.Parse(s[0]),
+                    byte.Parse(s[1]),
+                    byte.Parse(s[2]));
+
+            throw new FormatException("RnetDeviceId");
         }
 
         /// <summary>

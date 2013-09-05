@@ -22,7 +22,7 @@ namespace Rnet.Manager.Profiles.Core
         /// Initializes a new instance.
         /// </summary>
         /// <param name="profile"></param>
-        public ContainerViewModel(Profile<IContainer> profile)
+        public ContainerViewModel(ProfileHandle<IContainer> profile)
             : base(profile)
         {
 

@@ -12,7 +12,7 @@ namespace Rnet.Manager.Profiles.Core
         /// Initializes a new instance.
         /// </summary>
         /// <param name="profile"></param>
-        public DeviceViewModel(Profile<IDevice> profile)
+        public DeviceViewModel(ProfileHandle<IDevice> profile)
             : base(profile)
         {
 

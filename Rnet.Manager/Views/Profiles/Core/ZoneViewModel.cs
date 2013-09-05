@@ -12,7 +12,7 @@ namespace Rnet.Manager.Profiles.Core
         /// Initializes a new instance.
         /// </summary>
         /// <param name="profile"></param>
-        public ZoneViewModel(Profile<IZone> profile)
+        public ZoneViewModel(ProfileHandle<IZone> profile)
             : base(profile)
         {
 

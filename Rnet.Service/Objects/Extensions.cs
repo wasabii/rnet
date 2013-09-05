@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-
+using System.Xml.Linq;
+using System.Xml.Serialization;
 using Nancy;
-
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 
@@ -64,15 +64,53 @@ namespace Rnet.Service.Objects
         }
 
         /// <summary>
-        /// Gets the Uri of the profile.
+        /// Gets the Uri of the object.
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this Profile profile, NancyContext context)
+        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, NancyContext context)
+        {
+            Contract.Requires<ArgumentNullException>(o != null);
+
+            // combine with URI of container
+            var p = o.GetContainer();
+            if (p != null)
+                return (await p.GetFriendlyUri(context)).UriCombine(await o.GetId());
+
+            // no container, we must be under the bus directly
+            return context.GetBaseUri().UriCombine(await o.GetId());
+        }
+
+        /// <summary>
+        /// Gets the uri of the profile.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static async Task<Uri> GetUri(this ProfileHandle profile, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
+            Contract.Requires<ArgumentNullException>(context != null);
 
             var u = await profile.Target.GetUri(context);
+            if (u == null)
+                return null;
+
+            return u.UriCombine(Util.PROFILE_URI_PREFIX + profile.Metadata.Id);
+        }
+
+        /// <summary>
+        /// Gets the friendly uri of the profile.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, NancyContext context)
+        {
+            Contract.Requires<ArgumentNullException>(profile != null);
+            Contract.Requires<ArgumentNullException>(context != null);
+
+            var u = await profile.Target.GetFriendlyUri(context);
             if (u == null)
                 return null;
 
@@ -103,6 +141,21 @@ namespace Rnet.Service.Objects
 
             return context.GetBaseUri()
                 .UriCombine(":" + device.GetId());
+        }
+
+        /// <summary>
+        /// Serializes the specified <see cref="Object"/> to an <see cref="XElement"/>.
+        /// </summary>
+        /// <param name="self"></param>
+        /// <returns></returns>
+        public static XElement ToXElement<T>(this T self)
+        {
+            var xml = new XDocument();
+            var srs = new XmlSerializer(typeof(T));
+            using (var wrt = xml.CreateWriter())
+                srs.Serialize(wrt, self);
+
+            return xml.Root;
         }
 
     }

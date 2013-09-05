@@ -43,7 +43,7 @@ namespace Rnet.Service
         {
 
             [Export]
-            class FuncFactoryFactory<T>
+            class FuncFactoryFactory
             {
 
                 [Import]
@@ -58,7 +58,7 @@ namespace Rnet.Service
             [Export]
             public T CreateExport()
             {
-                return Container.GetExportedValue<FuncFactoryFactory<T>>().Factory.CreateExport().Value;
+                return Container.GetExportedValue<FuncFactoryFactory>().Factory.CreateExport().Value;
             }
 
         }

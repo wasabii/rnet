@@ -1,35 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 using Nancy;
 using Nancy.Responses.Negotiation;
 
-using Rnet.Drivers;
-using Rnet.Profiles.Metadata;
-
 namespace Rnet.Service.Objects
 {
 
+    /// <summary>
+    /// Implements XML serialization of the <see cref="ProfileHandler"/> and supporting types.
+    /// </summary>
     [Export(typeof(IResponseProcessor))]
     public class ProfileXmlResponseProcessor : IResponseProcessor
     {
 
         public IEnumerable<Tuple<string, MediaRange>> ExtensionMappings
         {
-            get
-            {
-                yield return new Tuple<string, MediaRange>("xml", "application/xml");
-            }
+            get { yield return new Tuple<string, MediaRange>("xml", "application/xml"); }
         }
 
         public ProcessorMatch CanProcess(MediaRange requestedMediaRange, dynamic model, NancyContext context)
         {
             var m = new ProcessorMatch();
-
-            if (model is Profile)
+            return m;
+            if (model is ProfileData)
+            //||
+            //    model is ProfilePropertyData ||
+            //    model is ProfileCommandData)
                 m.ModelResult = MatchResult.ExactMatch;
 
             if (requestedMediaRange.Matches("*/xml"))
@@ -40,34 +40,68 @@ namespace Rnet.Service.Objects
 
         public Response Process(MediaRange requestedMediaRange, dynamic model, NancyContext context)
         {
+            if (model is ProfileData)
+                return Process((ProfileData)model, context);
+
+            //if (model is ProfilePropertyData)
+            //    return Process((ProfilePropertyData)model, context);
+
+            //if (model is ProfileCommandData)
+            //    return Process((ProfileCommandData)model, context);
+
             return new Response()
             {
-                Contents = s => ProfileToXml(context, (Profile)model).Save(s, SaveOptions.OmitDuplicateNamespaces),
-                ContentType = "application/xml",
+                StatusCode = HttpStatusCode.NotImplemented,
             };
         }
 
-        XDocument ProfileToXml(NancyContext context, Profile profile)
+        Response Process(ProfileData profile, NancyContext context)
         {
-            var md = profile.Metadata;
-            var ns = md.XmlNamespace;
-
-            return new XDocument(
-                new XElement(ns + md.Name,
-                    new XAttribute("Id", md.Id),
-                    md.Properties.Select(i => PropertyToXml(context, profile, i))));
+            return new Response()
+            {
+                ContentType = "application/xml",
+                Contents = s => ProfileToXml(context, profile).Save(s, SaveOptions.OmitDuplicateNamespaces),
+            };
         }
 
-        XElement PropertyToXml(NancyContext context, Profile profile, PropertyDescriptor property)
-        {
-            var md = profile.Metadata;
-            var ns = md.XmlNamespace;
+        //Response Process(ProfilePropertyData property, NancyContext context)
+        //{
+        //    return new Response()
+        //    {
+        //        ContentType = "application/xml",
+        //        Contents = s => PropertyToXml(context, property).Save(s, SaveOptions.OmitDuplicateNamespaces),
+        //    };
+        //}
 
-            return new XElement(ns + property.Name,
-                new XAttribute("Href", property.Name),
-                new XElement(ns + "Value",
-                    property.GetValue(profile.Instance)));
+        //Response Process(ProfileCommandData command, NancyContext context)
+        //{
+        //    return new Response()
+        //    {
+        //        ContentType = "application/xml",
+        //        Contents = s => CommandToXml(context, command).Save(s, SaveOptions.OmitDuplicateNamespaces),
+        //    };
+        //}
+
+        XDocument ProfileToXml(NancyContext context, ProfileData profile)
+        {
+            var xml = new XDocument();
+            var srs = new XmlSerializer(typeof(ProfileData));
+            using (var wrt = xml.CreateWriter())
+                srs.Serialize(wrt, profile);
+
+            return xml;
+           // return new XDocument(xml.Root.FirstNode);
         }
+
+        //XElement PropertyToXml(NancyContext context, ProfilePropertyData property)
+        //{
+
+        //}
+
+        //XElement CommandToXml(NancyContext context, ProfilePropertyData property)
+        //{
+
+        //}
 
     }
 

@@ -19,23 +19,23 @@ namespace Rnet.Service.Objects
     /// Serves requests under the objects URL.
     /// </summary>
     [Export(typeof(INancyModule))]
-    [Export(typeof(ObjectModule))]
-    public sealed class ObjectModule : BusModule
+    [Export(typeof(BusModule))]
+    public sealed class BusModule : NancyModule
     {
 
         ICompositionService composition;
-        IEnumerable<Lazy<IRequestProcessor, IRequestProcessorMetadata>> processors;
+        IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
         [ImportingConstructor]
-        public ObjectModule(
+        public BusModule(
             [Import] ICompositionService composition,
             [Import] RnetBus bus,
-            [ImportMany] IEnumerable<Lazy<IRequestProcessor, IRequestProcessorMetadata>> processors)
-            : base(bus, "/")
+            [ImportMany] IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors)
+            : base("/")
         {
             Contract.Requires<ArgumentNullException>(composition != null);
             Contract.Requires<ArgumentNullException>(bus != null);
@@ -43,11 +43,17 @@ namespace Rnet.Service.Objects
 
             this.composition = composition;
             this.processors = processors;
+            Bus = bus;
 
             Get[@"/", true] =
             Get[@"/{Uri*}", true] = async (x, ct) =>
-                await GetRequest(x.Uri ?? "");
+                await GetRequest(x.Uri);
         }
+
+        /// <summary>
+        /// Gets the <see cref="RnetBus"/>.
+        /// </summary>
+        protected RnetBus Bus { get; private set; }
 
         /// <summary>
         /// Implements a GET request.
@@ -55,12 +61,10 @@ namespace Rnet.Service.Objects
         /// <returns></returns>
         async Task<object> GetRequest(string uri)
         {
-            Contract.Requires<ArgumentNullException>(uri != null);
-
             // split and clean up uri
-            var path = uri.Split('/')
+            var path = uri != null ? uri.Split('/')
                 .Where(i => !string.IsNullOrWhiteSpace(i))
-                .ToArray();
+                .ToArray() : new string[0];
 
             // resolve the path into an object
             var o = await Resolve(Bus, path) ?? HttpStatusCode.NotFound;
@@ -119,8 +123,8 @@ namespace Rnet.Service.Objects
         {
             var o = source;
 
-            foreach (var p in processors.OrderByDescending(i => i.Metadata.Priority))
-                if (p.Metadata.Type.IsInstanceOfType(source))
+            foreach (var p in processors.OrderByDescending(i => i.Metadata.Infos.Max(j => j.Priority)))
+                if (p.Metadata.Infos.Any(i => i.Type.IsInstanceOfType(source)))
                     if ((o = await invoke(p.Value)) != null)
                         break;
 
@@ -196,6 +200,7 @@ namespace Rnet.Service.Objects
         async Task<ObjectData> FillObjectData(RnetBusObject o, ObjectData d)
         {
             d.Uri = await o.GetUri(Context);
+            d.FriendlyUri = await o.GetFriendlyUri(Context);
             d.Id = await o.GetId();
             d.Name = await o.GetName(Context);
             d.Objects = await GetObjects(o);
@@ -220,6 +225,7 @@ namespace Rnet.Service.Objects
         {
             await FillObjectData(o, d);
             d.RnetId = o.GetId();
+            d.DataUri = o.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT);
             return d;
         }
 
@@ -263,15 +269,16 @@ namespace Rnet.Service.Objects
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
-            var p = await o.GetProfiles() ?? Enumerable.Empty<Profile>();
+            var p = await o.GetProfiles() ?? Enumerable.Empty<ProfileHandle>();
             return new ProfileRefCollection(await p.ToObservable().SelectAsync(i => ProfileToRef(i), true).ToList());
         }
 
-        public async Task<ProfileRef> ProfileToRef(Profile profile)
+        public async Task<ProfileRef> ProfileToRef(ProfileHandle profile)
         {
             return new ProfileRef()
             {
                 Uri = await profile.GetUri(Context),
+                FriendlyUri = await profile.GetFriendlyUri(Context),
                 Id = profile.Metadata.Id,
             };
         }

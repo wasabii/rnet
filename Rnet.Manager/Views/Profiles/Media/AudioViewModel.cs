@@ -13,7 +13,7 @@ namespace Rnet.Manager.Profiles.Media
         /// Initializes a new instance.
         /// </summary>
         /// <param name="profile"></param>
-        public AudioViewModel(Profile<IEqualization> profile)
+        public AudioViewModel(ProfileHandle<IEqualization> profile)
             : base(profile)
         {
             PowerOnCommand = new DelegateCommand(() => Profile.Instance.PowerOn());

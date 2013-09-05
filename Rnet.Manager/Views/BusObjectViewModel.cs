@@ -14,7 +14,7 @@ namespace Rnet.Manager.Views
     public class BusObjectViewModel : NotificationObject
     {
 
-        TypeDictionary<Profile> profiles;
+        TypeDictionary<ProfileHandle> profiles;
         TypeDictionary<ViewModel> profileViewModels;
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Rnet.Manager.Views
             var p = await t;
 
             // load the supported profiles
-            Profiles = new TypeDictionary<Profile>(p
+            Profiles = new TypeDictionary<ProfileHandle>(p
                 .ToDictionary(i => i.Metadata.Contract, i => i));
             ProfileViewModels = new TypeDictionary<ViewModel>(Profiles
                 .Select(i => Rnet.Manager.Profiles.ViewModel.Create(i.Value))
@@ -52,7 +52,7 @@ namespace Rnet.Manager.Views
         /// <summary>
         /// Known set of profile types and implementation.
         /// </summary>
-        public TypeDictionary<Profile> Profiles
+        public TypeDictionary<ProfileHandle> Profiles
         {
             get { return profiles; }
             set { profiles = value; RaisePropertyChanged(() => Profiles); }

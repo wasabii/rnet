@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
-using Rnet.Profiles;
+using Rnet.Drivers.Russound.Media.Audio;
 
 namespace Rnet.Drivers.Russound
 {
@@ -50,7 +50,7 @@ namespace Rnet.Drivers.Russound
             return Task.FromResult(new object[]
             { 
                 new Zone(zone),
-                new ZoneAudio(zone),
+                new Equalization(zone),
             });
         }
 

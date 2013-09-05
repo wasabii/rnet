@@ -18,7 +18,7 @@ namespace Rnet.Manager
         }
 
         public static readonly DependencyProperty ProfileProperty = DependencyProperty.Register(
-            "Profile", typeof(Profile), typeof(ProfilePresenter), new PropertyMetadata(Profile_Changed));
+            "Profile", typeof(ProfileHandle), typeof(ProfilePresenter), new PropertyMetadata(Profile_Changed));
 
         static void Profile_Changed(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
@@ -27,9 +27,9 @@ namespace Rnet.Manager
                 return;
         }
 
-        public Profile Profile
+        public ProfileHandle Profile
         {
-            get { return (Profile)GetValue(ProfileProperty); }
+            get { return (ProfileHandle)GetValue(ProfileProperty); }
             set { SetValue(ProfileProperty, value); }
         }
 

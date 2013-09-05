@@ -21,7 +21,7 @@ namespace Rnet.Service.Processors
         /// </summary>
         /// <param name="module"></param>
         protected RequestProcessor(
-            ObjectModule module)
+            BusModule module)
         {
             Contract.Requires<ArgumentNullException>(module != null);
 
@@ -39,7 +39,7 @@ namespace Rnet.Service.Processors
         /// <summary>
         /// Module of the current request.
         /// </summary>
-        protected ObjectModule Module { get; private set; }
+        protected BusModule Module { get; private set; }
 
         /// <summary>
         /// Resolves a new target from the given target.
@@ -65,7 +65,7 @@ namespace Rnet.Service.Processors
         /// <returns></returns>
         public virtual Task<object> Get(T target)
         {
-            return Task.FromResult<object>(null);
+            return Task.FromResult<object>(HttpStatusCode.MethodNotAllowed);
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Rnet.Service.Processors
         /// <returns></returns>
         public virtual Task<object> Put(T target)
         {
-            return Task.FromResult<object>(null);
+            return Task.FromResult<object>(HttpStatusCode.MethodNotAllowed);
         }
 
         /// <summary>

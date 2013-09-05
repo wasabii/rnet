@@ -17,7 +17,7 @@ namespace Rnet.Service
         /// <summary>
         /// Segment under a device which 
         /// </summary>
-        public static readonly string DATA_URI_SEGMENT = "_";
+        public static readonly string DATA_URI_SEGMENT = "_data";
 
         /// <summary>
         /// Combines the relative Uri into the base Uri.

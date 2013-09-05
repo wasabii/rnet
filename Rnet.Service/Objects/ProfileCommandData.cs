@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 
 using Newtonsoft.Json;
@@ -6,25 +9,38 @@ using Newtonsoft.Json;
 namespace Rnet.Service.Objects
 {
 
-    [XmlRoot("Command")]
+    [XmlSchemaProvider("GetSchema", IsAny = true)]
     [JsonObject("Command")]
-    public class ProfileCommandData
+    public class ProfileCommandData : IXmlSerializable
     {
 
-        [XmlIgnore]
-        [JsonProperty]
         public Uri Uri { get; set; }
 
-        [XmlAttribute("Uri")]
-        [JsonIgnore]
-        public string _Uri
+        public Uri FriendlyUri { get; set; }
+
+        public string Name { get; set; }
+
+        public string XmlNamespace { get; set; }
+
+        XmlSchema IXmlSerializable.GetSchema()
         {
-            get { return Uri != null ? Uri.ToString() : null; }
-            set { Uri = new Uri(value); }
+            return null;
         }
 
-        [JsonProperty]
-        public string Name { get; set; }
+        void IXmlSerializable.ReadXml(XmlReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IXmlSerializable.WriteXml(XmlWriter writer)
+        {
+            var ns = (XNamespace)XmlNamespace;
+
+            new XElement(ns + Name,
+                Uri != null ? new XAttribute("Uri", Uri) : null,
+                FriendlyUri != null ? new XAttribute("FriendlyUri", FriendlyUri) : null)
+                .WriteTo(writer);
+        }
 
     }
 

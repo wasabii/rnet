@@ -6,8 +6,8 @@ using Newtonsoft.Json;
 namespace Rnet.Service.Objects
 {
 
-    [XmlRoot("Object", Namespace = "urn:rnet")]
-    public class ObjectData
+    [XmlRoot("Item", Namespace = "urn:rnet")]
+    public class DataHandleData
     {
 
         [XmlIgnore]
@@ -35,20 +35,7 @@ namespace Rnet.Service.Objects
         }
 
         [XmlAttribute]
-        public string Id { get; set; }
-
-        [XmlAttribute]
-        public string Name { get; set; }
-
-        [XmlArray]
-        [XmlArrayItem("Controller", typeof(ControllerData))]
-        [XmlArrayItem("Device", typeof(DeviceData))]
-        [XmlArrayItem("Object", typeof(ObjectData))]
-        public ObjectDataCollection Objects { get; set; }
-
-        [XmlArray]
-        [XmlArrayItem("ProfileRef")]
-        public ProfileRefCollection Profiles { get; set; }
+        public string Path { get; set; }
 
     }
 

@@ -12,7 +12,7 @@ namespace Rnet.Manager.Profiles.Core
         /// Initializes a new instance.
         /// </summary>
         /// <param name="profile"></param>
-        public ObjectViewModel(Profile<IObject> profile)
+        public ObjectViewModel(ProfileHandle<IObject> profile)
             : base(profile)
         {
 

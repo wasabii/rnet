@@ -15,7 +15,7 @@ namespace Rnet.Service.Objects
         /// <param name="target"></param>
         [ImportingConstructor]
         protected ControllerRequestProcessor(
-            ObjectModule module)
+            BusModule module)
             : base(module)
         {
 

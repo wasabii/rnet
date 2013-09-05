@@ -10,7 +10,7 @@ namespace Rnet.Drivers
     /// Provides a profile implementation and the metadata associated with it.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class Profile<T> : Profile
+    public sealed class ProfileHandle<T> : ProfileHandle
         where T : class
     {
 
@@ -18,13 +18,13 @@ namespace Rnet.Drivers
         /// Initializes a new instance.
         /// </summary>
         /// <param name="target"></param>
-        /// <param name="contract"></param>
+        /// <param name="profile"></param>
         /// <param name="instance"></param>
-        public Profile(RnetBusObject target, ProfileDescriptor contract, T instance)
-            : base(target, contract, instance)
+        public ProfileHandle(RnetBusObject target, ProfileDescriptor profile, T instance)
+            : base(target, profile, instance)
         {
             Contract.Requires(target != null);
-            Contract.Requires(contract != null);
+            Contract.Requires(profile != null);
             Contract.Requires(instance != null);
         }
 
@@ -41,7 +41,7 @@ namespace Rnet.Drivers
     /// <summary>
     /// Provides a profile implementation and the metadata associated with it.
     /// </summary>
-    public abstract class Profile
+    public abstract class ProfileHandle
     {
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Rnet.Drivers
         /// <param name="target"></param>
         /// <param name="metadata"></param>
         /// <param name="instance"></param>
-        internal protected Profile(RnetBusObject target, ProfileDescriptor metadata, object instance)
+        internal protected ProfileHandle(RnetBusObject target, ProfileDescriptor metadata, object instance)
         {
             Contract.Requires<ArgumentNullException>(target != null);
             Contract.Requires<ArgumentNullException>(metadata != null);
@@ -75,6 +75,26 @@ namespace Rnet.Drivers
         /// Gets the instance which provides the implementation of the profile.
         /// </summary>
         public object Instance { get; private set; }
+
+        /// <summary>
+        /// Gets a handle to the specified property.
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public ProfilePropertyHandle this[PropertyDescriptor property]
+        {
+            get { return new ProfilePropertyHandle(this, property); }
+        }
+
+        /// <summary>
+        /// Gets a handle to the specified command.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public ProfileCommandHandle this[CommandDescriptor command]
+        {
+            get { return new ProfileCommandHandle(this, command); }
+        }
 
     }
 

@@ -122,10 +122,12 @@
     <Compile Include="LogicalBusObject.cs" />
     <Compile Include="Default\ProfileBase.cs" />
     <Compile Include="DriverManager.cs" />
-    <Compile Include="Profile.cs" />
+    <Compile Include="ProfileCommandHandle.cs" />
+    <Compile Include="ProfileHandle.cs" />
     <Compile Include="ProfileManager.cs" />
     <Compile Include="ModelObject.cs" />
     <Compile Include="Default\DeviceBase.cs" />
+    <Compile Include="ProfilePropertyHandle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="DriverPackage.cs" />

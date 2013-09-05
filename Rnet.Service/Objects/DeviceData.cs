@@ -13,6 +13,18 @@ namespace Rnet.Service.Objects
         [XmlAttribute]
         public string RnetId { get; set; }
 
+        [XmlIgnore]
+        [JsonProperty]
+        public Uri DataUri { get; set; }
+
+        [XmlAttribute("DataUri")]
+        [JsonIgnore]
+        public string _DataUri
+        {
+            get { return DataUri != null ? DataUri.ToString() : null; }
+            set { DataUri = new Uri(value); }
+        }
+
     }
 
 }

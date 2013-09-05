@@ -32,7 +32,7 @@ namespace Rnet.Drivers
         {
 
             RnetBusObject target;
-            Task<Profile[]> profiles;
+            Task<ProfileHandle[]> profiles;
 
             /// <summary>
             /// Initializes a new instance.
@@ -101,30 +101,30 @@ namespace Rnet.Drivers
             }
 
             /// <summary>
-            /// Creates a generic <see cref="Profile"/> instance that wraps the given information.
+            /// Creates a generic <see cref="ProfileHandle"/> instance that wraps the given information.
             /// </summary>
             /// <param name="target"></param>
             /// <param name="contract"></param>
             /// <param name="instance"></param>
             /// <returns></returns>
-            Profile CreateProfile(RnetBusObject target, ProfileDescriptor contract, object instance)
+            ProfileHandle CreateProfile(RnetBusObject target, ProfileDescriptor contract, object instance)
             {
                 Contract.Requires(target != null);
                 Contract.Requires(contract != null);
                 Contract.Requires(instance != null);
 
-                return (Profile)Activator.CreateInstance(
-                    typeof(Profile<>).MakeGenericType(contract.Contract),
+                return (ProfileHandle)Activator.CreateInstance(
+                    typeof(ProfileHandle<>).MakeGenericType(contract.Contract),
                         target, contract, instance);
             }
 
             /// <summary>
             /// Extracts the supported profile types out of the given instance and returns a set of <see
-            /// cref="Profile"/> objects.
+            /// cref="ProfileHandle"/> objects.
             /// </summary>
             /// <param name="instance"></param>
             /// <returns></returns>
-            IEnumerable<Profile> CreateProfiles(object instance)
+            IEnumerable<ProfileHandle> CreateProfiles(object instance)
             {
                 Contract.Requires(instance != null);
 
@@ -135,18 +135,18 @@ namespace Rnet.Drivers
             }
 
             /// <summary>
-            /// Accepts a list of profile instances and emits a set of completed <see cref="Profile"/> classes which
+            /// Accepts a list of profile instances and emits a set of completed <see cref="ProfileHandle"/> classes which
             /// contain the metadata.
             /// </summary>
             /// <param name="instances"></param>
             /// <returns></returns>
-            async Task<Profile[]> CreateProfiles(Task<object[]> instances)
+            async Task<ProfileHandle[]> CreateProfiles(Task<object[]> instances)
             {
                 Contract.Requires(instances != null);
 
                 var o = await instances;
                 if (o == null)
-                    return new Profile[0];
+                    return new ProfileHandle[0];
 
                 var l = o
                     .SelectMany(i => CreateProfiles(i))
@@ -165,7 +165,7 @@ namespace Rnet.Drivers
             /// Gets the set of profiles supported by the bus object.
             /// </summary>
             /// <returns></returns>
-            public Task<Profile[]> GetProfiles()
+            public Task<ProfileHandle[]> GetProfiles()
             {
                 // fetch from catch or build
                 return profiles ?? (profiles = CreateProfiles(RequestProfiles()));
@@ -209,7 +209,7 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static Task<Profile[]> GetProfiles(this RnetBusObject target)
+        public static Task<ProfileHandle[]> GetProfiles(this RnetBusObject target)
         {
             Contract.Requires(target != null);
 

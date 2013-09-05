@@ -5,13 +5,13 @@ using Rnet.Drivers.Default;
 using Rnet.Profiles.Core;
 using Rnet.Profiles.Media.Audio;
 
-namespace Rnet.Drivers.Russound
+namespace Rnet.Drivers.Russound.Media.Audio
 {
 
     /// <summary>
     /// Implements <see cref="IEqualization"/> for a zone on a Russound controller.
     /// </summary>
-    class ZoneAudio : ZoneBase, IEqualization
+    class Equalization : ZoneBase, IEqualization
     {
 
         RnetDataHandle runHandle;
@@ -39,7 +39,7 @@ namespace Rnet.Drivers.Russound
         /// Initializes a new instance.
         /// </summary>
         /// <param name="zone"></param>
-        public ZoneAudio(RnetZone zone)
+        public Equalization(RnetZone zone)
             : base(zone)
         {
             runHandle =
