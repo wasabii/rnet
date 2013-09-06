@@ -1,6 +1,6 @@
 ﻿using Rnet.Drivers;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     /// <summary>

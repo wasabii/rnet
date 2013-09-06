@@ -4,10 +4,10 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 using Nancy;
-using Rnet.Service.Models;
-using Rnet.Service.Processors;
+using Rnet.Service.Host.Models;
+using Rnet.Service.Host.Processors;
 
-namespace Rnet.Service.Processors
+namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetBus))]

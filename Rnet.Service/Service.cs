@@ -1,12 +1,15 @@
 ﻿using System.ServiceProcess;
 
+using Rnet.Service.Host.Host;
+
 namespace Rnet.Service
 {
 
     public partial class Service : ServiceBase
     {
 
-        RnetHost host = new RnetHost();
+        static readonly RnetHost web;
+        static readonly RnetBus rnet;
 
         public Service()
         {

@@ -2,9 +2,9 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 
-using Rnet.Service.Processors;
+using Rnet.Service.Host.Processors;
 
-namespace Rnet.Service.Processors
+namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetController), -50)]

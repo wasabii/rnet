@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Rnet.Service
+namespace Rnet.Service.Host
 {
 
     /// <summary>

@@ -3,7 +3,7 @@ using System.Diagnostics.Contracts;
 
 using Nancy;
 
-namespace Rnet.Service
+namespace Rnet.Service.Host
 {
 
     static class Util

@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using Nancy;
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
-using Rnet.Service.Models;
-using Rnet.Service.Processors;
+using Rnet.Service.Host.Models;
+using Rnet.Service.Host.Processors;
 
-namespace Rnet.Service.Processors
+namespace Rnet.Service.Host.Processors
 {
 
     /// <summary>

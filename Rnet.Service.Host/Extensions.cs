@@ -9,7 +9,7 @@ using Nancy;
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     public static class Extensions

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 
-namespace Rnet.Service
+namespace Rnet.Service.Host
 {
 
     public sealed class CompositionService : ICompositionService

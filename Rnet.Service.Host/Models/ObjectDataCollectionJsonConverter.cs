@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     class ObjectDataCollectionJsonConverter : JsonConverter

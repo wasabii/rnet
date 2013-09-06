@@ -2,7 +2,7 @@
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     [XmlRoot("Bus", Namespace = "urn:rnet")]

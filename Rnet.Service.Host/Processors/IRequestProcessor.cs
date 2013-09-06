@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Rnet.Service.Processors
+namespace Rnet.Service.Host.Processors
 {
 
     /// <summary>

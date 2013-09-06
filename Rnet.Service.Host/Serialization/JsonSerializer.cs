@@ -8,7 +8,7 @@ using Nancy.IO;
 
 using Newtonsoft.Json;
 
-namespace Rnet.Service.Serialization
+namespace Rnet.Service.Host.Serialization
 {
 
     /// <summary>

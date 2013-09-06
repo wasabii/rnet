@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 using Nancy;
 
-using Rnet.Service.Models;
+using Rnet.Service.Host.Models;
 
-namespace Rnet.Service.Processors
+namespace Rnet.Service.Host.Processors
 {
 
     /// <summary>

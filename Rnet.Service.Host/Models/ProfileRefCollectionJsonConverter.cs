@@ -3,7 +3,7 @@ using System.Linq;
 
 using Newtonsoft.Json;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     class ProfileRefCollectionJsonConverter : JsonConverter

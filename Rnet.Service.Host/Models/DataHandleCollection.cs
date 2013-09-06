@@ -4,7 +4,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     [XmlRoot("Data", Namespace = "urn:rnet")]

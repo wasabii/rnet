@@ -1,43 +1,81 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
+using Nancy;
+using Nancy.Bootstrapper.Mef;
+using Nancy.ErrorHandling;
 using Nancy.Hosting.Self;
 
-namespace Rnet.Service
+using Nito.AsyncEx;
+
+namespace Rnet.Service.Host
 {
 
-    public class RnetHost : IDisposable
+    public class RnetHost : IDisposable, IStatusCodeHandler
     {
 
-        SingleThreadSynchronizationContext sync = new SingleThreadSynchronizationContext();
-        Uri uri = new Uri("rnet.tcp://70.123.112.92:9999");
-        ApplicationCatalog applicationCatalog;
-        AggregateCatalog catalog;
-        CompositionContainer container;
-        RnetBus bus;
-        NancyHost nancyHost;
+        readonly object sync = new object();
+        readonly AsyncLock async = new AsyncLock();
+        readonly RnetBus bus;
+        readonly Uri baseUri;
+        readonly AggregateCatalog catalog;
+        readonly CompositionContainer container;
+        NancyHost nancy;
+
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public RnetHost()
+        /// <param name="bus"></param>
+        /// <param name="baseUri"></param>
+        /// <param name="parent"></param>
+        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer parent)
         {
-            sync.UnhandledException += sync_UnhandledException;
+            Contract.Requires<ArgumentNullException>(bus != null);
+            Contract.Requires<ArgumentNullException>(baseUri != null);
+
+            this.bus = bus;
+            this.baseUri = baseUri;
+
+            // configure the container
+            // if parent specified, we become a child
+            // add our own assembly
+            container = new CompositionContainer(
+                catalog = new AggregateCatalog(parent != null ? parent.Catalog : null, new AssemblyCatalog(typeof(RnetHost).Assembly)),
+                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
+                parent);
+
+            // export initial values
+            container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
+            container.ComposeExportedValue(this);
+            container.ComposeExportedValue(bus);
         }
 
         /// <summary>
-        /// Invoked when there is a unhandled exception.
+        /// Initializes a new instance.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        void sync_UnhandledException(object sender, UnhandledExceptionEventArgs args)
+        /// <param name="bus"></param>
+        /// <param name="baseUri"></param>
+        public RnetHost(RnetBus bus, Uri baseUri)
+            : this(bus, baseUri, null)
         {
-            if (Debugger.IsAttached)
-                Debugger.Break();
+            Contract.Requires<ArgumentNullException>(bus != null);
+            Contract.Requires<ArgumentNullException>(baseUri != null);
+        }
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="bus"></param>
+        /// <param name="baseUri"></param>
+        public RnetHost(RnetBus bus, string baseUri)
+            : this(bus, new Uri(baseUri), null)
+        {
+            Contract.Requires<ArgumentNullException>(bus != null);
+            Contract.Requires<ArgumentNullException>(baseUri != null);
         }
 
         /// <summary>
@@ -45,8 +83,8 @@ namespace Rnet.Service
         /// </summary>
         public void Start()
         {
-            sync.Post(async i => await OnStartAsync(), null);
-            sync.Start();
+            lock (sync)
+                OnStartAsync().Wait();
         }
 
         /// <summary>
@@ -54,24 +92,13 @@ namespace Rnet.Service
         /// </summary>
         async Task OnStartAsync()
         {
-            // configure the application container
-            container = new CompositionContainer(
-                catalog = new AggregateCatalog(applicationCatalog = new ApplicationCatalog()),
-                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService);
-            container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
-
-            // configure bus
-            bus = new RnetBus(uri);
-            container.ComposeExportedValue<RnetBus>(bus);
+            await Task.Yield();
 
             // configure nancy
-            nancyHost = new NancyHost(
+            nancy = new NancyHost(
                 new NancyBootstrapper(container),
-                new Uri("http://localhost:12292/rnet/"));
-            nancyHost.Start();
-
-            // start the bus
-            await bus.Start();
+                baseUri);
+            nancy.Start();
         }
 
         /// <summary>
@@ -79,10 +106,8 @@ namespace Rnet.Service
         /// </summary>
         public void Stop()
         {
-            Contract.Assert(sync != null);
-
-            sync.Post(async i => await OnStopAsync(), null);
-            sync.Stop();
+            lock (sync)
+                OnStopAsync().Wait();
         }
 
         /// <summary>
@@ -90,29 +115,54 @@ namespace Rnet.Service
         /// </summary>
         async Task OnStopAsync()
         {
-            if (container != null)
-            {
-                container.Dispose();
-                container = null;
-            }
+            await Task.Yield();
 
-            if (nancyHost != null)
+            if (nancy != null)
             {
-                nancyHost.Stop();
-                nancyHost.Dispose();
-                nancyHost = null;
-            }
-
-            if (bus != null)
-            {
-                await bus.Stop();
-                bus = null;
+                nancy.Stop();
+                nancy.Dispose();
+                nancy = null;
             }
         }
 
+        /// <summary>
+        /// Disposes of the instance.
+        /// </summary>
         public void Dispose()
         {
             Stop();
+        }
+
+        /// <summary>
+        /// Implements IStatusCodeHandler.HandlesStatusCode.
+        /// </summary>
+        /// <param name="statusCode"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        bool IStatusCodeHandler.HandlesStatusCode(HttpStatusCode statusCode, NancyContext context)
+        {
+            Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
+
+            // check whether the reported status code is an error
+            return statusCode != HttpStatusCode.OK;
+        }
+
+        /// <summary>
+        /// Implements IStatusCodeHandler.Handle.
+        /// </summary>
+        /// <param name="statusCode"></param>
+        /// <param name="context"></param>
+        void IStatusCodeHandler.Handle(HttpStatusCode statusCode, NancyContext context)
+        {
+            Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
+        }
+
+        /// <summary>
+        /// Finalizes the instance.
+        /// </summary>
+        ~RnetHost()
+        {
+            Dispose();
         }
 
     }

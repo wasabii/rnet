@@ -4,10 +4,10 @@ using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using System.Linq;
 
-using Rnet.Service.Processors;
-using Rnet.Service.Models;
+using Rnet.Service.Host.Processors;
+using Rnet.Service.Host.Models;
 
-namespace Rnet.Service.Processors
+namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetDevice), -75)]

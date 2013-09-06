@@ -2,7 +2,7 @@
 
 using Nancy;
 
-namespace Rnet.Service
+namespace Rnet.Service.Host
 {
 
     class HttpException : Exception

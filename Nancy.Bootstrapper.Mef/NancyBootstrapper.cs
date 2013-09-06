@@ -8,12 +8,10 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 
-using Nancy;
-using Nancy.Bootstrapper;
 using Nancy.Diagnostics;
 using Nancy.Responses.Negotiation;
 
-namespace Rnet.Service
+namespace Nancy.Bootstrapper.Mef
 {
 
     public class NancyBootstrapper : NancyBootstrapperWithRequestContainerBase<CompositionContainer>
@@ -101,7 +99,6 @@ namespace Rnet.Service
                 new AggregateCatalog(container.Catalog),
                 CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
                 container);
-            c.ComposeExportedValue<ICompositionService>(new CompositionService(c));
             RegisterAssembly(c, typeof(INancyEngine).Assembly);
             return c;
         }
@@ -375,12 +372,10 @@ namespace Rnet.Service
 
         protected override CompositionContainer CreateRequestContainer()
         {
-            var c = new CompositionContainer(
+            return new CompositionContainer(
                 new AggregateCatalog(ApplicationContainer.Catalog),
                 CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
                 ApplicationContainer);
-            c.ComposeExportedValue<ICompositionService>(new CompositionService(c));
-            return c;
         }
 
         protected override void RegisterRequestContainerModules(CompositionContainer container, IEnumerable<ModuleRegistration> moduleRegistrationTypes)

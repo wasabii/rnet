@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     [XmlRoot("Controller", Namespace = "urn:rnet")]

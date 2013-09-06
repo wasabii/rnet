@@ -82,6 +82,16 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Nito.AsyncEx, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Nito.AsyncEx.1.0.0\lib\net45\Nito.AsyncEx.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Concurrent">
+      <HintPath>..\packages\Nito.AsyncEx.1.0.0\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Enlightenment">
+      <HintPath>..\packages\Nito.AsyncEx.1.0.0\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.Composition.Registration" />
@@ -116,7 +126,6 @@
     <Compile Include="IProfileHandle.cs" />
     <Compile Include="IProfilePropertyHandle.cs" />
     <Compile Include="Processors\IRequestProcessor.cs" />
-    <Compile Include="NancyBootstrapper.cs" />
     <Compile Include="Models\ObjectData.cs" />
     <Compile Include="Models\ObjectDataCollection.cs" />
     <Compile Include="Models\ObjectDataCollectionJsonConverter.cs" />
@@ -140,6 +149,10 @@
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Nancy.Bootstrapper.Mef\Nancy.Bootstrapper.Mef.csproj">
+      <Project>{187dcedf-7093-46fc-8c76-793f0c6bd591}</Project>
+      <Name>Nancy.Bootstrapper.Mef</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
       <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
       <Name>Rnet.Drivers</Name>

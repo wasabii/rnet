@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 using Nancy;
 
-namespace Rnet.Service.Serialization
+namespace Rnet.Service.Host.Serialization
 {
 
     /// <summary>

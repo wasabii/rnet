@@ -5,7 +5,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics.Contracts;
 
-namespace Rnet.Service
+namespace Rnet.Service.Host
 {
 
     public static class CompositionExtensions

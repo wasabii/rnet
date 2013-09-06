@@ -1,6 +1,6 @@
 ﻿using Rnet.Profiles.Metadata;
 
-namespace Rnet.Service.Models
+namespace Rnet.Service.Host.Models
 {
 
     /// <summary>
