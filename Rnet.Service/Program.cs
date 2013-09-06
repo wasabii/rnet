@@ -10,10 +10,10 @@ namespace Rnet.Service
         public static void Main()
         {
 #if DEBUG
-            var h = new Host();
-            h.OnStart();
+            var h = new RnetHost();
+            h.Start();
             Console.ReadLine();
-            h.OnStop();
+            h.Stop();
             Console.ReadLine();
 #else
             ServiceBase.Run(new[] { new RnetService() });

@@ -6,7 +6,7 @@ namespace Rnet.Service
     public partial class Service : ServiceBase
     {
 
-        Host host = new Host();
+        RnetHost host = new RnetHost();
 
         public Service()
         {
@@ -15,13 +15,13 @@ namespace Rnet.Service
 
         protected override void OnStart(string[] args)
         {
-            host = new Host();
-            host.OnStart();
+            host = new RnetHost();
+            host.Start();
         }
 
         protected override void OnStop()
         {
-            host.OnStop();
+            host.Stop();
         }
 
     }
