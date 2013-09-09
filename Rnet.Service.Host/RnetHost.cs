@@ -17,14 +17,12 @@ namespace Rnet.Service.Host
     public class RnetHost : IDisposable, IStatusCodeHandler
     {
 
-        readonly object sync = new object();
         readonly AsyncLock async = new AsyncLock();
         readonly RnetBus bus;
         readonly Uri baseUri;
         readonly AggregateCatalog catalog;
         readonly CompositionContainer container;
         NancyHost nancy;
-
 
         /// <summary>
         /// Initializes a new instance.
@@ -44,9 +42,9 @@ namespace Rnet.Service.Host
             // if parent specified, we become a child
             // add our own assembly
             container = new CompositionContainer(
-                catalog = new AggregateCatalog(parent != null ? parent.Catalog : null, new AssemblyCatalog(typeof(RnetHost).Assembly)),
+                catalog = new AggregateCatalog(parent != null ? parent.Catalog : new AggregateCatalog(), new AssemblyCatalog(typeof(RnetHost).Assembly)),
                 CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
-                parent);
+                parent != null ? new[] { parent } : new ExportProvider[0]);
 
             // export initial values
             container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
@@ -83,22 +81,24 @@ namespace Rnet.Service.Host
         /// </summary>
         public void Start()
         {
-            lock (sync)
-                OnStartAsync().Wait();
+            StartAsync().Wait();
         }
 
         /// <summary>
         /// Starts the service, from within synchronization context.
         /// </summary>
-        async Task OnStartAsync()
+        public async Task StartAsync()
         {
-            await Task.Yield();
+            using (await async.LockAsync())
+            {
+                await Task.Yield();
 
-            // configure nancy
-            nancy = new NancyHost(
-                new NancyBootstrapper(container),
-                baseUri);
-            nancy.Start();
+                // configure nancy
+                nancy = new NancyHost(
+                    new NancyBootstrapper(),
+                    baseUri);
+                nancy.Start();
+            }
         }
 
         /// <summary>
@@ -106,22 +106,24 @@ namespace Rnet.Service.Host
         /// </summary>
         public void Stop()
         {
-            lock (sync)
-                OnStopAsync().Wait();
+            StopAsync().Wait();
         }
 
         /// <summary>
         /// Stops the service, from within synchronization context.
         /// </summary>
-        async Task OnStopAsync()
+        public async Task StopAsync()
         {
-            await Task.Yield();
-
-            if (nancy != null)
+            using (await async.LockAsync())
             {
-                nancy.Stop();
-                nancy.Dispose();
-                nancy = null;
+                await Task.Yield();
+
+                if (nancy != null)
+                {
+                    nancy.Stop();
+                    nancy.Dispose();
+                    nancy = null;
+                }
             }
         }
 

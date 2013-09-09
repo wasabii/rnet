@@ -39,6 +39,7 @@ namespace Rnet
 
             Uri = uri;
             Controllers = new RnetControllerCollection(this);
+            State = RnetBusState.Stopped;
 
             // start new client
             Client = new RnetClient(Uri);
@@ -57,6 +58,16 @@ namespace Rnet
             : this(new Uri(uri))
         {
             Contract.Requires(uri != null);
+        }
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="configuration"></param>
+        public RnetBus(RnetBusConfigurationElement configuration)
+            : this(configuration.Connection.Uri)
+        {
+            Contract.Requires(configuration != null);
         }
 
         /// <summary>

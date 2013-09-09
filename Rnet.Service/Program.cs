@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using Rnet.Service.Host.Host;
 
 namespace Rnet.Service
 {
@@ -8,7 +6,7 @@ namespace Rnet.Service
     public class Program
     {
 
-        static readony TraceSource source = new TraceSource("Rnet.Service", SourceLevels.All);
+        static readonly ServiceImpl impl;
 
         /// <summary>
         /// Main program entry point.
@@ -18,28 +16,19 @@ namespace Rnet.Service
         {
             using (var s = new ServiceImpl())
             {
-                Trace.Write
-                s.Start();
-                Console.ReadLine();
-                s.Stop();
-            }
-        }
+                Console.WriteLine("Starting ...");
+                s.OnStart(args);
+                Console.WriteLine("Started ...");
 
-        /// <summary>
-        /// Main instance entry point.
-        /// </summary>
-        /// <param name="args"></param>
-        void Run(string[] args)
-        {
-            web = new RnetHost()
-            web.Start();
-#if DEBUG
-            Console.ReadLine();
-            web.Stop();
-            Console.ReadLine();
-#else
-            ServiceBase.Run(new[] { new RnetService() });
-#endif
+                Console.ReadLine();
+
+                Console.WriteLine("Stopping ...");
+                s.OnStop();
+                Console.WriteLine("Stopped ...");
+
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+            }
         }
 
     }

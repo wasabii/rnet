@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Service.Host", "Rnet.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nancy.Bootstrapper.Mef", "Nancy.Bootstrapper.Mef\Nancy.Bootstrapper.Mef.csproj", "{187DCEDF-7093-46FC-8C76-793F0C6BD591}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nancy.Bootstrapper.Mef.Tests", "Nancy.Bootstrapper.Mef.Tests\Nancy.Bootstrapper.Mef.Tests.csproj", "{53070CA5-930F-4BFB-AF24-6E49F6A2ABC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,10 @@ Global
 		{187DCEDF-7093-46FC-8C76-793F0C6BD591}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{187DCEDF-7093-46FC-8C76-793F0C6BD591}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{187DCEDF-7093-46FC-8C76-793F0C6BD591}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53070CA5-930F-4BFB-AF24-6E49F6A2ABC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53070CA5-930F-4BFB-AF24-6E49F6A2ABC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53070CA5-930F-4BFB-AF24-6E49F6A2ABC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53070CA5-930F-4BFB-AF24-6E49F6A2ABC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

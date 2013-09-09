@@ -41,9 +41,11 @@ namespace Rnet
 
                 return;
             }
+
             if (uri.HostNameType == UriHostNameType.IPv4)
             {
                 ep = new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port);
+
                 return;
             }
         }

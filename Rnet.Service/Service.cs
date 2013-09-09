@@ -1,15 +1,12 @@
 ﻿using System.ServiceProcess;
 
-using Rnet.Service.Host.Host;
-
 namespace Rnet.Service
 {
 
     public partial class Service : ServiceBase
     {
 
-        static readonly RnetHost web;
-        static readonly RnetBus rnet;
+        ServiceImpl impl;
 
         public Service()
         {
@@ -18,13 +15,14 @@ namespace Rnet.Service
 
         protected override void OnStart(string[] args)
         {
-            host = new RnetHost();
-            host.Start();
+            impl = new ServiceImpl();
+            impl.OnStart(args);
         }
 
         protected override void OnStop()
         {
-            host.Stop();
+            impl.OnStop();
+            impl = null;
         }
 
     }

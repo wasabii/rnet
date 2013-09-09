@@ -99,6 +99,9 @@
     <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetBusConfigurationElement.cs" />
+    <Compile Include="RnetConnectionConfigurationCollection.cs" />
+    <Compile Include="RnetConnectionConfigurationElement.cs" />
     <Compile Include="RnetBusStateEventArgs.cs" />
     <Compile Include="RnetBusState.cs" />
     <Compile Include="RnetDataHandle.cs" />

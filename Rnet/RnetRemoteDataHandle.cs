@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Threading;
@@ -87,6 +88,7 @@ namespace Rnet
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
+        [DebuggerStepThrough]
         public override async Task<byte[]> Read(CancellationToken cancellationToken)
         {
             return await RnetUtil.DefaultIfCancelled(async ct =>
