@@ -124,6 +124,8 @@ namespace Rnet.Service.Host.Models
         /// <returns></returns>
         public static string GetId(this RnetDevice device)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+
             return string.Format("{0}.{1}.{2}",
                 (int)device.DeviceId.ControllerId,
                 (int)device.DeviceId.ZoneId,

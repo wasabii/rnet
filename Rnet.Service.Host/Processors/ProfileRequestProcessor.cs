@@ -60,6 +60,8 @@ namespace Rnet.Service.Host.Processors
 
         Task<object> Resolve(ProfileHandle profile, string[] path)
         {
+            Contract.Requires<ArgumentNullException>(profile != null);
+
             // search for property
             var property = profile.Metadata.Properties.FirstOrDefault(i => i.Name == path[0]);
             if (property != null)

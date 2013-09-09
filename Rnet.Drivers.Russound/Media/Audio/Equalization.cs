@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-
 using Rnet.Drivers.Default;
 using Rnet.Profiles.Core;
 using Rnet.Profiles.Media.Audio;
@@ -86,6 +86,9 @@ namespace Rnet.Drivers.Russound.Media.Audio
         /// <param name="d"></param>
         void ReceiveZone(byte[] d)
         {
+            Contract.Requires(d != null);
+            Contract.Requires(d.Length > 6);
+
             ReceivePower(d[0]);
             ReceiveVolume(d[2]);
             ReceiveBass(d[3]);

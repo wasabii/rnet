@@ -46,12 +46,13 @@ namespace Rnet.Service.Host.Processors
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(path != null);
+            Contract.Requires<ArgumentOutOfRangeException>(path.Length >= 1);
 
             // list of all available data items
             if (path.Length == 1)
                 return Task.FromResult<object>(ToDataCollection(device));
-
-            return Task.FromResult<object>(ResolveDataItem(device, path[1]));
+            else
+                return Task.FromResult<object>(ResolveDataItem(device, path[1]));
         }
 
         DataHandleCollection ToDataCollection(RnetDevice device)

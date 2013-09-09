@@ -5,7 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Nancy;
-using Nancy.Bootstrapper.Mef;
+using Nancy.Bootstrappers.Mef;
 using Nancy.ErrorHandling;
 using Nancy.Hosting.Self;
 

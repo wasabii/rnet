@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Rnet.Drivers.Default;
 using Rnet.Profiles.Core;
 
@@ -33,6 +33,9 @@ namespace Rnet.Drivers.Russound
         public Controller(RnetController controller, int zoneCount)
             : base(controller)
         {
+            Contract.Requires<ArgumentNullException>(controller != null);
+            Contract.Requires<ArgumentNullException>(zoneCount >= 1 && zoneCount <= 32);
+
             // grab references to the supported zones
             zones = Enumerable.Range(0, zoneCount)
                 .Select(i => Controller.Zones[i])

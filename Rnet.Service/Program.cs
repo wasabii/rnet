@@ -6,8 +6,6 @@ namespace Rnet.Service
     public class Program
     {
 
-        static readonly ServiceImpl impl;
-
         /// <summary>
         /// Main program entry point.
         /// </summary>

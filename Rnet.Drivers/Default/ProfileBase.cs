@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 namespace Rnet.Drivers.Default
 {
@@ -15,6 +17,8 @@ namespace Rnet.Drivers.Default
         /// <param name="target"></param>
         protected ProfileBase(RnetBusObject target)
         {
+            Contract.Requires<ArgumentNullException>(target != null);
+
             Target = target;
         }
 

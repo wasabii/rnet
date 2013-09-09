@@ -83,7 +83,7 @@ namespace Rnet.Drivers
         /// <returns></returns>
         public ProfilePropertyHandle this[PropertyDescriptor property]
         {
-            get { return new ProfilePropertyHandle(this, property); }
+            get { Contract.Requires<ArgumentNullException>(property != null); return new ProfilePropertyHandle(this, property); }
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Rnet.Drivers
         /// <returns></returns>
         public ProfileCommandHandle this[CommandDescriptor command]
         {
-            get { return new ProfileCommandHandle(this, command); }
+            get { Contract.Requires<ArgumentNullException>(command != null); return new ProfileCommandHandle(this, command); }
         }
 
     }

@@ -40,6 +40,8 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         public static Uri GetBaseUri(this NancyContext context)
         {
+            Contract.Requires<ArgumentNullException>(context != null);
+
             var u = context.Request.Url.Clone();
             u.Path = context.NegotiationContext.ModulePath;
             return u;
