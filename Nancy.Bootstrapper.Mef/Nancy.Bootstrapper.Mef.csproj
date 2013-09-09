@@ -70,8 +70,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Nancy">
-      <HintPath>..\packages\Nancy.0.20.0-Beta4\lib\net40\Nancy.dll</HintPath>
+    <Reference Include="Nancy, Version=0.20.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Nancy.0.20.0\lib\net40\Nancy.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -85,6 +86,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CompositionExtensions.cs" />
+    <Compile Include="INancyGeneratedPartMetadataView.cs" />
+    <Compile Include="NancyCatalog.cs" />
+    <Compile Include="NancyGeneratedPartAttribute.cs" />
+    <Compile Include="INancyGeneratedPartMetadata.cs" />
+    <Compile Include="NancyExportAttribute.cs" />
+    <Compile Include="NancyTypeCatalog.cs" />
     <Compile Include="NancyBootstrapper.cs" />
     <Compile Include="NancyAssemblyCatalog.cs" />
     <Compile Include="NancyReflectionContext.cs" />

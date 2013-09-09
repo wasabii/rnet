@@ -1,5 +1,5 @@
 ﻿using System;
-using System.ComponentModel.Composition.Primitives;
+using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 
@@ -7,30 +7,20 @@ namespace Nancy.Bootstrapper.Mef
 {
 
     /// <summary>
-    /// Catalog version that wraps another 
+    /// Assembly catalog that provides export of Nancy implementations that are not decorated with standard
+    /// MEF attributes. The <see cref="NancyReflectionContext"/> is used to virtualize MEF attributes.
     /// </summary>
-    public class NancyAssemblyCatalog : ComposablePartCatalog
+    public class NancyAssemblyCatalog : NancyCatalog
     {
-
-        Assembly assembly;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="assembly"></param>
         public NancyAssemblyCatalog(Assembly assembly)
+            : base(new AssemblyCatalog(assembly, new NancyReflectionContext()))
         {
             Contract.Requires<NullReferenceException>(assembly != null);
-
-            this.assembly = assembly;
-        }
-
-        public override System.Linq.IQueryable<ComposablePartDefinition> Parts
-        {
-            get
-            {
-                return base.Parts;
-            }
         }
 
     }
