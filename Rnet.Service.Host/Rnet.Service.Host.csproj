@@ -110,6 +110,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RnetNancyBootstrapper.cs" />
     <Compile Include="RnetServiceHostConfigurationCollection.cs" />
     <Compile Include="RnetServiceHostConfigurationElement.cs" />
     <Compile Include="Serialization\JsonSerializer.cs" />

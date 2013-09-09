@@ -86,8 +86,8 @@ namespace Rnet.Drivers.Russound.Media.Audio
         /// <param name="d"></param>
         void ReceiveZone(byte[] d)
         {
-            Contract.Requires(d != null);
-            Contract.Requires(d.Length > 6);
+            Contract.Requires<ArgumentNullException>(d != null);
+            Contract.Requires<ArgumentOutOfRangeException>(d.Length > 6);
 
             ReceivePower(d[0]);
             ReceiveVolume(d[2]);

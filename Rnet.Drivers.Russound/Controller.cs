@@ -34,7 +34,7 @@ namespace Rnet.Drivers.Russound
             : base(controller)
         {
             Contract.Requires<ArgumentNullException>(controller != null);
-            Contract.Requires<ArgumentNullException>(zoneCount >= 1 && zoneCount <= 32);
+            Contract.Requires<ArgumentOutOfRangeException>(zoneCount >= 1 && zoneCount <= 32);
 
             // grab references to the supported zones
             zones = Enumerable.Range(0, zoneCount)
