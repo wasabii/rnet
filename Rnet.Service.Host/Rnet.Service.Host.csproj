@@ -79,7 +79,7 @@
     </Reference>
     <Reference Include="Nancy.Bootstrappers.Mef, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nancy.Bootstrappers.Mef.0.0.0.2\lib\net45\Nancy.Bootstrappers.Mef.dll</HintPath>
+      <HintPath>..\packages\Nancy.Bootstrappers.Mef.0.0.0.5\lib\net45\Nancy.Bootstrappers.Mef.dll</HintPath>
     </Reference>
     <Reference Include="Nancy.Hosting.Self, Version=0.20.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
