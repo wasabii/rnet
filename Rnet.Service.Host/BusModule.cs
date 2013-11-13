@@ -23,9 +23,9 @@ namespace Rnet.Service.Host
     public sealed class BusModule : NancyModule
     {
 
-        ICompositionService composition;
-        RnetBus bus;
-        IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors;
+        readonly ICompositionService composition;
+        readonly RnetBus bus;
+        readonly IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors;
 
         /// <summary>
         /// Initializes a new instance.

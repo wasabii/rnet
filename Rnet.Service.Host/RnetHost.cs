@@ -3,18 +3,17 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-
 using Nancy;
 using Nancy.Bootstrappers.Mef;
+using Nancy.Bootstrappers.Mef.Composition.Hosting;
 using Nancy.ErrorHandling;
 using Nancy.Hosting.Self;
-
 using Nito.AsyncEx;
 
 namespace Rnet.Service.Host
 {
 
-    public class RnetHost : IDisposable, IStatusCodeHandler
+    public class RnetHost : IDisposable
     {
 
         readonly AsyncLock async = new AsyncLock();
@@ -34,6 +33,7 @@ namespace Rnet.Service.Host
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
+            Contract.Requires<ArgumentException>(baseUri.ToString().EndsWith("/"));
 
             this.bus = bus;
             this.baseUri = baseUri;
@@ -44,7 +44,7 @@ namespace Rnet.Service.Host
             container = new CompositionContainer(
                 catalog = new AggregateCatalog(parent != null ? parent.Catalog : new AggregateCatalog(), new AssemblyCatalog(typeof(RnetHost).Assembly)),
                 CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
-                parent != null ? new[] { parent } : new ExportProvider[0]);
+                parent != null ? new ExportProvider[] { parent, new NancyExportProvider() } : new ExportProvider[] { new NancyExportProvider() });
 
             // export initial values
             container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
@@ -95,7 +95,7 @@ namespace Rnet.Service.Host
 
                 // configure nancy
                 nancy = new NancyHost(
-                    new NancyBootstrapper(),
+                    new RnetNancyBootstrapper(container),
                     baseUri);
                 nancy.Start();
             }
@@ -135,29 +135,29 @@ namespace Rnet.Service.Host
             Stop();
         }
 
-        /// <summary>
-        /// Implements IStatusCodeHandler.HandlesStatusCode.
-        /// </summary>
-        /// <param name="statusCode"></param>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        bool IStatusCodeHandler.HandlesStatusCode(HttpStatusCode statusCode, NancyContext context)
-        {
-            Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
+        ///// <summary>
+        ///// Implements IStatusCodeHandler.HandlesStatusCode.
+        ///// </summary>
+        ///// <param name="statusCode"></param>
+        ///// <param name="context"></param>
+        ///// <returns></returns>
+        //bool IStatusCodeHandler.HandlesStatusCode(HttpStatusCode statusCode, NancyContext context)
+        //{
+        //    Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
 
-            // check whether the reported status code is an error
-            return statusCode != HttpStatusCode.OK;
-        }
+        //    // check whether the reported status code is an error
+        //    return statusCode != HttpStatusCode.OK;
+        //}
 
-        /// <summary>
-        /// Implements IStatusCodeHandler.Handle.
-        /// </summary>
-        /// <param name="statusCode"></param>
-        /// <param name="context"></param>
-        void IStatusCodeHandler.Handle(HttpStatusCode statusCode, NancyContext context)
-        {
-            Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
-        }
+        ///// <summary>
+        ///// Implements IStatusCodeHandler.Handle.
+        ///// </summary>
+        ///// <param name="statusCode"></param>
+        ///// <param name="context"></param>
+        //void IStatusCodeHandler.Handle(HttpStatusCode statusCode, NancyContext context)
+        //{
+        //    Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
+        //}
 
         /// <summary>
         /// Finalizes the instance.
