@@ -70,7 +70,7 @@ namespace Rnet.Service.Host.Processors
             // search for command
             var command = profile.Metadata.Commands.FirstOrDefault(i => i.Name == path[0]);
             if (command != null)
-                return Task.FromResult<object>(new ResolveResponse(profile[property], path.Skip(1).ToArray()));
+                return Task.FromResult<object>(new ResolveResponse(profile[command], path.Skip(1).ToArray()));
 
             return Task.FromResult<object>(null);
         }
