@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
-
+using Nancy.Bootstrappers.Mef.Composition.Hosting;
 using Nito.AsyncEx;
-
 using Rnet.Service.Host;
 
 namespace Rnet.Service
@@ -42,6 +42,7 @@ namespace Rnet.Service
 
         }
 
+        readonly CompositionContainer container;
         readonly List<Instance> instances;
 
         /// <summary>
@@ -49,6 +50,7 @@ namespace Rnet.Service
         /// </summary>
         public ServiceImpl()
         {
+            this.container = new CompositionContainer(new ApplicationCatalog(), new NancyExportProvider());
             this.instances = new List<Instance>();
         }
 
@@ -63,7 +65,7 @@ namespace Rnet.Service
                 // expose new bus on a new host
                 var context = new AsyncContextThread();
                 var bus = new RnetBus(conf.Bus);
-                var host = new RnetHost(bus, conf.Uri);
+                var host = new RnetHost(bus, conf.Uri, container);
                 instances.Add(new Instance(context, bus, host));
 
                 // schedule initialization

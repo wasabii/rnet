@@ -98,6 +98,7 @@
       <HintPath>..\packages\OLinq.0.0.14.0\lib\net40\OLinq.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Net" />
     <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -143,15 +144,16 @@
     <Compile Include="Views\BusObjectViewModel.cs" />
     <Compile Include="Views\Profiles\Core\ControllerViewModel.cs" />
     <Compile Include="Views\Profiles\Core\ContainerViewModel.cs" />
-    <Compile Include="Views\Profiles\ViewModelAttribute.cs" />
     <Compile Include="Views\Profiles\Core\ZoneViewModel.cs" />
     <Compile Include="Views\Profiles\Core\ObjectViewModel.cs" />
     <Compile Include="Views\Profiles\Core\DeviceViewModel.cs" />
-    <Compile Include="Views\Profiles\Media\AudioViewModel.cs" />
-    <Compile Include="Views\Profiles\ViewModel.cs" />
+    <Compile Include="Views\Profiles\Media\EqualizationController.cs" />
+    <Compile Include="Views\Profiles\Media\EqualizationViewModel.cs" />
+    <Compile Include="Views\Profiles\ProfileViewModel.cs" />
     <Compile Include="Views\MessageDirection.cs" />
     <Compile Include="Views\MessageViewModel.cs" />
     <Compile Include="TreeViewBehavior.cs" />
+    <Compile Include="Views\Controller.cs" />
     <Compile Include="XamlViewer.cs" />
     <Resource Include="Views\BusView.xaml">
       <SubType>Designer</SubType>

@@ -1,9 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.ComponentModel.Composition;
+using System.Diagnostics.Contracts;
+using System.Linq;
 
 using Microsoft.Practices.Prism.ViewModel;
 
 using Rnet.Drivers;
-using Rnet.Manager.Profiles;
+using Rnet.Manager.Views.Profiles;
 
 namespace Rnet.Manager.Views
 {
@@ -14,16 +17,27 @@ namespace Rnet.Manager.Views
     public class BusObjectViewModel : NotificationObject
     {
 
+        readonly RnetBusObject target;
+        readonly ProfileManager profileManager;
+
         TypeDictionary<ProfileHandle> profiles;
-        TypeDictionary<ViewModel> profileViewModels;
+        TypeDictionary<ProfileViewModel> profileViewModels;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="target"></param>
-        public BusObjectViewModel(RnetBusObject target)
+        [ImportingConstructor]
+        public BusObjectViewModel(
+            RnetBusObject target,
+            ProfileManager profileManager)
         {
-            Target = target;
+            Contract.Requires<ArgumentNullException>(target != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
+
+            this.profileManager = profileManager;
+            this.target = target;
+
             Initialize();
         }
 
@@ -32,14 +46,14 @@ namespace Rnet.Manager.Views
         /// </summary>
         async void Initialize()
         {
-            var t = Target.GetProfiles();
+            var t = profileManager.GetProfiles(Target);
             var p = await t;
 
             // load the supported profiles
             Profiles = new TypeDictionary<ProfileHandle>(p
                 .ToDictionary(i => i.Metadata.Contract, i => i));
-            ProfileViewModels = new TypeDictionary<ViewModel>(Profiles
-                .Select(i => Rnet.Manager.Profiles.ViewModel.Create(i.Value))
+            ProfileViewModels = new TypeDictionary<ProfileViewModel>(Profiles
+                .Select(i => ProfileViewModel.Create(i.Value))
                 .Where(i => i != null)
                 .ToDictionary(i => i.Profile.Metadata.Contract, i => i));
         }
@@ -47,7 +61,10 @@ namespace Rnet.Manager.Views
         /// <summary>
         /// Object being viewed.
         /// </summary>
-        public RnetBusObject Target { get; private set; }
+        public RnetBusObject Target
+        {
+            get { return target; }
+        }
 
         /// <summary>
         /// Known set of profile types and implementation.
@@ -61,7 +78,7 @@ namespace Rnet.Manager.Views
         /// <summary>
         /// Known set of profile types and view models.
         /// </summary>
-        public TypeDictionary<ViewModel> ProfileViewModels
+        public TypeDictionary<ProfileViewModel> ProfileViewModels
         {
             get { return profileViewModels; }
             set { profileViewModels = value; RaisePropertyChanged(() => ProfileViewModels); }

@@ -4,8 +4,8 @@ using Rnet.Profiles.Core;
 namespace Rnet.Manager.Profiles.Core
 {
 
-    [ViewModel(typeof(IDevice))]
-    public class DeviceViewModel : ViewModel<IDevice>
+    [ProfileViewModel(typeof(IDevice))]
+    public class DeviceViewModel : ProfileViewModel<IDevice>
     {
 
         /// <summary>

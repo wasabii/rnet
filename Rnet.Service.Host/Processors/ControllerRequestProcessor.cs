@@ -2,13 +2,14 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 
-using Rnet.Service.Host.Processors;
+using Rnet.Drivers;
 
 namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetController), -50)]
-    public class ControllerRequestProcessor : DeviceRequestProcessor
+    public class ControllerRequestProcessor :
+        DeviceRequestProcessor
     {
 
         /// <summary>
@@ -17,10 +18,12 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected ControllerRequestProcessor(
-            BusModule module)
-            : base(module)
+            BusModule module,
+            ProfileManager profileManager)
+            : base(module, profileManager)
         {
             Contract.Requires<ArgumentNullException>(module != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
         }
 
     }

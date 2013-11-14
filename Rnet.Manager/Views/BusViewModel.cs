@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.ExceptionServices;
-
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.ViewModel;
-
 using OLinq;
+using Rnet.Drivers;
 
 namespace Rnet.Manager.Views
 {
@@ -18,7 +18,7 @@ namespace Rnet.Manager.Views
     public class BusViewModel : NotificationObject
     {
 
-        Uri uri;
+        readonly Uri uri;
         RnetBus bus;
         IEnumerable<BusObjectViewModel> objects;
         ObservableCollection<MessageViewModel> messages;
@@ -27,9 +27,12 @@ namespace Rnet.Manager.Views
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        public BusViewModel()
+        [ImportingConstructor]
+        public BusViewModel(
+            ProfileManager profileManager)
         {
-            Uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
+            this.uri = new Uri("rnet.tcp://tokyo.cogito.cx:9999");
+
             StartCommand = new DelegateCommand(Start, () => Bus == null);
             StopCommand = new DelegateCommand(Stop, () => Bus != null);
             ScanCommand = new DelegateCommand(Scan, () => Bus != null);

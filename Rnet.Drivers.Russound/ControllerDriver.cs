@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rnet.Drivers.Russound
@@ -17,7 +19,7 @@ namespace Rnet.Drivers.Russound
         public ControllerDriver(RnetController controller)
             : base(controller)
         {
-
+            Contract.Requires<ArgumentNullException>(controller != null);
         }
 
         /// <summary>

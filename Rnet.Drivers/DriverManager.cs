@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Nito.AsyncEx;
 
 namespace Rnet.Drivers
 {
@@ -12,32 +11,23 @@ namespace Rnet.Drivers
     /// <summary>
     /// Provides methods to query an RNET device for its supported driver.
     /// </summary>
-    public static class DriverManager
+    [Export(typeof(DriverManager))]
+    public sealed class DriverManager
     {
 
-        static readonly AsyncLock lck = new AsyncLock();
-        static readonly SortedSet<DriverPackage> packages = new SortedSet<DriverPackage>();
+        readonly IEnumerable<DriverPackage> packages;
 
         /// <summary>
-        /// Initializes the default instance.
+        /// Initializes a new instances.
         /// </summary>
-        static DriverManager()
+        /// <param name="packages"></param>
+        [ImportingConstructor]
+        public DriverManager(
+            [ImportMany] IEnumerable<DriverPackage> packages)
         {
-            // ensure default drivers are always available
-            Register<Default.DriverPackage>();
-        }
+            Contract.Requires<ArgumentNullException>(packages != null);
 
-        /// <summary>
-        /// Registers a driver package by type.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public static void Register<T>()
-            where T : DriverPackage, new()
-        {
-            lock (lck)
-                if (!packages.Any(i => i.GetType() == typeof(T)))
-                    if (!packages.Add(new T()))
-                        throw new Exception("Unknown error adding package.");
+            this.packages = packages.OrderBy(i => i);
         }
 
         /// <summary>
@@ -46,7 +36,7 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
-        static async Task<Driver> CreateDriver(RnetDevice device)
+        async Task<Driver> CreateDriver(RnetDevice device)
         {
             foreach (var package in packages)
             {
@@ -63,9 +53,10 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
-        public static Task<Driver> GetDriver(this RnetDevice device)
+        public Task<Driver> GetDriver(RnetDevice device)
         {
             Contract.Requires<ArgumentNullException>(device != null);
+
             return device.Context.GetOrCreate<Task<Driver>>(() => CreateDriver(device));
         }
 

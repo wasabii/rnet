@@ -4,8 +4,8 @@ using Rnet.Profiles.Core;
 namespace Rnet.Manager.Profiles.Core
 {
 
-    [ViewModel(typeof(IZone))]
-    public class ZoneViewModel : ViewModel<IZone>
+    [ProfileViewModel(typeof(IZone))]
+    public class ZoneViewModel : ProfileViewModel<IZone>
     {
 
         /// <summary>

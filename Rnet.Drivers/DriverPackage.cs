@@ -1,18 +1,22 @@
 ﻿using System;
+using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 
 namespace Rnet.Drivers
 {
 
     /// <summary>
-    /// Provides the ability to resolve a <see cref="Driver"/> instance for <see cref="RnetDevice"/> objects.
+    /// Provides the ability to resolve a driver for a device.
     /// </summary>
-    public abstract class DriverPackage : IComparable<DriverPackage>
+    [InheritedExport(typeof(DriverPackage))]
+    public abstract class DriverPackage :
+        IComparable<DriverPackage>
     {
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
+        [ImportingConstructor]
         protected DriverPackage()
         {
 
@@ -42,6 +46,11 @@ namespace Rnet.Drivers
         /// <returns></returns>
         protected abstract Task<Driver> GetDriver(RnetDevice device);
 
+        /// <summary>
+        /// Compares this instance to the specified <see cref="DriverPackage"/>.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         int IComparable<DriverPackage>.CompareTo(DriverPackage other)
         {
             return Priority.CompareTo(other.Priority);

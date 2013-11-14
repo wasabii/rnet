@@ -1,20 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-
 using OLinq;
-
 using Rnet.Drivers;
 using Rnet.Manager.Views;
 using Rnet.Profiles.Core;
 
-namespace Rnet.Manager.Profiles.Core
+namespace Rnet.Manager.Views.Profiles.Core
 {
 
-    [ViewModel(typeof(IContainer))]
-    public class ContainerViewModel : ViewModel<IContainer>
+    [ProfileViewModel(typeof(IContainer))]
+    public class ContainerViewModel : ProfileViewModel<IContainer>
     {
 
+        readonly ProfileManager profileManager;
         IEnumerable<RnetBusObject> objects;
         IEnumerable<BusObjectViewModel> objectViewModels;
 
@@ -22,10 +23,15 @@ namespace Rnet.Manager.Profiles.Core
         /// Initializes a new instance.
         /// </summary>
         /// <param name="profile"></param>
-        public ContainerViewModel(ProfileHandle<IContainer> profile)
+        public ContainerViewModel(
+            ProfileManager profileManager,
+            ProfileHandle<IContainer> profile)
             : base(profile)
         {
+            Contract.Requires<ArgumentNullException>(profileManager != null);
+            Contract.Requires<ArgumentNullException>(profile != null);
 
+            this.profileManager = profileManager;
         }
 
         internal override Task Initialize()

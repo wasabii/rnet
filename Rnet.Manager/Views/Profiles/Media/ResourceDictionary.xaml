@@ -5,7 +5,7 @@
     xmlns:rnetmpm="clr-namespace:Rnet.Manager.Profiles.Media;assembly=Rnet.Manager">
 
     <DataTemplate
-        DataType="{x:Type rnetmpm:AudioViewModel}">
+        DataType="{x:Type rnetmpm:EqualizationViewModel}">
         <rnetm:XamlViewer
             Source="AudioView.xaml" />
     </DataTemplate>

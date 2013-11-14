@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 namespace Rnet.Drivers.Russound
 {
@@ -6,26 +8,10 @@ namespace Rnet.Drivers.Russound
     /// <summary>
     /// Provides Russound specific drivers for known Russound devices.
     /// </summary>
-    public sealed class DriverPackage : Drivers.DriverPackage
+    public class DriverPackage :
+        Drivers.DriverPackage
     {
 
-        /// <summary>
-        /// Initializes the static instance.
-        /// </summary>
-        static DriverPackage()
-        {
-            // register ourselves if we can
-            DriverManager.Register<DriverPackage>();
-        }
-
-        /// <summary>
-        /// Registers the driver package.
-        /// </summary>
-        public static void Register()
-        {
-
-        }
-        
         /// <summary>
         /// We provide official drivers for Russound.
         /// </summary>
@@ -38,12 +24,14 @@ namespace Rnet.Drivers.Russound
         {
             if (device is RnetController)
                 return GetDriver((RnetController)device);
-            
+
             return Task.FromResult<Driver>(null);
         }
 
         async Task<Driver> GetDriver(RnetController controller)
         {
+            Contract.Requires<ArgumentNullException>(controller != null);
+
             var model = await controller[0, 0].ReadAsciiString();
             if (model == null)
                 return null;

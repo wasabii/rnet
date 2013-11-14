@@ -228,14 +228,13 @@ namespace Rnet
 
                 // start client running
                 await Client.Start();
+                SetState(RnetBusState.Started);
 
                 // activate the path to the local device
                 d.Activate();
 
                 // initiate device scan
                 await Scan();
-
-                SetState(RnetBusState.Started);
             }
         }
 
@@ -391,10 +390,10 @@ namespace Rnet
         /// <returns></returns>
         RnetDevice GetOrCreateDevice(RnetDeviceId id)
         {
-            Contract.Requires(Controllers != null);
+            Contract.Requires(controllers != null);
 
             // get controller
-            var c = Controllers[id.ControllerId];
+            var c = controllers[id.ControllerId];
             if (c == null)
                 return null;
 

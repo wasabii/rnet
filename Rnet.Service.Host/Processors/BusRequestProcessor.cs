@@ -3,15 +3,17 @@ using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Nancy;
+
 using Rnet.Service.Host.Models;
-using Rnet.Service.Host.Processors;
 
 namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetBus))]
-    public class BusRequestProcessor : RequestProcessor<RnetBus>
+    public class BusRequestProcessor :
+        RequestProcessor<RnetBus>
     {
 
         /// <summary>

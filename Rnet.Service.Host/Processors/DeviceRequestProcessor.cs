@@ -1,10 +1,10 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
-using Rnet.Service.Host.Processors;
+using Rnet.Drivers;
 using Rnet.Service.Host.Models;
 
 namespace Rnet.Service.Host.Processors
@@ -20,10 +20,12 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected DeviceRequestProcessor(
-            BusModule module)
-            : base(module)
+            BusModule module,
+            ProfileManager profileManager)
+            : base(module, profileManager)
         {
             Contract.Requires<ArgumentNullException>(module != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
         }
 
         public override async Task<object> Resolve(RnetDevice target, string[] path)
@@ -57,6 +59,9 @@ namespace Rnet.Service.Host.Processors
 
         DataHandleCollection ToDataCollection(RnetDevice device)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+            Contract.Requires<ArgumentNullException>(device.Data != null);
+
             return new DataHandleCollection(device.Data.Select(i => new DataHandleData()
             {
                 Uri = device.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT).UriCombine(i.Path.ToString()),
@@ -66,6 +71,9 @@ namespace Rnet.Service.Host.Processors
 
         DataHandleData ResolveDataItem(RnetDevice device, string path)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+            Contract.Requires<ArgumentNullException>(path != null);
+
             return null;
         }
 

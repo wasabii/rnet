@@ -98,6 +98,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nancy.0.21.1\lib\net40\Nancy.dll</HintPath>
     </Reference>
+    <Reference Include="Nancy.Bootstrappers.Mef, Version=0.19.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Nancy.Bootstrappers.Mef.0.19.0\lib\net45\Nancy.Bootstrappers.Mef.dll</HintPath>
+    </Reference>
     <Reference Include="Nito.AsyncEx, Version=2.0.0.0, Culture=neutral, PublicKeyToken=09d695329ca273b7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nito.AsyncEx.2.0.0\lib\net45\Nito.AsyncEx.dll</HintPath>
@@ -111,6 +115,7 @@
       <HintPath>..\packages\Nito.AsyncEx.2.0.0\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
@@ -151,6 +156,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rnet.Drivers.Russound\Rnet.Drivers.Russound.csproj">
+      <Project>{5ed2a90a-cdf8-4923-add5-e0056b468213}</Project>
+      <Name>Rnet.Drivers.Russound</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rnet.Service.Host\Rnet.Service.Host.csproj">
       <Project>{95fbfedf-4aa4-480a-99f1-9518bbb75565}</Project>
       <Name>Rnet.Service.Host</Name>

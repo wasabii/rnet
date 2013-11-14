@@ -4,8 +4,8 @@ using Rnet.Profiles.Core;
 namespace Rnet.Manager.Profiles.Core
 {
 
-    [ViewModel(typeof(IObject))]
-    public class ObjectViewModel : ViewModel<IObject>
+    [ProfileViewModel(typeof(IObject))]
+    public class ObjectViewModel : ProfileViewModel<IObject>
     {
 
         /// <summary>

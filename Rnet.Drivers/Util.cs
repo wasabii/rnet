@@ -77,11 +77,11 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<string> GetId(this RnetBusObject o)
+        public static async Task<string> GetId(this RnetBusObject o, ProfileManager profileManager)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
-            var p = await o.GetProfile<IObject>();
+            var p = await profileManager.GetProfile<IObject>(o);
             return p != null && !string.IsNullOrWhiteSpace(p.Id) ? p.Id : GetGeneratedName(o);
         }
 

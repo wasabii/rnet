@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
@@ -16,14 +17,9 @@ namespace Rnet.Drivers
     /// <summary>
     /// Provides methods to query an RNET bus object for its supported profiles.
     /// </summary>
-    public static class ProfileManager
+    [Export(typeof(ProfileManager))]
+    public sealed class ProfileManager
     {
-
-        /// <summary>
-        /// Cache of known metadata.
-        /// </summary>
-        static readonly ConcurrentDictionary<Type, ProfileDescriptor> contracts =
-            new ConcurrentDictionary<Type, ProfileDescriptor>();
 
         /// <summary>
         /// Caches the set of loaded profiles for each bus object.
@@ -31,17 +27,27 @@ namespace Rnet.Drivers
         class Cache
         {
 
+            readonly DriverManager driverManager;
+            readonly ProfileManager profileManager;
             readonly RnetBusObject target;
+
             Task<ProfileHandle[]> profiles;
 
             /// <summary>
             /// Initializes a new instance.
             /// </summary>
             /// <param name="target"></param>
-            public Cache(RnetBusObject target)
+            public Cache(
+                DriverManager driverManager,
+                ProfileManager profileManager,
+                RnetBusObject target)
             {
+                Contract.Requires<ArgumentNullException>(driverManager != null);
+                Contract.Requires<ArgumentNullException>(profileManager != null);
                 Contract.Requires<ArgumentNullException>(target != null);
 
+                this.driverManager = driverManager;
+                this.profileManager = profileManager;
                 this.target = target;
             }
 
@@ -54,7 +60,7 @@ namespace Rnet.Drivers
             {
                 Contract.Requires<ArgumentNullException>(device != null);
 
-                var driver = await device.GetDriver();
+                var driver = await driverManager.GetDriver(device);
                 if (driver != null)
                     return await driver.GetProfilesInternal();
 
@@ -70,7 +76,7 @@ namespace Rnet.Drivers
             {
                 Contract.Requires<ArgumentNullException>(zone != null);
 
-                var owner = await zone.Controller.GetProfile<IOwner>();
+                var owner = await profileManager.GetProfile<IOwner>(zone.Controller);
                 if (owner != null)
                     return await owner.GetProfiles(zone);
 
@@ -92,7 +98,7 @@ namespace Rnet.Drivers
                 if (context != null &&
                     context.Owner != null)
                 {
-                    var profile = await context.Owner.GetProfile<IOwner>();
+                    var profile = await profileManager.GetProfile<IOwner>(context.Owner);
                     if (profile != null)
                         return await profile.GetProfiles(target);
                 }
@@ -129,7 +135,7 @@ namespace Rnet.Drivers
                 Contract.Requires<ArgumentNullException>(instance != null);
 
                 return instance.GetType().GetInterfaces()
-                    .Select(i => GetOrCreateMetadata(i))
+                    .Select(i => profileManager.GetOrCreateMetadata(i))
                     .Where(i => i != null)
                     .Select(i => CreateProfile(target, i, instance));
             }
@@ -173,12 +179,29 @@ namespace Rnet.Drivers
 
         }
 
+        readonly DriverManager driverManager;
+        readonly ConcurrentDictionary<Type, ProfileDescriptor> cache;
+
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="driverManager"></param>
+        [ImportingConstructor]
+        public ProfileManager(
+            DriverManager driverManager)
+        {
+            Contract.Requires<ArgumentNullException>(driverManager != null);
+
+            this.driverManager = driverManager;
+            this.cache = new ConcurrentDictionary<Type, ProfileDescriptor>();
+        }
+
         /// <summary>
         /// Creates a new metadata instance for the given contract type.
         /// </summary>
         /// <param name="contract"></param>
         /// <returns></returns>
-        static ProfileDescriptor CreateMetadata(Type contract)
+        ProfileDescriptor CreateMetadata(Type contract)
         {
             Contract.Requires<ArgumentNullException>(contract != null);
 
@@ -196,11 +219,11 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="contract"></param>
         /// <returns></returns>
-        static ProfileDescriptor GetOrCreateMetadata(Type contract)
+        ProfileDescriptor GetOrCreateMetadata(Type contract)
         {
             Contract.Requires<ArgumentNullException>(contract != null);
 
-            return ProfileManager.contracts.GetOrAdd(contract, m =>
+            return cache.GetOrAdd(contract, m =>
                 CreateMetadata(contract));
         }
 
@@ -209,12 +232,12 @@ namespace Rnet.Drivers
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static Task<ProfileHandle[]> GetProfiles(this RnetBusObject target)
+        public Task<ProfileHandle[]> GetProfiles(RnetBusObject target)
         {
             Contract.Requires<ArgumentNullException>(target != null);
 
             return target.Context.GetOrCreate<Cache>(() =>
-                new Cache(target))
+                new Cache(driverManager, this, target))
                     .GetProfiles();
         }
 
@@ -224,7 +247,7 @@ namespace Rnet.Drivers
         /// <param name="target"></param>
         /// <param name="contract"></param>
         /// <returns></returns>
-        public static async Task<object> GetProfile(this RnetBusObject target, Type contract)
+        public async Task<object> GetProfile(RnetBusObject target, Type contract)
         {
             Contract.Requires<ArgumentNullException>(target != null);
             Contract.Requires<ArgumentNullException>(contract != null);
@@ -240,7 +263,7 @@ namespace Rnet.Drivers
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static async Task<T> GetProfile<T>(this RnetBusObject target)
+        public async Task<T> GetProfile<T>(RnetBusObject target)
             where T : class
         {
             Contract.Requires<ArgumentNullException>(target != null);

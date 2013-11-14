@@ -3,10 +3,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using Nancy;
-using Nancy.Bootstrappers.Mef;
-using Nancy.Bootstrappers.Mef.Composition.Hosting;
-using Nancy.ErrorHandling;
+
 using Nancy.Hosting.Self;
 using Nito.AsyncEx;
 
@@ -28,23 +25,17 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="bus"></param>
         /// <param name="baseUri"></param>
-        /// <param name="parent"></param>
-        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer parent)
+        /// <param name="container"></param>
+        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer container)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
+            Contract.Requires<ArgumentNullException>(container != null);
             Contract.Requires<ArgumentException>(baseUri.ToString().EndsWith("/"));
 
             this.bus = bus;
             this.baseUri = baseUri;
-
-            // configure the container
-            // if parent specified, we become a child
-            // add our own assembly
-            container = new CompositionContainer(
-                catalog = new AggregateCatalog(parent != null ? parent.Catalog : new AggregateCatalog(), new AssemblyCatalog(typeof(RnetHost).Assembly)),
-                CompositionOptions.DisableSilentRejection | CompositionOptions.IsThreadSafe | CompositionOptions.ExportCompositionService,
-                parent != null ? new ExportProvider[] { parent, new NancyExportProvider() } : new ExportProvider[] { new NancyExportProvider() });
+            this.container = container;
 
             // export initial values
             container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
@@ -57,23 +48,13 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="bus"></param>
         /// <param name="baseUri"></param>
-        public RnetHost(RnetBus bus, Uri baseUri)
-            : this(bus, baseUri, null)
+        public RnetHost(RnetBus bus, string baseUri, CompositionContainer container)
+            : this(bus, new Uri(baseUri), container)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
-        }
-
-        /// <summary>
-        /// Initializes a new instance.
-        /// </summary>
-        /// <param name="bus"></param>
-        /// <param name="baseUri"></param>
-        public RnetHost(RnetBus bus, string baseUri)
-            : this(bus, new Uri(baseUri), null)
-        {
-            Contract.Requires<ArgumentNullException>(bus != null);
-            Contract.Requires<ArgumentNullException>(baseUri != null);
+            Contract.Requires<ArgumentNullException>(container != null);
+            Contract.Requires<ArgumentException>(baseUri.EndsWith("/"));
         }
 
         /// <summary>

@@ -26,6 +26,8 @@ namespace Rnet.Service.Host
         readonly ICompositionService composition;
         readonly RnetBus bus;
         readonly IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors;
+        readonly DriverManager driverManager;
+        readonly ProfileManager profileManager;
 
         /// <summary>
         /// Initializes a new instance.
@@ -35,16 +37,22 @@ namespace Rnet.Service.Host
         public BusModule(
             [Import] ICompositionService composition,
             [Import] RnetBus bus,
-            [ImportMany] IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors)
+            [ImportMany] IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors,
+            [Import] DriverManager driverManager,
+            [Import] ProfileManager profileManager)
             : base("/")
         {
             Contract.Requires<ArgumentNullException>(composition != null);
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(processors != null);
+            Contract.Requires<ArgumentNullException>(driverManager != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
 
             this.composition = composition;
             this.bus = bus;
             this.processors = processors;
+            this.driverManager = driverManager;
+            this.profileManager = profileManager;
 
             Get[@"/", true] =
             Get[@"/{Uri*}", true] = async (x, ct) =>
@@ -82,8 +90,6 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         async Task<object> PutRequest(string uri)
         {
-            Contract.Requires<ArgumentNullException>(uri != null);
-
             // split and clean up uri
             var path = uri.Split('/')
                 .Where(i => !string.IsNullOrWhiteSpace(i))
@@ -106,6 +112,9 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         async Task<object> Resolve(object source, string[] path)
         {
+            Contract.Requires<ArgumentNullException>(source != null);
+            Contract.Requires<ArgumentNullException>(path != null);
+
             var o = await InvokeResolve(source, path);
             while (o is ResolveResponse)
                 o = await InvokeResolve(((ResolveResponse)o).Object, ((ResolveResponse)o).Path);
@@ -121,6 +130,9 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         async Task<object> Invoke(object source, Func<IRequestProcessor, Task<object>> invoke)
         {
+            Contract.Requires<ArgumentNullException>(source != null);
+            Contract.Requires<ArgumentNullException>(invoke != null);
+
             var o = source;
 
             foreach (var p in processors.OrderByDescending(i => i.Metadata.Infos.Max(j => j.Priority)))
@@ -139,6 +151,9 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         Task<object> InvokeResolve(object source, string[] path)
         {
+            Contract.Requires<ArgumentNullException>(source != null);
+            Contract.Requires<ArgumentNullException>(path != null);
+
             return Invoke(source, i => i.Resolve(source, path));
         }
 
@@ -149,6 +164,8 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         Task<object> InvokeGet(object source)
         {
+            Contract.Requires<ArgumentNullException>(source != null);
+
             return Invoke(source, i => i.Get(source));
         }
 
@@ -159,6 +176,8 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         Task<object> InvokePut(object source)
         {
+            Contract.Requires<ArgumentNullException>(source != null);
+
             return Invoke(source, i => i.Put(source));
         }
 
@@ -170,13 +189,13 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         internal async Task<RnetBusObject> FindObject(IEnumerable<RnetBusObject> source, string id)
         {
-            Contract.Requires(source != null);
-            Contract.Requires(id != null);
+            Contract.Requires<ArgumentNullException>(source != null);
+            Contract.Requires<ArgumentNullException>(id != null);
 
             // find first matching ID
             foreach (var o in source)
             {
-                var i = await o.GetId();
+                var i = await o.GetId(profileManager);
                 if (i == id)
                     return o;
             }
@@ -191,6 +210,8 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         public async Task<ObjectData> ObjectToData(RnetBusObject d)
         {
+            Contract.Requires<ArgumentNullException>(d != null);
+
             if (d is RnetDevice)
                 return await DeviceToData((RnetDevice)d);
             else
@@ -199,10 +220,13 @@ namespace Rnet.Service.Host
 
         async Task<ObjectData> FillObjectData(RnetBusObject o, ObjectData d)
         {
-            d.Uri = await o.GetUri(Context);
-            d.FriendlyUri = await o.GetFriendlyUri(Context);
-            d.Id = await o.GetId();
-            d.Name = await o.GetName(Context);
+            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(d != null);
+
+            d.Uri = await o.GetUri(profileManager, Context);
+            d.FriendlyUri = await o.GetFriendlyUri(profileManager, Context);
+            d.Id = await o.GetId(profileManager);
+            d.Name = await o.GetName(profileManager, Context);
             d.Objects = await GetObjects(o);
             d.Profiles = await GetProfileRefs(o);
             return d;
@@ -215,6 +239,8 @@ namespace Rnet.Service.Host
         /// <returns></returns>
         public async Task<DeviceData> DeviceToData(RnetDevice d)
         {
+            Contract.Requires<ArgumentNullException>(d != null);
+
             if (d is RnetController)
                 return await ControllerToData((RnetController)d);
             else
@@ -223,6 +249,9 @@ namespace Rnet.Service.Host
 
         async Task<DeviceData> FillDeviceData(RnetDevice o, DeviceData d)
         {
+            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(d != null);
+
             await FillObjectData(o, d);
             d.RnetId = o.GetId();
             d.DataUri = o.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT);
@@ -255,7 +284,7 @@ namespace Rnet.Service.Host
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
-            var p = await o.GetProfile<IContainer>() ?? Enumerable.Empty<RnetBusObject>();
+            var p = await profileManager.GetProfile<IContainer>(o) ?? Enumerable.Empty<RnetBusObject>();
             return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(i))));
         }
 
@@ -269,7 +298,7 @@ namespace Rnet.Service.Host
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
-            var p = await o.GetProfiles() ?? Enumerable.Empty<ProfileHandle>();
+            var p = await profileManager.GetProfiles(o) ?? Enumerable.Empty<ProfileHandle>();
             return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(i))));
         }
 
@@ -277,8 +306,8 @@ namespace Rnet.Service.Host
         {
             return new ProfileRef()
             {
-                Uri = await profile.GetUri(Context),
-                FriendlyUri = await profile.GetFriendlyUri(Context),
+                Uri = await profile.GetUri(profileManager, Context),
+                FriendlyUri = await profile.GetFriendlyUri(profileManager, Context),
                 Id = profile.Metadata.Id,
             };
         }

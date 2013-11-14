@@ -33,15 +33,16 @@ namespace Rnet.Service.Host.Models
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<string> GetName(this RnetBusObject o, NancyContext context)
+        public static async Task<string> GetName(this RnetBusObject o, ProfileManager profileManager, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
             // obtain object profile
-            var p = await o.GetProfile<IObject>();
+            var p = await profileManager.GetProfile<IObject>(o);
             if (p == null)
-                return await o.GetId();
+                return await o.GetId(profileManager);
 
             return p.DisplayName;
         }
@@ -51,9 +52,10 @@ namespace Rnet.Service.Host.Models
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this RnetBusObject o, NancyContext context)
+        public static async Task<Uri> GetUri(this RnetBusObject o, ProfileManager profileManager, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
             // obtain device URI for devices
@@ -63,7 +65,7 @@ namespace Rnet.Service.Host.Models
             // combine with URI of owner
             var p = o.GetOwner();
             if (p != null)
-                return (await p.GetUri(context)).UriCombine(await o.GetId());
+                return (await p.GetUri(profileManager, context)).UriCombine(await o.GetId(profileManager));
 
             return null;
         }
@@ -73,7 +75,7 @@ namespace Rnet.Service.Host.Models
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, NancyContext context)
+        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, ProfileManager profileManager, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(context != null);
@@ -81,10 +83,10 @@ namespace Rnet.Service.Host.Models
             // combine with URI of container
             var p = o.GetContainer();
             if (p != null)
-                return (await p.GetFriendlyUri(context)).UriCombine(await o.GetId());
+                return (await p.GetFriendlyUri(profileManager, context)).UriCombine(await o.GetId(profileManager));
 
             // no container, we must be under the bus directly
-            return context.GetBaseUri().UriCombine(await o.GetId());
+            return context.GetBaseUri().UriCombine(await o.GetId(profileManager));
         }
 
         /// <summary>
@@ -93,12 +95,13 @@ namespace Rnet.Service.Host.Models
         /// <param name="profile"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this ProfileHandle profile, NancyContext context)
+        public static async Task<Uri> GetUri(this ProfileHandle profile, ProfileManager profileManager, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
-            var u = await profile.Target.GetUri(context);
+            var u = await profile.Target.GetUri(profileManager, context);
             if (u == null)
                 return null;
 
@@ -111,12 +114,13 @@ namespace Rnet.Service.Host.Models
         /// <param name="profile"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, NancyContext context)
+        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, ProfileManager profileManager, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
-            var u = await profile.Target.GetFriendlyUri(context);
+            var u = await profile.Target.GetFriendlyUri(profileManager, context);
             if (u == null)
                 return null;
 

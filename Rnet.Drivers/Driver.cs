@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 namespace Rnet.Drivers
@@ -11,7 +12,8 @@ namespace Rnet.Drivers
     /// the <see cref="Driver"/> class directly, but rather resolve its profiles through the <see 
     /// cref="ProfileManager"/>.
     /// </summary>
-    public abstract class Driver : IComparable<Driver>
+    public abstract class Driver :
+        IComparable<Driver>
     {
 
         /// <summary>
@@ -20,6 +22,8 @@ namespace Rnet.Drivers
         /// <param name="device"></param>
         protected internal Driver(RnetDevice device)
         {
+            Contract.Requires<ArgumentNullException>(device != null);
+
             Device = device;
         }
 

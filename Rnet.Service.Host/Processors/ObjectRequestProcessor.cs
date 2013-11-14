@@ -3,11 +3,12 @@ using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Nancy;
+
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 using Rnet.Service.Host.Models;
-using Rnet.Service.Host.Processors;
 
 namespace Rnet.Service.Host.Processors
 {
@@ -17,7 +18,8 @@ namespace Rnet.Service.Host.Processors
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [RequestProcessor(typeof(RnetBusObject))]
-    public sealed class ObjectRequestProcessor : ObjectRequestProcessor<RnetBusObject>
+    public sealed class ObjectRequestProcessor :
+        ObjectRequestProcessor<RnetBusObject>
     {
 
         /// <summary>
@@ -26,10 +28,12 @@ namespace Rnet.Service.Host.Processors
         /// <param name="module"></param>
         [ImportingConstructor]
         public ObjectRequestProcessor(
-            BusModule module)
-            : base(module)
+            BusModule module,
+            ProfileManager profileManager)
+            : base(module, profileManager)
         {
             Contract.Requires<ArgumentNullException>(module != null);
+            Contract.Requires<ArgumentNullException>(profileManager != null);
         }
 
     }
@@ -37,29 +41,38 @@ namespace Rnet.Service.Host.Processors
     /// <summary>
     /// Handles requests for <see cref="RnetBusObject"/> instances.
     /// </summary>
-    public abstract class ObjectRequestProcessor<T> : RequestProcessor<T>
+    public abstract class ObjectRequestProcessor<T> :
+        RequestProcessor<T>
         where T : RnetBusObject
     {
+
+        readonly ProfileManager profileManager;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="target"></param>
         protected ObjectRequestProcessor(
-            BusModule module)
+            BusModule module,
+            ProfileManager profileManager)
             : base(module)
         {
             Contract.Requires<ArgumentNullException>(module != null);
+
+            this.profileManager = profileManager;
         }
 
         public override async Task<object> Resolve(T target, string[] path)
         {
+            Contract.Requires<ArgumentNullException>(target != null);
+            Contract.Requires<ArgumentNullException>(path != null);
+
             // referring to a profile
             if (path[0].StartsWith(Util.PROFILE_URI_PREFIX))
                 return await ResolveProfile(target, path, path[0].Substring(Util.PROFILE_URI_PREFIX.Length));
 
             // object contains other objects
-            var c = await target.GetProfile<IContainer>();
+            var c = await profileManager.GetProfile<IContainer>(target);
             if (c != null)
             {
                 // find contained object with specified id
@@ -85,7 +98,7 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(profileId));
 
             // find matching profile
-            var profiles = await target.GetProfiles();
+            var profiles = await profileManager.GetProfiles(target);
             if (profiles == null)
                 return null;
 
@@ -135,10 +148,10 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
 
-            d.Uri = await o.GetUri(Context);
-            d.FriendlyUri = await o.GetFriendlyUri(Context);
-            d.Id = await o.GetId();
-            d.Name = await o.GetName(Context);
+            d.Uri = await o.GetUri(profileManager, Context);
+            d.FriendlyUri = await o.GetFriendlyUri(profileManager, Context);
+            d.Id = await o.GetId(profileManager);
+            d.Name = await o.GetName(profileManager, Context);
             d.Objects = await GetObjects(o);
             d.Profiles = await GetProfileRefs(o);
             return d;
@@ -213,7 +226,7 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
-            var p = await o.GetProfile<IContainer>() ?? Enumerable.Empty<RnetBusObject>();
+            var p = await profileManager.GetProfile<IContainer>(o) ?? Enumerable.Empty<RnetBusObject>();
             return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(i))));
         }
 
@@ -227,7 +240,7 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
-            var p = await o.GetProfiles() ?? Enumerable.Empty<ProfileHandle>();
+            var p = await profileManager.GetProfiles(o) ?? Enumerable.Empty<ProfileHandle>();
             return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(i))));
         }
 
@@ -242,8 +255,8 @@ namespace Rnet.Service.Host.Processors
 
             return new ProfileRef()
             {
-                Uri = await profile.GetUri(Context),
-                FriendlyUri = await profile.GetFriendlyUri(Context),
+                Uri = await profile.GetUri(profileManager, Context),
+                FriendlyUri = await profile.GetFriendlyUri(profileManager, Context),
                 Id = profile.Metadata.Id,
             };
         }
