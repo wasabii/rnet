@@ -9,13 +9,25 @@ using Rnet.Service.Host;
 namespace Rnet.Service
 {
 
+    /// <summary>
+    /// Implements the RNet service.
+    /// </summary>
     class ServiceImpl : IDisposable
     {
 
-        class Execution
+        /// <summary>
+        /// Describes a running instance.
+        /// </summary>
+        class Instance
         {
 
-            public Execution(AsyncContextThread sync, RnetBus bus, RnetHost host)
+            /// <summary>
+            /// Initializes a new instance.
+            /// </summary>
+            /// <param name="sync"></param>
+            /// <param name="bus"></param>
+            /// <param name="host"></param>
+            public Instance(AsyncContextThread sync, RnetBus bus, RnetHost host)
             {
                 Context = sync;
                 Bus = bus;
@@ -30,14 +42,14 @@ namespace Rnet.Service
 
         }
 
-        List<Execution> running;
+        readonly List<Instance> instances;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         public ServiceImpl()
         {
-            running = new List<Execution>();
+            this.instances = new List<Instance>();
         }
 
         public void OnStart(string[] args)
@@ -52,12 +64,12 @@ namespace Rnet.Service
                 var context = new AsyncContextThread();
                 var bus = new RnetBus(conf.Bus);
                 var host = new RnetHost(bus, conf.Uri);
-                running.Add(new Execution(context, bus, host));
+                instances.Add(new Instance(context, bus, host));
 
                 // schedule initialization
                 context.Factory.Run(async () =>
                 {
-                   // await bus.Start();
+                    await bus.Start();
                     await host.StartAsync();
                 }).Wait();
             }
@@ -65,7 +77,7 @@ namespace Rnet.Service
 
         public void OnStop()
         {
-            foreach (var item in running.ToArray())
+            foreach (var item in instances.ToArray())
             {
                 var context = item.Context;
                 var bus = item.Bus;
@@ -80,7 +92,7 @@ namespace Rnet.Service
 
                 // wait for exit
                 context.JoinAsync();
-                running.Remove(item);
+                instances.Remove(item);
             }
         }
 

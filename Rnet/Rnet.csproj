@@ -109,6 +109,7 @@
     <Compile Include="RnetObject.cs" />
     <Compile Include="RnetPriority.cs" />
     <Compile Include="RnetTcpUriParser.cs" />
+    <Compile Include="RnetTraceSource.cs" />
     <Compile Include="RnetUnknownMessage.cs" />
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="RnetBus.cs" />

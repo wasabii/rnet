@@ -127,7 +127,7 @@ namespace Rnet
                 try
                 {
                     // attempt to open connection
-                    Trace.TraceInformation("Opening connection.");
+                    RnetTraceSource.Default.TraceInformation("RnetClient:OpenConnection opening");
                     await Connection.Open(cancellationToken);
                 }
                 catch (OperationCanceledException)
@@ -219,6 +219,8 @@ namespace Rnet
         void OnMessageSent(RnetMessageEventArgs args)
         {
             Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires<NullReferenceException>(args.Message != null);
+            RnetTraceSource.Default.TraceEvent(TraceEventType.Verbose, -1, "RnetClient:OnMessageSent Message={0}", args.Message);
 
             if (MessageSent != null)
                 MessageSent(this, args);
@@ -236,6 +238,8 @@ namespace Rnet
         void OnMessageReceived(RnetMessageEventArgs args)
         {
             Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires<NullReferenceException>(args.Message != null);
+            RnetTraceSource.Default.TraceEvent(TraceEventType.Verbose, -1, "RnetClient:OnMessageReceived Message={0}", args.Message);
 
             if (MessageReceived != null)
                 MessageReceived(this, args);
@@ -253,6 +257,8 @@ namespace Rnet
         void OnUnhandledException(RnetExceptionEventArgs args)
         {
             Contract.Requires<ArgumentNullException>(args != null);
+            Contract.Requires<NullReferenceException>(args.Exception != null);
+            RnetTraceSource.Default.TraceInformation("RnetClient:OnUnhandledException ExceptionType={0}", args.Exception.GetType());
 
             if (UnhandledException != null)
                 UnhandledException(this, args);
@@ -270,6 +276,7 @@ namespace Rnet
         void OnStateChanged(RnetClientStateEventArgs args)
         {
             Contract.Requires<ArgumentNullException>(args != null);
+            RnetTraceSource.Default.TraceInformation("RnetClient:OnStateChanged State={0}", args.State);
 
             if (StateChanged != null)
                 StateChanged(this, args);

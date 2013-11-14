@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 namespace Rnet.Drivers.Default
 {
@@ -16,7 +18,7 @@ namespace Rnet.Drivers.Default
         public ControllerDriver(RnetController controller)
             : base(controller)
         {
-
+            Contract.Requires<ArgumentNullException>(controller != null);
         }
 
         /// <summary>

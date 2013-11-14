@@ -153,7 +153,7 @@ namespace Rnet
         /// </summary>
         public virtual IEnumerable<RnetDataHandle> Data
         {
-            get { return handles.Values.Select(i => i.GetTargetOrDefault()).ToList(); }
+            get { return handles.Values.Select(i => i.GetTargetOrDefault()).Where(i => i != null).ToList(); }
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 
 namespace Rnet
@@ -11,6 +10,10 @@ namespace Rnet
     public sealed class RnetZone : RnetBusObject
     {
 
+        readonly RnetController controller;
+        readonly RnetZoneId id;
+        readonly RnetZoneDeviceCollection devices;
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
@@ -18,27 +21,36 @@ namespace Rnet
             : base(controller.Bus)
         {
             Contract.Requires<ArgumentNullException>(controller != null);
+            RnetTraceSource.Default.TraceInformation("RnetZone:ctor Id={0}", (int)id);
 
-            Trace.TraceInformation("RnetZone:ctor Id={0}", (int)id);
-            Controller = controller;
-            Id = id;
-            Devices = new RnetZoneDeviceCollection(this);
+            this.controller = controller;
+            this.id = id;
+            this.devices = new RnetZoneDeviceCollection(this);
         }
 
         /// <summary>
         /// Controller that manages this zone.
         /// </summary>
-        public RnetController Controller { get; private set; }
+        public RnetController Controller
+        {
+            get { return controller; }
+        }
 
         /// <summary>
         /// Gets the zone ID of the zone.
         /// </summary>
-        public RnetZoneId Id { get; private set; }
+        public RnetZoneId Id
+        {
+            get { return id; }
+        }
 
         /// <summary>
         /// The set of devices underneath this zone.
         /// </summary>
-        public RnetZoneDeviceCollection Devices { get; private set; }
+        public RnetZoneDeviceCollection Devices
+        {
+            get { return devices; }
+        }
 
         /// <summary>
         /// Marks the object as active.

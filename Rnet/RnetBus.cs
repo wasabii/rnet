@@ -23,8 +23,14 @@ namespace Rnet
             RnetUriParser.RegisterParsers();
         }
 
-        AsyncLock lck = new AsyncLock();
+        readonly AsyncLock lck = new AsyncLock();
+        readonly Uri uri;
+        readonly RnetControllerCollection controllers;
+        readonly RnetClient client;
+
         RnetBusState state;
+        SynchronizationContext synchronizationContext;
+        RnetLocalDevice localDevice;
 
         /// <summary>
         /// Initializes a new instance.
@@ -32,22 +38,24 @@ namespace Rnet
         /// <param name="uri"></param>
         public RnetBus(Uri uri)
         {
-            Contract.Requires(uri != null);
+            Contract.Requires<ArgumentNullException>(uri != null);
             Contract.Ensures(Uri != null);
             Contract.Ensures(Controllers != null);
             Contract.Ensures(Client != null);
+            Contract.Ensures(State == RnetBusState.Stopped);
+            RnetTraceSource.Default.TraceInformation("RnetBus:ctor Uri={0}", uri);
 
-            Uri = uri;
-            Controllers = new RnetControllerCollection(this);
-            State = RnetBusState.Stopped;
+            this.uri = uri;
+            this.controllers = new RnetControllerCollection(this);
+            this.state = RnetBusState.Stopped;
 
             // start new client
-            Client = new RnetClient(Uri);
-            Client.StateChanged += Client_StateChanged;
-            Client.MessageReceived += Client_MessageReceived;
-            Client.MessageSent += Client_MessageSent;
-            Client.UnhandledException += Client_UnhandledException;
-            Client.Connection.StateChanged += Connection_StateChanged;
+            this.client = new RnetClient(Uri);
+            this.client.StateChanged += Client_StateChanged;
+            this.client.MessageReceived += Client_MessageReceived;
+            this.client.MessageSent += Client_MessageSent;
+            this.client.UnhandledException += Client_UnhandledException;
+            this.client.Connection.StateChanged += Connection_StateChanged;
         }
 
         /// <summary>
@@ -57,7 +65,7 @@ namespace Rnet
         public RnetBus(string uri)
             : this(new Uri(uri))
         {
-            Contract.Requires(uri != null);
+            Contract.Requires<ArgumentNullException>(uri != null);
         }
 
         /// <summary>
@@ -73,32 +81,50 @@ namespace Rnet
         /// <summary>
         /// Gets the <see cref="Uri"/> by which to establish the RNET connection.
         /// </summary>
-        public Uri Uri { get; private set; }
+        public Uri Uri
+        {
+            get { return uri; }
+        }
 
         /// <summary>
         /// Used to report events to the user.
         /// </summary>
-        public SynchronizationContext SynchronizationContext { get; private set; }
+        public SynchronizationContext SynchronizationContext
+        {
+            get { return synchronizationContext; }
+        }
 
         /// <summary>
         /// <see cref="RnetClient"/> through which the bus will communicate.
         /// </summary>
-        public RnetClient Client { get; private set; }
+        public RnetClient Client
+        {
+            get { return client; }
+        }
 
         /// <summary>
         /// Local device implementation which is exposed on the bus and from which messages originate.
         /// </summary>
-        public RnetLocalDevice LocalDevice { get; private set; }
+        public RnetLocalDevice LocalDevice
+        {
+            get { return localDevice; }
+        }
 
         /// <summary>
         /// Controllers detected on the bus.
         /// </summary>
-        public RnetControllerCollection Controllers { get; private set; }
+        public RnetControllerCollection Controllers
+        {
+            get { return controllers; }
+        }
 
         /// <summary>
         /// Gets the current state of the bus.
         /// </summary>
-        public RnetBusState State { get; private set; }
+        public RnetBusState State
+        {
+            get { return state; }
+        }
 
         /// <summary>
         /// Sets the current state.
@@ -106,7 +132,7 @@ namespace Rnet
         /// <param name="state"></param>
         void SetState(RnetBusState state)
         {
-            OnStateChanged(new RnetBusStateEventArgs(State = state));
+            OnStateChanged(new RnetBusStateEventArgs(this.state = state));
         }
 
         /// <summary>
@@ -191,14 +217,14 @@ namespace Rnet
 
                 // begin starting
                 SetState(RnetBusState.Starting);
-                SynchronizationContext = synchronizationContext;
+                this.synchronizationContext = synchronizationContext;
                 Controllers.Clear();
 
                 // generate minimal required model and insert new local device
                 var c = Controllers[RnetControllerId.Root];
                 var z = c.Zones[RnetZoneId.Zone1];
                 var d = new RnetLocalDevice(z, keypadId);
-                z.Devices[keypadId] = LocalDevice = d;
+                z.Devices[keypadId] = this.localDevice = d;
 
                 // start client running
                 await Client.Start();

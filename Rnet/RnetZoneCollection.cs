@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Rnet
@@ -14,21 +15,17 @@ namespace Rnet
     public sealed class RnetZoneCollection : IEnumerable<RnetZone>, INotifyCollectionChanged
     {
 
-        ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>> zones =
-            new ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>>();
+        readonly RnetController controller;
+        readonly ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>> zones;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         internal RnetZoneCollection(RnetController controller)
         {
-            Controller = controller;
+            this.controller = controller;
+            this.zones = new ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>>();
         }
-
-        /// <summary>
-        /// Controller holding this zone collection.
-        /// </summary>
-        RnetController Controller { get; set; }
 
         /// <summary>
         /// Gets a zone with the given identifier.
@@ -51,7 +48,7 @@ namespace Rnet
                 return null;
 
             return zones
-                .GetOrCreate(id, i => new RnetZone(Controller, id));
+                .GetOrCreate(id, i => new RnetZone(controller, id));
         }
 
         /// <summary>
@@ -75,7 +72,10 @@ namespace Rnet
         /// <param name="zone"></param>
         internal void OnZoneActive(RnetZone zone)
         {
-            Controller.Activate();
+            Contract.Requires<ArgumentNullException>(zone != null);
+            RnetTraceSource.Default.TraceInformation("RnetZoneCollection:OnZoneActive Id={0}", zone.Id);
+
+            controller.Activate();
             RaiseCollectionChanged();
         }
 

@@ -1,7 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -71,6 +74,8 @@ namespace Rnet
         /// <returns></returns>
         public async Task Scan()
         {
+            RnetTraceSource.Default.TraceInformation("RnetControllerCollection:Scan");
+
             await Task.WhenAll(Enumerable.Range(0, 16)
                 .Select(async i => await this[i][0, 0].Read()));
         }
@@ -95,6 +100,9 @@ namespace Rnet
         /// <param name="controller"></param>
         internal void OnControllerActive(RnetController controller)
         {
+            Contract.Requires<ArgumentNullException>(controller != null);
+            RnetTraceSource.Default.TraceInformation("RnetControllerCollection.OnControllerActive: {0}", controller.Id);
+
             RaiseCollectionChanged();
         }
 

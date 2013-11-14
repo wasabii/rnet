@@ -7,6 +7,9 @@
     public sealed class RnetController : RnetRemoteDevice
     {
 
+        readonly RnetControllerId id;
+        readonly RnetZoneCollection zones;
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
@@ -14,19 +17,27 @@
         public RnetController(RnetBus bus, RnetControllerId id)
             : base(bus)
         {
-            Id = id;
-            Zones = new RnetZoneCollection(this);
+            RnetTraceSource.Default.TraceInformation("RnetController:ctor Id={0}", id);
+
+            this.id = id;
+            this.zones = new RnetZoneCollection(this);
         }
 
         /// <summary>
         /// Gets the controller ID.
         /// </summary>
-        public RnetControllerId Id { get; private set; }
+        public RnetControllerId Id
+        {
+            get { return id; }
+        }
 
         /// <summary>
         /// Zones available underneath this controller.
         /// </summary>
-        public RnetZoneCollection Zones { get; private set; }
+        public RnetZoneCollection Zones
+        {
+            get { return zones; }
+        }
 
         /// <summary>
         /// Gets the device ID of the controller.

@@ -22,6 +22,9 @@ namespace Rnet.Service.Host.Models
         /// <returns></returns>
         public static Uri MakeRelativeUri(this Uri uri, NancyContext context)
         {
+            Contract.Requires<ArgumentNullException>(uri != null);
+            Contract.Requires<ArgumentNullException>(context != null);
+
             return new Uri(context.Request.Url.ToString().TrimEnd('/') + '/').MakeRelativeUri(uri);
         }
 
@@ -33,6 +36,7 @@ namespace Rnet.Service.Host.Models
         public static async Task<string> GetName(this RnetBusObject o, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(context != null);
 
             // obtain object profile
             var p = await o.GetProfile<IObject>();
@@ -50,6 +54,7 @@ namespace Rnet.Service.Host.Models
         public static async Task<Uri> GetUri(this RnetBusObject o, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(context != null);
 
             // obtain device URI for devices
             if (o is RnetDevice)
@@ -71,6 +76,7 @@ namespace Rnet.Service.Host.Models
         public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentNullException>(context != null);
 
             // combine with URI of container
             var p = o.GetContainer();
@@ -140,6 +146,7 @@ namespace Rnet.Service.Host.Models
         public static Uri GetUri(this RnetDevice device, NancyContext context)
         {
             Contract.Requires<ArgumentNullException>(device != null);
+            Contract.Requires<ArgumentNullException>(context != null);
 
             return context.GetBaseUri()
                 .UriCombine(":" + device.GetId());
@@ -152,6 +159,8 @@ namespace Rnet.Service.Host.Models
         /// <returns></returns>
         public static XElement ToXElement<T>(this T self)
         {
+            Contract.Requires<ArgumentNullException>(self != null);
+
             var xml = new XDocument();
             var srs = new XmlSerializer(typeof(T));
             using (var wrt = xml.CreateWriter())
