@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
+
 using Nancy.Bootstrapper;
 using Nancy.Bootstrappers.Mef;
-using Nancy.Bootstrappers.Mef.Composition.Hosting;
 using Nancy.ViewEngines;
 
 namespace Rnet.Service.Host
