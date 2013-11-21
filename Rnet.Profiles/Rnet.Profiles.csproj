@@ -87,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IProfileContractMetadata.cs" />
+    <Compile Include="Media\Audio\ISink.cs" />
     <Compile Include="Metadata\ParameterDescriptorCollection.cs" />
     <Compile Include="Metadata\CommandDescriptorCollection.cs" />
     <Compile Include="Metadata\CommandDescriptor.cs" />
