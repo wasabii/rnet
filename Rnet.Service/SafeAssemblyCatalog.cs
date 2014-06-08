@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Linq;
@@ -8,29 +9,57 @@ namespace Rnet.Service
 {
 
     class SafeAssemblyCatalog :
-        AssemblyCatalog
+        ComposablePartCatalog
     {
 
-        IQueryable<ComposablePartDefinition> parts;
+        readonly TypeCatalog catalog;
 
         public SafeAssemblyCatalog(string assembly)
-            : base(assembly)
         {
             try
             {
-                this.parts = base.Parts.ToList().AsQueryable();
+                this.catalog = new TypeCatalog(GetTypes(assembly));
             }
             catch (ReflectionTypeLoadException e)
             {
-                this.parts = Enumerable.Empty<ComposablePartDefinition>().AsQueryable();
-                Console.WriteLine(assembly);
-                Console.WriteLine(e);
+                this.catalog = new TypeCatalog();
             }
+        }
+
+        IEnumerable<Type> GetTypes(string assembly)
+        {
+            var types = new List<Type>();
+
+            try
+            {
+                var asm = Assembly.LoadFrom(assembly);
+                if (asm == null)
+                    return types;
+
+                foreach (var type in asm.GetTypes())
+                {
+                    try
+                    {
+                        type.GetMembers();
+                        types.Add(type);
+                    }
+                    catch (TypeLoadException e)
+                    {
+
+                    }
+                }
+            }
+            catch (TypeLoadException e)
+            {
+
+            }
+
+            return types;
         }
 
         public override IQueryable<ComposablePartDefinition> Parts
         {
-            get { return parts; }
+            get { return catalog.Parts; }
         }
 
     }

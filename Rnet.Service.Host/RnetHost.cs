@@ -5,15 +5,10 @@ using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Microsoft.Owin.Hosting;
-using Owin;
-using Microsoft.Owin;
-using Microsoft.Owin.Host;
-using Microsoft.Owin.Host.HttpListener;
-using System.Web.Http.Owin;
-using System.Web.Http;
-using System.Web.Http.SelfHost;
 
 using Nito.AsyncEx;
+
+using Owin;
 
 namespace Rnet.Service.Host
 {
