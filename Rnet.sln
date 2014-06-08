@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet", "Rnet\Rnet.csproj", "{9E1BB758-B788-4C23-959B-201E27B221FC}"
 EndProject
@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{103C6F
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Service.Host", "Rnet.Service.Host\Rnet.Service.Host.csproj", "{95FBFEDF-4AA4-480A-99F1-9518BBB75565}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Android", "Rnet.Android\Rnet.Android.csproj", "{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,6 +64,12 @@ Global
 		{95FBFEDF-4AA4-480A-99F1-9518BBB75565}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95FBFEDF-4AA4-480A-99F1-9518BBB75565}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{95FBFEDF-4AA4-480A-99F1-9518BBB75565}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6CE046A-FE9D-4CEB-A1A1-C7E783BDA287}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

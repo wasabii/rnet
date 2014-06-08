@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Rnet.Profiles.Metadata
 {
@@ -108,6 +107,7 @@ namespace Rnet.Profiles.Metadata
         {
             Contract.Requires<ArgumentNullException>(instance != null);
             Contract.Requires<InvalidCastException>(typeof(T).IsAssignableFrom(Type));
+
             return (T)GetValue(instance);
         }
 
@@ -121,6 +121,7 @@ namespace Rnet.Profiles.Metadata
             Contract.Requires<ArgumentNullException>(instance != null);
             Contract.Requires<InvalidCastException>(Profile.Contract.IsInstanceOfType(instance));
             Contract.Requires<InvalidCastException>(PropertyInfo.DeclaringType.IsInstanceOfType(instance));
+
             return propertyInfo.GetValue(instance);
         }
 
@@ -133,7 +134,9 @@ namespace Rnet.Profiles.Metadata
         /// <returns></returns>
         public void SetValue<T>(object instance, T value)
         {
+            Contract.Requires<ArgumentNullException>(instance != null);
             Contract.Requires<InvalidCastException>(Type.IsAssignableFrom(typeof(T)));
+
             SetValue(instance, (object)value);
         }
 
@@ -148,6 +151,7 @@ namespace Rnet.Profiles.Metadata
             Contract.Requires<ArgumentNullException>(instance != null);
             Contract.Requires<InvalidCastException>(Profile.Contract.IsInstanceOfType(instance));
             Contract.Requires<InvalidCastException>(PropertyInfo.DeclaringType.IsInstanceOfType(instance));
+
             propertyInfo.SetValue(instance, value);
         }
 

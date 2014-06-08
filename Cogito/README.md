@@ -1,4 +1,0 @@
-Cogito
-======
-
-Various .Net utilities.

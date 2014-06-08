@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics.Contracts;
 
 namespace Rnet.Service.Host.Processors
 {
@@ -70,7 +71,7 @@ namespace Rnet.Service.Host.Processors
         public RequestProcessorMultipleAttribute(Type type)
             : this(type, 0)
         {
-
+            Contract.Requires<ArgumentNullException>(type != null);
         }
 
         /// <summary>
@@ -78,6 +79,8 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         public RequestProcessorMultipleAttribute(Type type, int priority)
         {
+            Contract.Requires<ArgumentNullException>(type != null);
+
             Type = type;
             Priority = priority;
         }
@@ -108,6 +111,8 @@ namespace Rnet.Service.Host.Processors
         /// <param name="d"></param>
         public RequestProcessorMetadata(IDictionary<string, object> d)
         {
+            Contract.Requires<ArgumentNullException>(d != null);
+
             var p1 = d["Type"] as Type[] ?? new Type[] { (Type)d["Type"] };
             var p2 = d["Priority"] as int[] ?? new int[] { (int)d["Priority"] };
 
@@ -115,6 +120,7 @@ namespace Rnet.Service.Host.Processors
             for (int i = 0; i < Infos.Length; i++)
                 Infos[i] = new RequestProcessorMultipleAttribute(p1[i], p2[i]);
         }
+
     }
 
 }

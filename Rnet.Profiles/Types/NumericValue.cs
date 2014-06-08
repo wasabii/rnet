@@ -5,10 +5,10 @@
     {
 
         decimal value;
-        decimal min;
-        decimal max;
-        decimal step;
-        decimal multiple;
+        //decimal min;
+        //decimal max;
+        //decimal step;
+        //decimal multiple;
 
         /// <summary>
         /// Gets or sets the current value.

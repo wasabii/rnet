@@ -4,44 +4,51 @@ using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
-using Nancy.Hosting.Self;
+using Microsoft.Owin.Hosting;
+using Owin;
+using Microsoft.Owin;
+using Microsoft.Owin.Host;
+using Microsoft.Owin.Host.HttpListener;
+using System.Web.Http.Owin;
+using System.Web.Http;
+using System.Web.Http.SelfHost;
 
 using Nito.AsyncEx;
 
 namespace Rnet.Service.Host
 {
 
-    public class RnetHost : IDisposable
+    public class RnetHost :
+        IDisposable
     {
 
         readonly AsyncLock async = new AsyncLock();
         readonly RnetBus bus;
         readonly Uri baseUri;
-        readonly AggregateCatalog catalog;
         readonly CompositionContainer container;
-        NancyHost nancy;
+        IDisposable webApp;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="bus"></param>
         /// <param name="baseUri"></param>
-        /// <param name="container"></param>
-        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer container)
+        /// <param name="exports"></param>
+        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer exports)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
-            Contract.Requires<ArgumentNullException>(container != null);
+            Contract.Requires<ArgumentNullException>(exports != null);
             Contract.Requires<ArgumentException>(baseUri.ToString().EndsWith("/"));
 
             this.bus = bus;
             this.baseUri = baseUri;
-            this.container = container;
+            this.container = exports;
 
             // export initial values
-            container.ComposeExportedValue<ICompositionService>(new CompositionService(container));
-            container.ComposeExportedValue(this);
-            container.ComposeExportedValue(bus);
+            exports.ComposeExportedValue<ICompositionService>(new CompositionService(exports));
+            exports.ComposeExportedValue(this);
+            exports.ComposeExportedValue(bus);
         }
 
         /// <summary>
@@ -49,12 +56,12 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="bus"></param>
         /// <param name="baseUri"></param>
-        public RnetHost(RnetBus bus, string baseUri, CompositionContainer container)
-            : this(bus, new Uri(baseUri), container)
+        public RnetHost(RnetBus bus, string baseUri, CompositionContainer exports)
+            : this(bus, new Uri(baseUri), exports)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
-            Contract.Requires<ArgumentNullException>(container != null);
+            Contract.Requires<ArgumentNullException>(exports != null);
             Contract.Requires<ArgumentException>(baseUri.EndsWith("/"));
         }
 
@@ -75,11 +82,14 @@ namespace Rnet.Service.Host
             {
                 await Task.Yield();
 
-                // configure nancy
-                nancy = new NancyHost(
-                    new RnetNancyBootstrapper(container),
-                    baseUri);
-                nancy.Start();
+                webApp = WebApp.Start(new StartOptions(baseUri.ToString()), _ =>
+                {
+                    _.Use(async (context, func) =>
+                    {
+                        await container.GetExportedValue<BusModule>().Invoke(context);
+                        await func();
+                    });
+                });
             }
         }
 
@@ -100,11 +110,10 @@ namespace Rnet.Service.Host
             {
                 await Task.Yield();
 
-                if (nancy != null)
+                if (webApp != null)
                 {
-                    nancy.Stop();
-                    nancy.Dispose();
-                    nancy = null;
+                    webApp.Dispose();
+                    webApp = null;
                 }
             }
         }

@@ -9,6 +9,14 @@ namespace Rnet
     static class DictionaryExtensions
     {
 
+        /// <summary>
+        /// Gets the specified value or returns the default.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="self"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> self, TKey key)
         {
             Contract.Requires<ArgumentNullException>(self != null);
@@ -17,6 +25,15 @@ namespace Rnet
             return self.TryGetValue(key, out value) ? value : default(TValue);
         }
 
+        /// <summary>
+        /// Gest or creates a value from the given dictionary.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="self"></param>
+        /// <param name="key"></param>
+        /// <param name="create"></param>
+        /// <returns></returns>
         public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> self, TKey key, Func<TKey, TValue> create)
         {
             Contract.Requires<ArgumentNullException>(self != null);

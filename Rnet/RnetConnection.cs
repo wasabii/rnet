@@ -84,6 +84,8 @@ namespace Rnet
             if (writer == null)
                 throw new RnetException("Unable to obtain RnetWriter.");
 
+            Console.WriteLine("Got Writer");
+
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }
 
@@ -110,6 +112,8 @@ namespace Rnet
             reader = null;
             writer = null;
 
+            Console.WriteLine("Closed and stuff");
+
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }
 
@@ -132,7 +136,8 @@ namespace Rnet
         /// <returns></returns>
         public Task Send(RnetMessage message)
         {
-            Contract.Requires(message != null);
+            Contract.Requires<ArgumentNullException>(message != null);
+            Contract.Assert(writer != null);
 
             return Send(message, CancellationToken.None);
         }
@@ -145,7 +150,8 @@ namespace Rnet
         /// <returns></returns>
         public virtual Task Send(RnetMessage message, CancellationToken cancellationToken)
         {
-            Contract.Requires(message != null);
+            Contract.Requires<ArgumentNullException>(message != null);
+            Contract.Assert(writer != null);
 
             if (State != RnetConnectionState.Open)
                 throw new RnetConnectionException("Connection is not open.");
@@ -165,6 +171,7 @@ namespace Rnet
         async Task WriteMessage(RnetMessage message, CancellationToken cancellationToken)
         {
             Contract.Requires<ArgumentNullException>(message != null);
+            Contract.Requires<InvalidOperationException>(writer != null);
 
             using (await write.LockAsync(cancellationToken))
                 message.Write(writer);

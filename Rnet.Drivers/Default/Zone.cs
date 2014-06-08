@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Diagnostics.Contracts;
 
 using Rnet.Profiles.Core;
 
@@ -18,7 +19,7 @@ namespace Rnet.Drivers.Default
         protected internal Zone(RnetZone zone)
             : base(zone)
         {
-
+            Contract.Requires<ArgumentNullException>(zone != null);
         }
 
         public string Id

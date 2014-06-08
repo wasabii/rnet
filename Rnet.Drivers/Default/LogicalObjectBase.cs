@@ -1,4 +1,7 @@
-﻿namespace Rnet.Drivers.Default
+﻿using System;
+using System.Diagnostics.Contracts;
+
+namespace Rnet.Drivers.Default
 {
 
     /// <summary>
@@ -14,7 +17,7 @@
         protected LogicalObjectBase(LogicalBusObject target)
             : base(target)
         {
-
+            Contract.Requires<ArgumentNullException>(target != null); 
         }
 
         /// <summary>

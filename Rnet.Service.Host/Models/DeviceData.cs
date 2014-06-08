@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Xml.Serialization;
 
 using Newtonsoft.Json;
@@ -22,7 +23,7 @@ namespace Rnet.Service.Host.Models
         public string _DataUri
         {
             get { return DataUri != null ? DataUri.ToString() : null; }
-            set { DataUri = new Uri(value); }
+            set { Contract.Requires<ArgumentNullException>(value != null); DataUri = new Uri(value); }
         }
 
     }

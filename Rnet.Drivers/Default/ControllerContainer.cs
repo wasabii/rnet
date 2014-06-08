@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Rnet.Profiles.Core;
@@ -22,6 +24,8 @@ namespace Rnet.Drivers.Default
         protected internal ControllerContainer(RnetController target)
             : base(target)
         {
+            Contract.Requires<ArgumentNullException>(target != null); 
+
             Controller.Zones.CollectionChanged += (s, a) => RaiseCollectionChanged(a);
         }
 

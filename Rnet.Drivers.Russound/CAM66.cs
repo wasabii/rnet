@@ -1,4 +1,7 @@
-﻿namespace Rnet.Drivers.Russound
+﻿using System;
+using System.Diagnostics.Contracts;
+
+namespace Rnet.Drivers.Russound
 {
 
     /// <summary>
@@ -14,7 +17,7 @@
         public CAM66(RnetController controller)
             : base(controller)
         {
-
+            Contract.Requires<ArgumentNullException>(controller != null); 
         }
 
         protected override int ZoneCount

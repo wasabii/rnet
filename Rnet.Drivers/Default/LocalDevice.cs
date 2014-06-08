@@ -1,4 +1,7 @@
-﻿using Rnet.Profiles.Core;
+﻿using System;
+using System.Diagnostics.Contracts;
+
+using Rnet.Profiles.Core;
 
 namespace Rnet.Drivers.Default
 {
@@ -16,7 +19,7 @@ namespace Rnet.Drivers.Default
         public LocalDevice(RnetLocalDevice device)
             : base(device)
         {
-
+            Contract.Requires<ArgumentNullException>(device != null);
         }
 
         new RnetLocalDevice Target

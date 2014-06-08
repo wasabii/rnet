@@ -2,9 +2,10 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
-using Nancy;
+using Microsoft.Owin;
 
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
@@ -62,14 +63,11 @@ namespace Rnet.Service.Host.Processors
             this.profileManager = profileManager;
         }
 
-        public override async Task<object> Resolve(T target, string[] path)
+        public override async Task<object> Resolve(IOwinContext context, T target, string[] path)
         {
-            Contract.Requires<ArgumentNullException>(target != null);
-            Contract.Requires<ArgumentNullException>(path != null);
-
             // referring to a profile
             if (path[0].StartsWith(Util.PROFILE_URI_PREFIX))
-                return await ResolveProfile(target, path, path[0].Substring(Util.PROFILE_URI_PREFIX.Length));
+                return await ResolveProfile(context,target, path, path[0].Substring(Util.PROFILE_URI_PREFIX.Length));
 
             // object contains other objects
             var c = await profileManager.GetProfile<IContainer>(target);
@@ -91,7 +89,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="path"></param>
         /// <param name="profileId"></param>
         /// <returns></returns>
-        async Task<object> ResolveProfile(RnetBusObject target, string[] path, string profileId)
+        async Task<object> ResolveProfile(IOwinContext context, RnetBusObject target, string[] path, string profileId)
         {
             Contract.Requires<ArgumentNullException>(target != null);
             Contract.Requires<ArgumentException>(path != null && path.Length > 0);
@@ -110,12 +108,12 @@ namespace Rnet.Service.Host.Processors
             return null;
         }
 
-        public override async Task<object> Get(T target)
+        public override async Task<object> Get(IOwinContext context, T target)
         {
-            return await ObjectToData(target);
+            return await ObjectToData(context,target);
         }
 
-        public override Task<object> Put(T target)
+        public override Task<object> Put(IOwinContext context, T target)
         {
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
@@ -127,14 +125,14 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        protected async Task<ObjectData> ObjectToData(RnetBusObject o)
+        protected async Task<ObjectData> ObjectToData(IOwinContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
             if (o is RnetDevice)
-                return await DeviceToData((RnetDevice)o);
+                return await DeviceToData(context,(RnetDevice)o);
 
-            return await FillObjectData(o, new ObjectData());
+            return await FillObjectData(context,o, new ObjectData());
         }
 
         /// <summary>
@@ -143,17 +141,17 @@ namespace Rnet.Service.Host.Processors
         /// <param name="o"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<ObjectData> FillObjectData(RnetBusObject o, ObjectData d)
+        async Task<ObjectData> FillObjectData(IOwinContext context, RnetBusObject o, ObjectData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
 
-            d.Uri = await o.GetUri(profileManager, Context);
-            d.FriendlyUri = await o.GetFriendlyUri(profileManager, Context);
+            d.Uri = await o.GetUri(profileManager, context);
+            d.FriendlyUri = await o.GetFriendlyUri(profileManager, context);
             d.Id = await o.GetId(profileManager);
-            d.Name = await o.GetName(profileManager, Context);
-            d.Objects = await GetObjects(o);
-            d.Profiles = await GetProfileRefs(o);
+            d.Name = await o.GetName(profileManager, context);
+            d.Objects = await GetObjects(context,o);
+            d.Profiles = await GetProfileRefs(context,o);
             return d;
         }
 
@@ -162,14 +160,14 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        protected async Task<DeviceData> DeviceToData(RnetDevice o)
+        protected async Task<DeviceData> DeviceToData(IOwinContext context, RnetDevice o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
             if (o is RnetController)
-                return await ControllerToData((RnetController)o);
+                return await ControllerToData(context,(RnetController)o);
 
-            return await FillDeviceData(o, new DeviceData());
+            return await FillDeviceData(context,o, new DeviceData());
         }
 
         /// <summary>
@@ -178,14 +176,14 @@ namespace Rnet.Service.Host.Processors
         /// <param name="o"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<DeviceData> FillDeviceData(RnetDevice o, DeviceData d)
+        async Task<DeviceData> FillDeviceData(IOwinContext context, RnetDevice o, DeviceData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
 
-            await FillObjectData(o, d);
+            await FillObjectData(context,o, d);
             d.RnetId = o.GetId();
-            d.DataUri = o.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT);
+            d.DataUri = o.GetUri(context).UriCombine(Util.DATA_URI_SEGMENT);
             return d;
         }
 
@@ -194,11 +192,11 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<ControllerData> ControllerToData(RnetController d)
+        async Task<ControllerData> ControllerToData(IOwinContext context, RnetController d)
         {
             Contract.Requires<ArgumentNullException>(d != null);
 
-            return await FillControllerData(d, new ControllerData());
+            return await FillControllerData(context,d, new ControllerData());
         }
 
         /// <summary>
@@ -207,12 +205,12 @@ namespace Rnet.Service.Host.Processors
         /// <param name="o"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<ControllerData> FillControllerData(RnetController o, ControllerData d)
+        async Task<ControllerData> FillControllerData(IOwinContext context, RnetController o, ControllerData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
 
-            await FillDeviceData(o, d);
+            await FillDeviceData(context,o, d);
             return d;
         }
 
@@ -221,13 +219,13 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        async Task<ObjectDataCollection> GetObjects(RnetBusObject o)
+        async Task<ObjectDataCollection> GetObjects(IOwinContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
             var p = await profileManager.GetProfile<IContainer>(o) ?? Enumerable.Empty<RnetBusObject>();
-            return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(i))));
+            return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(context,i))));
         }
 
         /// <summary>
@@ -235,13 +233,13 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        async Task<ProfileRefCollection> GetProfileRefs(RnetBusObject o)
+        async Task<ProfileRefCollection> GetProfileRefs(IOwinContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
             // load container
             var p = await profileManager.GetProfiles(o) ?? Enumerable.Empty<ProfileHandle>();
-            return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(i))));
+            return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(context,i))));
         }
 
         /// <summary>
@@ -249,14 +247,14 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="profile"></param>
         /// <returns></returns>
-        async Task<ProfileRef> ProfileToRef(ProfileHandle profile)
+        async Task<ProfileRef> ProfileToRef(IOwinContext context, ProfileHandle profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
             return new ProfileRef()
             {
-                Uri = await profile.GetUri(profileManager, Context),
-                FriendlyUri = await profile.GetFriendlyUri(profileManager, Context),
+                Uri = await profile.GetUri(profileManager, context),
+                FriendlyUri = await profile.GetFriendlyUri(profileManager, context),
                 Id = profile.Metadata.Id,
             };
         }

@@ -2,12 +2,10 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-
-using Nancy;
-using Nancy.ModelBinding;
-
+using Microsoft.Owin;
 using Rnet.Drivers;
 using Rnet.Service.Host.Models;
 
@@ -40,33 +38,25 @@ namespace Rnet.Service.Host.Processors
             this.profileManager = profileManager;
         }
 
-        NancyContext Context
+        public Task<object> Resolve(IOwinContext context, object target, string[] path)
         {
-            get { return module.Context; }
-        }
-
-        public Task<object> Resolve(object target, string[] path)
-        {
-            Contract.Requires<ArgumentNullException>(target != null);
-            Contract.Requires<ArgumentNullException>(path != null);
-
             // end of path
             if (path.Length == 0)
                 return Task.FromResult<object>(target);
 
             if (target is ProfileHandle)
-                return Resolve((ProfileHandle)target, path);
+                return Resolve(context, (ProfileHandle)target, path);
 
             if (target is ProfilePropertyHandle)
-                return Resolve((ProfilePropertyHandle)target, path);
+                return Resolve(context, (ProfilePropertyHandle)target, path);
 
             if (target is ProfileCommandHandle)
-                return Resolve((ProfileCommandHandle)target, path);
+                return Resolve(context, (ProfileCommandHandle)target, path);
 
             return null;
         }
 
-        Task<object> Resolve(ProfileHandle profile, string[] path)
+        Task<object> Resolve(IOwinContext context, ProfileHandle profile, string[] path)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -84,7 +74,7 @@ namespace Rnet.Service.Host.Processors
             return Task.FromResult<object>(null);
         }
 
-        Task<object> Resolve(ProfilePropertyHandle property, string[] path)
+        Task<object> Resolve(IOwinContext context, ProfilePropertyHandle property, string[] path)
         {
             Contract.Requires<ArgumentNullException>(property != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -93,7 +83,7 @@ namespace Rnet.Service.Host.Processors
             //return Task.FromResult<object>(new ResolveResponse(property, path.Skip(1).ToArray()));
         }
 
-        Task<object> Resolve(ProfileCommandHandle command, string[] path)
+        Task<object> Resolve(IOwinContext context, ProfileCommandHandle command, string[] path)
         {
             Contract.Requires<ArgumentNullException>(command != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -102,54 +92,52 @@ namespace Rnet.Service.Host.Processors
             //return Task.FromResult<object>(new ResolveResponse(command, path.Skip(1).ToArray()));
         }
 
-        public Task<object> Get(object target)
+        public Task<object> Get(IOwinContext context, object target)
         {
-            Contract.Requires<ArgumentNullException>(target != null);
-
-            var t = module.Bind();
+            var t = module.Bind(context);
 
             if (target is ProfileHandle)
-                return Get((ProfileHandle)target);
+                return Get(context, (ProfileHandle)target);
 
             if (target is ProfilePropertyHandle)
-                return Get((ProfilePropertyHandle)target);
+                return Get(context, (ProfilePropertyHandle)target);
 
             if (target is ProfileCommandHandle)
-                return Get((ProfileCommandHandle)target);
+                return Get(context, (ProfileCommandHandle)target);
 
             return null;
         }
 
-        async Task<object> Get(ProfileHandle profile)
+        async Task<object> Get(IOwinContext context, ProfileHandle profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
             return new ProfileData()
             {
-                Uri = await profile.GetUri(profileManager, Context),
-                FriendlyUri = await profile.GetFriendlyUri(profileManager, Context),
+                Uri = await profile.GetUri(profileManager, context),
+                FriendlyUri = await profile.GetFriendlyUri(profileManager, context),
                 Id = profile.Metadata.Id,
                 Name = profile.Metadata.Name,
                 Namespace = profile.Metadata.Namespace,
                 XmlNamespace = profile.Metadata.XmlNamespace.NamespaceName,
-                Properties = await GetProperties(profile),
-                Commands = await GetCommands(profile),
+                Properties = await GetProperties(context, profile),
+                Commands = await GetCommands(context, profile),
             };
         }
 
-        async Task<object> Get(ProfilePropertyHandle property)
+        async Task<object> Get(IOwinContext context, ProfilePropertyHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
             dynamic set = null;
 
-            var data = module.Bind<ProfilePropertyData>();
+            var data = module.Bind<ProfilePropertyData>(context);
             if (data != null)
                 if (data.Value != null)
                     set = data.Value;
 
-            if (module.Request.Query.Value != null)
-                set = module.Request.Query.Value;
+            if (context.Request.Query != null)
+                set = context.Request.Query;
 
             if (set != null)
                 if (set.GetType() == property.Metadata.Type)
@@ -157,123 +145,121 @@ namespace Rnet.Service.Host.Processors
                 else
                     property.Set(Convert.ChangeType(set, property.Metadata.Type));
 
-            return await PropertyToData(property);
+            return await PropertyToData(context, property);
         }
 
-        async Task<ProfilePropertyDataCollection> GetProperties(ProfileHandle profile)
+        async Task<ProfilePropertyDataCollection> GetProperties(IOwinContext context, ProfileHandle profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
             return new ProfilePropertyDataCollection(await Task.WhenAll(
                 profile.Metadata.Properties
                     .Select(async i =>
-                        await PropertyToData(profile[i]))));
+                        await PropertyToData(context, profile[i]))));
         }
 
-        async Task<ProfilePropertyData> PropertyToData(ProfilePropertyHandle property)
+        async Task<ProfilePropertyData> PropertyToData(IOwinContext context, ProfilePropertyHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
             return new ProfilePropertyData()
             {
-                Uri = await GetPropertyUri(property),
-                FriendlyUri = await GetPropertyFriendlyUri(property),
+                Uri = await GetPropertyUri(context, property),
+                FriendlyUri = await GetPropertyFriendlyUri(context, property),
                 Name = property.Metadata.Name,
                 XmlNamespace = property.Profile.Metadata.XmlNamespace.NamespaceName,
                 Value = property.Get(),
             };
         }
 
-        async Task<Uri> GetPropertyUri(ProfilePropertyHandle property)
+        async Task<Uri> GetPropertyUri(IOwinContext context, ProfilePropertyHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            return (await property.Profile.GetUri(profileManager, Context)).UriCombine(property.Metadata.Name);
+            return (await property.Profile.GetUri(profileManager, context)).UriCombine(property.Metadata.Name);
         }
 
-        async Task<Uri> GetPropertyFriendlyUri(ProfilePropertyHandle property)
+        async Task<Uri> GetPropertyFriendlyUri(IOwinContext context, ProfilePropertyHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            return (await property.Profile.GetFriendlyUri(profileManager, Context)).UriCombine(property.Metadata.Name);
+            return (await property.Profile.GetFriendlyUri(profileManager, context)).UriCombine(property.Metadata.Name);
         }
 
-        async Task<object> Get(ProfileCommandHandle command)
+        async Task<object> Get(IOwinContext context, ProfileCommandHandle command)
         {
             Contract.Requires<ArgumentNullException>(command != null);
 
-            return await CommandToData(command);
+            return await CommandToData(context, command);
         }
 
-        async Task<ProfileCommandDataCollection> GetCommands(ProfileHandle profile)
+        async Task<ProfileCommandDataCollection> GetCommands(IOwinContext context, ProfileHandle profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
             return new ProfileCommandDataCollection(await Task.WhenAll(
                 profile.Metadata.Commands
                     .Select(async i =>
-                        await CommandToData(profile[i]))));
+                        await CommandToData(context, profile[i]))));
         }
 
-        async Task<ProfileCommandData> CommandToData(ProfileCommandHandle command)
+        async Task<ProfileCommandData> CommandToData(IOwinContext context, ProfileCommandHandle command)
         {
             Contract.Requires<ArgumentNullException>(command != null);
 
             return new ProfileCommandData()
             {
-                Uri = await GetCommandUri(command),
-                FriendlyUri = await GetCommandFriendlyUri(command),
+                Uri = await GetCommandUri(context, command),
+                FriendlyUri = await GetCommandFriendlyUri(context, command),
                 Name = command.Metadata.Name,
                 XmlNamespace = command.Profile.Metadata.XmlNamespace.NamespaceName,
             };
         }
 
-        async Task<Uri> GetCommandUri(ProfileCommandHandle command)
+        async Task<Uri> GetCommandUri(IOwinContext context, ProfileCommandHandle command)
         {
             Contract.Requires<ArgumentNullException>(command != null);
 
-            return (await command.Profile.GetUri(profileManager, Context)).UriCombine(command.Metadata.Name);
+            return (await command.Profile.GetUri(profileManager, context)).UriCombine(command.Metadata.Name);
         }
 
-        async Task<Uri> GetCommandFriendlyUri(ProfileCommandHandle command)
+        async Task<Uri> GetCommandFriendlyUri(IOwinContext context, ProfileCommandHandle command)
         {
             Contract.Requires<ArgumentNullException>(command != null);
 
-            return (await command.Profile.GetFriendlyUri(profileManager, Context)).UriCombine(command.Metadata.Name);
+            return (await command.Profile.GetFriendlyUri(profileManager, context)).UriCombine(command.Metadata.Name);
         }
 
-        public Task<object> Put(object target)
+        public Task<object> Put(IOwinContext context, object target)
         {
-            Contract.Requires<ArgumentNullException>(target != null);
-
             if (target is ProfileHandle)
-                return Put((ProfileHandle)target);
+                return Put(context, (ProfileHandle)target);
 
             if (target is ProfilePropertyHandle)
-                return Put((ProfilePropertyHandle)target);
+                return Put(context, (ProfilePropertyHandle)target);
 
             if (target is ProfileCommandHandle)
-                return Put((ProfileCommandHandle)target);
+                return Put(context, (ProfileCommandHandle)target);
 
             return Task.FromResult<object>(HttpStatusCode.MethodNotAllowed);
         }
 
-        Task<object> Put(ProfileHandle profile)
+        Task<object> Put(IOwinContext context, ProfileHandle profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
 
-        Task<object> Put(ProfilePropertyHandle property)
+        Task<object> Put(IOwinContext context, ProfilePropertyHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            var t = module.Bind<XDocument>();
+            var t = module.Bind<XDocument>(context);
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
 
-        Task<object> Put(ProfileCommandHandle property)
+        Task<object> Put(IOwinContext context, ProfileCommandHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
