@@ -1,11 +1,14 @@
 ﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+
 using Microsoft.Owin;
+
 using Rnet.Drivers;
 using Rnet.Service.Host.Models;
 
@@ -129,21 +132,21 @@ namespace Rnet.Service.Host.Processors
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            dynamic set = null;
-
-            var data = module.Bind<ProfilePropertyData>(context);
-            if (data != null)
-                if (data.Value != null)
-                    set = data.Value;
-
+            // set from query string
             if (context.Request.Query != null)
-                set = context.Request.Query;
-
-            if (set != null)
-                if (set.GetType() == property.Metadata.Type)
-                    property.Set(set);
-                else
-                    property.Set(Convert.ChangeType(set, property.Metadata.Type));
+            {
+                var str = context.Request.Query["Value"];
+                if (str != null)
+                {
+                    var conv = TypeDescriptor.GetConverter(property.Metadata.Type);
+                    if (conv != null && conv.CanConvertFrom(typeof(string)))
+                    {
+                        var value = conv.ConvertFromString(str);
+                        if (value != null)
+                            property.Set(value);
+                    }
+                }
+            }
 
             return await PropertyToData(context, property);
         }
@@ -189,6 +192,10 @@ namespace Rnet.Service.Host.Processors
         async Task<object> Get(IOwinContext context, ProfileCommandHandle command)
         {
             Contract.Requires<ArgumentNullException>(command != null);
+
+            var exec = context.Request.QueryString.Value;
+            if (exec == "Execute")
+                command.Invoke();
 
             return await CommandToData(context, command);
         }

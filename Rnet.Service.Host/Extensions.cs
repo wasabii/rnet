@@ -162,8 +162,8 @@ namespace Rnet.Service.Host.Models
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
-            return context.GetBaseUri()
-                .UriCombine(":" + device.GetId());
+            // HACK appending by hand; mono URI combining seems to fail with ':'
+            return new Uri(context.GetBaseUri().ToString().TrimEnd('/') + "/:" + device.GetId());
         }
 
         /// <summary>

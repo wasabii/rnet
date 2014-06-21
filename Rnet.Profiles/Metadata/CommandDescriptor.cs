@@ -86,6 +86,20 @@ namespace Rnet.Profiles.Metadata
             name = methodInfo.Name;
         }
 
+        /// <summary>
+        /// Invokes the given command on the specified instance.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public object Invoke(object instance, params object[] args)
+        {
+            Contract.Requires<ArgumentNullException>(instance != null);
+            Contract.Requires<InvalidCastException>(Profile.Contract.IsInstanceOfType(instance));
+
+            return methodInfo.Invoke(instance, args);
+        }
+
     }
 
 }

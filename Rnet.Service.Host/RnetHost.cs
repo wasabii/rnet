@@ -127,7 +127,7 @@ namespace Rnet.Service.Host
         ///// <param name="statusCode"></param>
         ///// <param name="context"></param>
         ///// <returns></returns>
-        //bool IStatusCodeHandler.HandlesStatusCode(HttpStatusCode statusCode, NancyContext context)
+        //bool IStatusCodeHandler.HandlesStatusCode(HttpStatusCode statusCode, IOwinContext context)
         //{
         //    Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
 
@@ -140,7 +140,7 @@ namespace Rnet.Service.Host
         ///// </summary>
         ///// <param name="statusCode"></param>
         ///// <param name="context"></param>
-        //void IStatusCodeHandler.Handle(HttpStatusCode statusCode, NancyContext context)
+        //void IStatusCodeHandler.Handle(HttpStatusCode statusCode, IOwinContext context)
         //{
         //    Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
         //}

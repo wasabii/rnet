@@ -34,7 +34,7 @@ namespace Rnet.Service.Host
         }
 
         /// <summary>
-        /// Gets the base URI for the given <see cref="NancyContext"/>.
+        /// Gets the base URI for the given <see cref="IOwinContext"/>.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
