@@ -5,7 +5,12 @@ using System.Configuration;
 namespace Rnet.Service.Host
 {
 
-    public class RnetServiceHostConfigurationCollection : ConfigurationElementCollection, IEnumerable<RnetServiceHostConfigurationElement>
+    /// <summary>
+    /// Defines a collection of <see cref="RnetServiceHostConfigurationElement"/>s.
+    /// </summary>
+    public class RnetServiceHostConfigurationCollection :
+        ConfigurationElementCollection,
+        IEnumerable<RnetServiceHostConfigurationElement>
     {
 
         protected override ConfigurationElement CreateNewElement()

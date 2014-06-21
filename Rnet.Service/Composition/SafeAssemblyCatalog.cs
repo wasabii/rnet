@@ -8,24 +8,37 @@ using System.Reflection;
 namespace Rnet.Service
 {
 
+    /// <summary>
+    /// <see cref="ComposablePartCatalog"/> that does not fail when parts cannot be loaded.
+    /// </summary>
     class SafeAssemblyCatalog :
         ComposablePartCatalog
     {
 
         readonly TypeCatalog catalog;
 
+        /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="assembly"></param>
         public SafeAssemblyCatalog(string assembly)
         {
             try
             {
                 this.catalog = new TypeCatalog(GetTypes(assembly));
             }
-            catch (ReflectionTypeLoadException e)
+            catch (TypeLoadException)
             {
                 this.catalog = new TypeCatalog();
             }
         }
 
+        /// <summary>
+        /// Loads the <see cref="Type"/>s available in the specified assembly, or returns no types if the assembly
+        /// cannot be loaded.
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns></returns>
         IEnumerable<Type> GetTypes(string assembly)
         {
             var types = new List<Type>();
@@ -43,13 +56,13 @@ namespace Rnet.Service
                         type.GetMembers();
                         types.Add(type);
                     }
-                    catch (TypeLoadException e)
+                    catch (TypeLoadException)
                     {
 
                     }
                 }
             }
-            catch (TypeLoadException e)
+            catch (TypeLoadException)
             {
 
             }

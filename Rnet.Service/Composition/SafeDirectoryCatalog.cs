@@ -7,7 +7,10 @@ using System.Linq;
 namespace Rnet.Service
 {
 
-    public class SafeDirectoryCatalog :
+    /// <summary>
+    /// <see cref="ComposablePartCatalog"/> that does not fail when parts cannot be loaded.
+    /// </summary>
+    class SafeDirectoryCatalog :
         ComposablePartCatalog
     {
 
@@ -21,6 +24,11 @@ namespace Rnet.Service
             this.catalog = new AggregateCatalog(GetAssemblyCatalogs(directory));
         }
 
+        /// <summary>
+        /// Gets children catalogs for each assembly in the directory.
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <returns></returns>
         IEnumerable<ComposablePartCatalog> GetAssemblyCatalogs(string directory)
         {
             return Directory.EnumerateFiles(directory, "*.dll")

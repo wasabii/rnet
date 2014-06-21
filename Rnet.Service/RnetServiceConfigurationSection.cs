@@ -5,7 +5,11 @@ using Rnet.Service.Host;
 namespace Rnet.Service
 {
 
-    public class RnetServiceConfigurationSection : ConfigurationSection
+    /// <summary>
+    /// Provides a <see cref="ConfigurationSection"/> for the RNET service.
+    /// </summary>
+    public class RnetServiceConfigurationSection : 
+        ConfigurationSection
     {
 
         /// <summary>
@@ -17,6 +21,9 @@ namespace Rnet.Service
             return (RnetServiceConfigurationSection)ConfigurationManager.GetSection("rnet.service") ?? new RnetServiceConfigurationSection();
         }
 
+        /// <summary>
+        /// Defines a collection of hosts.
+        /// </summary>
         [ConfigurationProperty("hosts")]
         [ConfigurationCollection(typeof(RnetServiceHostConfigurationElement))]
         public RnetServiceHostConfigurationCollection Hosts

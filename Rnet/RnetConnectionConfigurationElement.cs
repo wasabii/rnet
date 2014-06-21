@@ -4,7 +4,11 @@ using System.Configuration;
 namespace Rnet
 {
 
-    public class RnetConnectionConfigurationElement : ConfigurationElement
+    /// <summary>
+    /// Provides a connection to the RNET bus.
+    /// </summary>
+    public class RnetConnectionConfigurationElement : 
+        ConfigurationElement
     {
 
         /// <summary>

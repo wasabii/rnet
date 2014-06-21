@@ -149,9 +149,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="RnetServiceConfigurationSection.cs" />
-    <Compile Include="SafeApplicationCatalog.cs" />
-    <Compile Include="SafeAssemblyCatalog.cs" />
-    <Compile Include="SafeDirectoryCatalog.cs" />
+    <Compile Include="Composition\SafeApplicationCatalog.cs" />
+    <Compile Include="Composition\SafeAssemblyCatalog.cs" />
+    <Compile Include="Composition\SafeDirectoryCatalog.cs" />
     <Compile Include="Service.cs">
       <SubType>Component</SubType>
     </Compile>
