@@ -20,7 +20,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected DeviceRequestProcessor(
-            BusModule module,
+            RootRequestProcessor module,
             ProfileManager profileManager)
             : base(module, profileManager)
         {

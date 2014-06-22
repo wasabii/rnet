@@ -26,7 +26,9 @@ namespace Rnet.Service.Host.Processors
 
     [AttributeUsage(AttributeTargets.Class)]
     [MetadataAttribute]
-    public class RequestProcessorAttribute : ExportAttribute, IRequestProcessorMetadata
+    public class RequestProcessorAttribute :
+        ExportAttribute,
+        IRequestProcessorMetadata
     {
 
         /// <summary>
@@ -62,7 +64,9 @@ namespace Rnet.Service.Host.Processors
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     [MetadataAttribute]
-    public class RequestProcessorMultipleAttribute : Attribute, IRequestProcessorMetadata
+    public class RequestProcessorMultipleAttribute :
+        Attribute,
+        IRequestProcessorMetadata
     {
 
         /// <summary>
@@ -103,7 +107,7 @@ namespace Rnet.Service.Host.Processors
     public sealed class RequestProcessorMetadata
     {
 
-        public IRequestProcessorMetadata[] Infos { get; set; }
+        readonly IRequestProcessorMetadata[] infos;
 
         /// <summary>
         /// Initializes a new instance.
@@ -116,9 +120,14 @@ namespace Rnet.Service.Host.Processors
             var p1 = d["Type"] as Type[] ?? new Type[] { (Type)d["Type"] };
             var p2 = d["Priority"] as int[] ?? new int[] { (int)d["Priority"] };
 
-            Infos = new RequestProcessorMultipleAttribute[p1.Length];
-            for (int i = 0; i < Infos.Length; i++)
-                Infos[i] = new RequestProcessorMultipleAttribute(p1[i], p2[i]);
+            infos = new RequestProcessorMultipleAttribute[p1.Length];
+            for (int i = 0; i < infos.Length; i++)
+                infos[i] = new RequestProcessorMultipleAttribute(p1[i], p2[i]);
+        }
+
+        public IEnumerable<IRequestProcessorMetadata> Infos
+        {
+            get { return infos; }
         }
 
     }

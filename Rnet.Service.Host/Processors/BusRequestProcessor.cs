@@ -12,6 +12,9 @@ using Rnet.Service.Host.Models;
 namespace Rnet.Service.Host.Processors
 {
 
+    /// <summary>
+    /// Handles requests against a <see cref="RnetBus"/>.
+    /// </summary>
     [RequestProcessor(typeof(RnetBus))]
     public class BusRequestProcessor :
         RequestProcessor<RnetBus>
@@ -23,7 +26,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected BusRequestProcessor(
-            BusModule module)
+            RootRequestProcessor module)
             : base(module)
         {
             Contract.Requires<ArgumentNullException>(module != null);

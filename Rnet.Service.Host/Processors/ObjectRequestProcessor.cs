@@ -26,14 +26,14 @@ namespace Rnet.Service.Host.Processors
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="module"></param>
+        /// <param name="root"></param>
         [ImportingConstructor]
         public ObjectRequestProcessor(
-            BusModule module,
+            RootRequestProcessor root,
             ProfileManager profileManager)
-            : base(module, profileManager)
+            : base(root, profileManager)
         {
-            Contract.Requires<ArgumentNullException>(module != null);
+            Contract.Requires<ArgumentNullException>(root != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
         }
 
@@ -54,11 +54,11 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="target"></param>
         protected ObjectRequestProcessor(
-            BusModule module,
+            RootRequestProcessor root,
             ProfileManager profileManager)
-            : base(module)
+            : base(root)
         {
-            Contract.Requires<ArgumentNullException>(module != null);
+            Contract.Requires<ArgumentNullException>(root != null);
 
             this.profileManager = profileManager;
         }

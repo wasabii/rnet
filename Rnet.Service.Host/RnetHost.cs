@@ -81,7 +81,7 @@ namespace Rnet.Service.Host
                 {
                     _.Use(async (context, func) =>
                     {
-                        await container.GetExportedValue<BusModule>().Invoke(context);
+                        await container.GetExportedValue<RootRequestProcessor>().Invoke(context);
                         await func();
                     });
                 });

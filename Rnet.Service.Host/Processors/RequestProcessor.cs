@@ -20,7 +20,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="module"></param>
         protected RequestProcessor(
-            BusModule module)
+            RootRequestProcessor module)
         {
             Contract.Requires<ArgumentNullException>(module != null);
 
@@ -30,7 +30,7 @@ namespace Rnet.Service.Host.Processors
         /// <summary>
         /// Module of the current request.
         /// </summary>
-        protected BusModule Module { get; private set; }
+        protected RootRequestProcessor Module { get; private set; }
 
         /// <summary>
         /// Resolves a new target from the given target.

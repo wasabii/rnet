@@ -15,14 +15,18 @@ using Rnet.Service.Host.Models;
 namespace Rnet.Service.Host.Processors
 {
 
+    /// <summary>
+    /// Handles requests against a profile object.
+    /// </summary>
     [Export(typeof(IRequestProcessor))]
     [RequestProcessorMultiple(typeof(ProfileHandle))]
     [RequestProcessorMultiple(typeof(ProfilePropertyHandle))]
     [RequestProcessorMultiple(typeof(ProfileCommandHandle))]
-    public class ProfileRequestProcessor : IRequestProcessor
+    public class ProfileRequestProcessor : 
+        IRequestProcessor
     {
 
-        readonly BusModule module;
+        readonly RootRequestProcessor module;
         readonly ProfileManager profileManager;
 
         /// <summary>
@@ -31,7 +35,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="module"></param>
         [ImportingConstructor]
         public ProfileRequestProcessor(
-            BusModule module,
+            RootRequestProcessor module,
             ProfileManager profileManager)
         {
             Contract.Requires<ArgumentNullException>(module != null);
@@ -97,8 +101,6 @@ namespace Rnet.Service.Host.Processors
 
         public Task<object> Get(IOwinContext context, object target)
         {
-            var t = module.Bind(context);
-
             if (target is ProfileHandle)
                 return Get(context, (ProfileHandle)target);
 
@@ -262,7 +264,6 @@ namespace Rnet.Service.Host.Processors
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            var t = module.Bind<XDocument>(context);
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
 
