@@ -172,7 +172,7 @@
     <Compile Include="RnetDataAvailableEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config2" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Rnet.Util\App1.projitems" Label="Shared" Condition="Exists('..\Rnet.Util\App1.projitems')" />
