@@ -80,7 +80,7 @@
     <Compile Include="RnetRef.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config2" />
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
