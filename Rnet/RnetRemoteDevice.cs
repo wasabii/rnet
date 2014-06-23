@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using Nito.AsyncEx;
 
+using Rnet.Util;
+
 namespace Rnet
 {
 

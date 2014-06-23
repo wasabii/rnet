@@ -60,9 +60,17 @@ namespace Rnet.Service
                     {
 
                     }
+                    catch (ReflectionTypeLoadException)
+                    {
+
+                    }
                 }
             }
             catch (TypeLoadException)
+            {
+
+            }
+            catch (ReflectionTypeLoadException)
             {
 
             }

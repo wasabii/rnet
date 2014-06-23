@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json.Linq;
 
 namespace Rnet.Client
 {
@@ -9,15 +6,15 @@ namespace Rnet.Client
     /// <summary>
     /// Provides the ability to request data from an RNET Uri.
     /// </summary>
-    public interface IUrlResolver
+    public interface IRnetObjectProvider
     {
 
         /// <summary>
-        /// Gets the specified URI.
+        /// Gets the specified object.
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
-        Task<JObject> GetAsync(Uri uri);
+        RnetRef GetAsync(Uri uri);
 
     }
 

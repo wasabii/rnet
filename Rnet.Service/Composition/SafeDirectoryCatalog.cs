@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 
@@ -21,6 +23,8 @@ namespace Rnet.Service
         /// </summary>
         public SafeDirectoryCatalog(string directory)
         {
+            Contract.Requires<ArgumentNullException>(directory != null);
+
             this.catalog = new AggregateCatalog(GetAssemblyCatalogs(directory));
         }
 

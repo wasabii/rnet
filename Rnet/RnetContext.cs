@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
+using Rnet.Util;
+
 namespace Rnet
 {
 
