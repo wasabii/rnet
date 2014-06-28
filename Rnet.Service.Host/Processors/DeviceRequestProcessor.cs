@@ -3,7 +3,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Owin;
+
 using Rnet.Drivers;
 using Rnet.Service.Host.Models;
 
@@ -11,7 +11,8 @@ namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetDevice), -75)]
-    public class DeviceRequestProcessor : ObjectRequestProcessor<RnetDevice>
+    public class DeviceRequestProcessor : 
+        ObjectRequestProcessor<RnetDevice>
     {
 
         /// <summary>
@@ -20,7 +21,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected DeviceRequestProcessor(
-            RootRequestProcessor module,
+            RootProcessor module,
             ProfileManager profileManager)
             : base(module, profileManager)
         {
@@ -28,7 +29,7 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(profileManager != null);
         }
 
-        public override async Task<object> Resolve(IOwinContext context, RnetDevice target, string[] path)
+        public override async Task<object> Resolve(IContext context, RnetDevice target, string[] path)
         {
             // referring to a data path
             if (path[0] == Util.DATA_URI_SEGMENT)
@@ -44,7 +45,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="path"></param>
         /// <param name="dataPath"></param>
         /// <returns></returns>
-        Task<object> ResolveData(IOwinContext context, RnetDevice device, string[] path)
+        Task<object> ResolveData(IContext context, RnetDevice device, string[] path)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -57,7 +58,7 @@ namespace Rnet.Service.Host.Processors
                 return Task.FromResult<object>(ResolveDataItem(device, path[1]));
         }
 
-        DataHandleCollection ToDataCollection(IOwinContext context, RnetDevice device)
+        DataHandleCollection ToDataCollection(IContext context, RnetDevice device)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(device.Data != null);

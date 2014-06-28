@@ -1,7 +1,5 @@
 ﻿using System.Threading.Tasks;
 
-using Microsoft.Owin;
-
 namespace Rnet.Service.Host.Processors
 {
 
@@ -17,19 +15,19 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="target"></param>
         /// <returns></returns>
-        Task<object> Resolve(IOwinContext context, object target, string[] path);
+        Task<object> Resolve(IContext context, object target, string[] path);
 
         /// <summary>
         /// Handles and returns the result of a GET request against the specified target.
         /// </summary>
         /// <returns></returns>
-        Task<object> Get(IOwinContext context, object target);
+        Task<object> Get(IContext context, object target);
 
         /// <summary>
         /// Handles and returns the result of a PUT request against the specified target.
         /// </summary>
         /// <returns></returns>
-        Task<object> Put(IOwinContext context, object target);
+        Task<object> Put(IContext context, object target);
 
     }
 

@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
-using Microsoft.Owin;
-
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 
@@ -21,7 +19,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="uri"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static Uri MakeRelativeUri(this Uri uri, IOwinContext context)
+        public static Uri MakeRelativeUri(this Uri uri, IContext context)
         {
             Contract.Requires<ArgumentNullException>(uri != null);
             Contract.Requires<ArgumentNullException>(context != null);
@@ -36,7 +34,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<string> GetName(this RnetBusObject o, ProfileManager profileManager, IOwinContext context)
+        public static async Task<string> GetName(this RnetBusObject o, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -57,7 +55,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this RnetBusObject o, ProfileManager profileManager, IOwinContext context)
+        public static async Task<Uri> GetUri(this RnetBusObject o, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -82,7 +80,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, ProfileManager profileManager, IOwinContext context)
+        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(context != null);
@@ -103,7 +101,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this ProfileHandle profile, ProfileManager profileManager, IOwinContext context)
+        public static async Task<Uri> GetUri(this ProfileHandle profile, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -123,7 +121,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, ProfileManager profileManager, IOwinContext context)
+        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -157,7 +155,7 @@ namespace Rnet.Service.Host.Models
         /// <param name="device"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static Uri GetUri(this RnetDevice device, IOwinContext context)
+        public static Uri GetUri(this RnetDevice device, IContext context)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(context != null);

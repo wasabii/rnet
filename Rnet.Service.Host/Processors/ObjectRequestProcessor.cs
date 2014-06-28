@@ -5,8 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-using Microsoft.Owin;
-
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 using Rnet.Service.Host.Models;
@@ -29,7 +27,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="root"></param>
         [ImportingConstructor]
         public ObjectRequestProcessor(
-            RootRequestProcessor root,
+            RootProcessor root,
             ProfileManager profileManager)
             : base(root, profileManager)
         {
@@ -54,7 +52,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="target"></param>
         protected ObjectRequestProcessor(
-            RootRequestProcessor root,
+            RootProcessor root,
             ProfileManager profileManager)
             : base(root)
         {
@@ -63,7 +61,7 @@ namespace Rnet.Service.Host.Processors
             this.profileManager = profileManager;
         }
 
-        public override async Task<object> Resolve(IOwinContext context, T target, string[] path)
+        public override async Task<object> Resolve(IContext context, T target, string[] path)
         {
             // referring to a profile
             if (path[0].StartsWith(Util.PROFILE_URI_PREFIX))
@@ -74,7 +72,7 @@ namespace Rnet.Service.Host.Processors
             if (c != null)
             {
                 // find contained object with specified id
-                var o = await Module.FindObject(c, path[0]);
+                var o = await Root.FindObject(c, path[0]);
                 if (o != null)
                     return new ResolveResponse(o, path.Skip(1).ToArray());
             }
@@ -89,7 +87,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="path"></param>
         /// <param name="profileId"></param>
         /// <returns></returns>
-        async Task<object> ResolveProfile(IOwinContext context, RnetBusObject target, string[] path, string profileId)
+        async Task<object> ResolveProfile(IContext context, RnetBusObject target, string[] path, string profileId)
         {
             Contract.Requires<ArgumentNullException>(target != null);
             Contract.Requires<ArgumentException>(path != null && path.Length > 0);
@@ -108,12 +106,12 @@ namespace Rnet.Service.Host.Processors
             return null;
         }
 
-        public override async Task<object> Get(IOwinContext context, T target)
+        public override async Task<object> Get(IContext context, T target)
         {
             return await ObjectToData(context,target);
         }
 
-        public override Task<object> Put(IOwinContext context, T target)
+        public override Task<object> Put(IContext context, T target)
         {
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
@@ -125,7 +123,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        protected async Task<ObjectData> ObjectToData(IOwinContext context, RnetBusObject o)
+        protected async Task<ObjectData> ObjectToData(IContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -141,7 +139,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="o"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<ObjectData> FillObjectData(IOwinContext context, RnetBusObject o, ObjectData d)
+        async Task<ObjectData> FillObjectData(IContext context, RnetBusObject o, ObjectData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
@@ -160,7 +158,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        protected async Task<DeviceData> DeviceToData(IOwinContext context, RnetDevice o)
+        protected async Task<DeviceData> DeviceToData(IContext context, RnetDevice o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -176,7 +174,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="o"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<DeviceData> FillDeviceData(IOwinContext context, RnetDevice o, DeviceData d)
+        async Task<DeviceData> FillDeviceData(IContext context, RnetDevice o, DeviceData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
@@ -192,7 +190,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<ControllerData> ControllerToData(IOwinContext context, RnetController d)
+        async Task<ControllerData> ControllerToData(IContext context, RnetController d)
         {
             Contract.Requires<ArgumentNullException>(d != null);
 
@@ -205,7 +203,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="o"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        async Task<ControllerData> FillControllerData(IOwinContext context, RnetController o, ControllerData d)
+        async Task<ControllerData> FillControllerData(IContext context, RnetController o, ControllerData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
@@ -219,7 +217,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        async Task<ObjectDataCollection> GetObjects(IOwinContext context, RnetBusObject o)
+        async Task<ObjectDataCollection> GetObjects(IContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -233,7 +231,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        async Task<ProfileRefCollection> GetProfileRefs(IOwinContext context, RnetBusObject o)
+        async Task<ProfileRefCollection> GetProfileRefs(IContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -247,7 +245,7 @@ namespace Rnet.Service.Host.Processors
         /// </summary>
         /// <param name="profile"></param>
         /// <returns></returns>
-        async Task<ProfileRef> ProfileToRef(IOwinContext context, ProfileHandle profile)
+        async Task<ProfileRef> ProfileToRef(IContext context, ProfileHandle profile)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
 

@@ -49,7 +49,7 @@ namespace Rnet
             Contract.Invariant(WriteTimeout > TimeSpan.Zero);
             Contract.Invariant(EventTimeout > TimeSpan.Zero);
         }
-        
+
         /// <summary>
         /// Gets whether or not this device requires a handshake in response to high priority messages.
         /// </summary>
@@ -280,7 +280,7 @@ namespace Rnet
         /// <param name="data"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        async Task SendSetData(RnetPath targetPath, RnetPath sourcePath, byte[] data, CancellationToken cancellationToken)
+        public async Task SendSetData(RnetPath targetPath, RnetPath sourcePath, byte[] data, CancellationToken cancellationToken)
         {
             Contract.Requires(data != null);
             Contract.Requires(data.Length <= 1024);
@@ -333,7 +333,7 @@ namespace Rnet
         /// <param name="timestamp"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        internal async Task SendEvent(RnetPath path, RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority, CancellationToken cancellationToken)
+        public async Task SendEvent(RnetPath path, RnetEvent evt, ushort timestamp, ushort data, RnetPriority priority, CancellationToken cancellationToken)
         {
             using (await send.LockAsync(cancellationToken))
             using (await handshake.EnterAsync(cancellationToken))
@@ -356,6 +356,20 @@ namespace Rnet
                     while (handshakeMessage == null)
                         await handshake.WaitAsync(cancellationToken);
             }
+        }
+
+        /// <summary>
+        /// Issues an event message to the device.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="evt"></param>
+        /// <param name="timestamp"></param>
+        /// <param name="data"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public Task SendEvent(RnetPath path, RnetEvent evt, ushort timestamp = 0, ushort data = 0, RnetPriority priority = RnetPriority.Low)
+        {
+            return SendEvent(path, evt, timestamp, data, priority, CancellationToken.None);
         }
 
         /// <summary>

@@ -18,11 +18,6 @@ namespace Rnet.Wpf
 
         public App()
         {
-            var c = new ContainerConfiguration()
-                .WithAssemblies(AppDomain.CurrentDomain.GetAssemblies())
-                .WithAssembly(typeof(RnetClient).Assembly)
-                .CreateContainer();
-
             Task.Run(async () =>
             {
                 var p = c.GetExport<IRnetObjectProvider>();

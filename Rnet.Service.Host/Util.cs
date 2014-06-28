@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 
-using Microsoft.Owin;
-
 namespace Rnet.Service.Host
 {
 
@@ -34,11 +32,11 @@ namespace Rnet.Service.Host
         }
 
         /// <summary>
-        /// Gets the base URI for the given <see cref="IOwinContext"/>.
+        /// Gets the base URI for the given <see cref="IContext"/>.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static Uri GetBaseUri(this IOwinContext context)
+        public static Uri GetBaseUri(this IContext context)
         {
             Contract.Requires<ArgumentNullException>(context != null);
 

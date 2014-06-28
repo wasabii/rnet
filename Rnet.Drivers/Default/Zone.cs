@@ -9,7 +9,9 @@ namespace Rnet.Drivers.Default
     /// <summary>
     /// Provides a default implementation of <see cref="IZone"/> for a zone.
     /// </summary>
-    public class Zone : ZoneBase, IZone
+    public class Zone :
+        ZoneBase,
+        IZone
     {
 
         /// <summary>

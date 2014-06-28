@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace Rnet.Service.Host.Processors
 {
@@ -107,22 +108,40 @@ namespace Rnet.Service.Host.Processors
     public sealed class RequestProcessorMetadata
     {
 
+        /// <summary>
+        /// Extracts an array from the given object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        static T[] AsArray<T>(object o)
+        {
+            if (o is T[])
+                return (T[])o;
+            else if (o is IEnumerable<T>)
+                return ((IEnumerable<T>)o).ToArray();
+            else if (o is T)
+                return new T[] { (T)o };
+            else
+                return new T[] { };
+        }
+
         readonly IRequestProcessorMetadata[] infos;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="d"></param>
-        public RequestProcessorMetadata(IDictionary<string, object> d)
+        /// <param name="metadata"></param>
+        public RequestProcessorMetadata(IDictionary<string, object> metadata)
         {
-            Contract.Requires<ArgumentNullException>(d != null);
+            Contract.Requires<ArgumentNullException>(metadata != null);
 
-            var p1 = d["Type"] as Type[] ?? new Type[] { (Type)d["Type"] };
-            var p2 = d["Priority"] as int[] ?? new int[] { (int)d["Priority"] };
+            // get metadata arrays
+            var p1 = AsArray<Type>(metadata["Type"]);
+            var p2 = AsArray<int>(metadata["Priority"]);
 
-            infos = new RequestProcessorMultipleAttribute[p1.Length];
-            for (int i = 0; i < infos.Length; i++)
-                infos[i] = new RequestProcessorMultipleAttribute(p1[i], p2[i]);
+            // generate metadata pairs
+            this.infos = p1.Zip(p2, (i, j) => new RequestProcessorMultipleAttribute(i, j)).ToArray();
         }
 
         public IEnumerable<IRequestProcessorMetadata> Infos

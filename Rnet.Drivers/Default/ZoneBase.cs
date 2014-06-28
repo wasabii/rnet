@@ -7,7 +7,8 @@ namespace Rnet.Drivers.Default
     /// <summary>
     /// Serves as a simple profile implementation base for a zone.
     /// </summary>
-    public abstract class ZoneBase : ProfileBase
+    public abstract class ZoneBase : 
+        ProfileBase
     {
 
         /// <summary>

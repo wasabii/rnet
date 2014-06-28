@@ -11,7 +11,8 @@ namespace Rnet.Service.Host.Models
 
     [XmlSchemaProvider("GetSchema", IsAny = true)]
     [JsonObject("Command")]
-    public class ProfileCommandData : IXmlSerializable
+    public class ProfileCommandData :
+        IXmlSerializable
     {
 
         public Uri Uri { get; set; }

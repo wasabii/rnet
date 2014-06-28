@@ -5,8 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-using Microsoft.Owin;
-
 using Rnet.Service.Host.Models;
 
 namespace Rnet.Service.Host.Processors
@@ -26,13 +24,13 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected BusRequestProcessor(
-            RootRequestProcessor module)
+            RootProcessor module)
             : base(module)
         {
             Contract.Requires<ArgumentNullException>(module != null);
         }
 
-        public override async Task<object> Resolve(IOwinContext context, RnetBus bus, string[] path)
+        public override async Task<object> Resolve(IContext context, RnetBus bus, string[] path)
         {
             // if bus is down, so are we
             if (bus.State != RnetBusState.Started ||
@@ -53,7 +51,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="bus"></param>
         /// <param name="deviceId"></param>
         /// <returns></returns>
-        object ResolveDevice(IOwinContext context, RnetBus bus, string[] path, string deviceId)
+        object ResolveDevice(IContext context, RnetBus bus, string[] path, string deviceId)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -97,27 +95,27 @@ namespace Rnet.Service.Host.Processors
         /// <param name="bus"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        async Task<object> ResolveObject(IOwinContext context, RnetBus bus, string[] path)
+        async Task<object> ResolveObject(IContext context, RnetBus bus, string[] path)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentException>(path != null && path.Length > 0);
 
             // path represents a root object (controller, for now)
-            var o = await Module.FindObject(bus.Controllers, path[0]);
+            var o = await Root.FindObject(bus.Controllers, path[0]);
             if (o != null)
                 return new ResolveResponse(o, path.Skip(1).ToArray());
 
             return null;
         }
 
-        public override async Task<object> Get(IOwinContext context, RnetBus bus)
+        public override async Task<object> Get(IContext context, RnetBus bus)
         {
             // all devices available on the bus
             var l = await Task.WhenAll(Enumerable.Empty<RnetBusObject>()
                 .Concat(bus.Controllers)
                 .Concat(bus.Controllers.SelectMany(i => i.Zones).SelectMany(i => i.Devices))
                 .OfType<RnetDevice>()
-                .Select(i => Module.ObjectToData(context, i)));
+                .Select(i => Root.ObjectToData(context, i)));
 
             return new BusData()
             {

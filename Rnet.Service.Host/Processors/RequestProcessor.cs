@@ -2,7 +2,6 @@
 using System.Diagnostics.Contracts;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.Owin;
 
 namespace Rnet.Service.Host.Processors
 {
@@ -18,31 +17,31 @@ namespace Rnet.Service.Host.Processors
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="module"></param>
+        /// <param name="root"></param>
         protected RequestProcessor(
-            RootRequestProcessor module)
+            RootProcessor root)
         {
-            Contract.Requires<ArgumentNullException>(module != null);
+            Contract.Requires<ArgumentNullException>(root != null);
 
-            Module = module;
+            Root = root;
         }
 
         /// <summary>
         /// Module of the current request.
         /// </summary>
-        protected RootRequestProcessor Module { get; private set; }
+        protected RootProcessor Root { get; private set; }
 
         /// <summary>
         /// Resolves a new target from the given target.
         /// </summary>
         /// <returns></returns>
-        public abstract Task<object> Resolve(IOwinContext context, T target, string[] path);
+        public abstract Task<object> Resolve(IContext context, T target, string[] path);
 
         /// <summary>
         /// Implements IRequestProcessor.Resolve.
         /// </summary>
         /// <returns></returns>
-        Task<object> IRequestProcessor.Resolve(IOwinContext context, object target, string[] path)
+        Task<object> IRequestProcessor.Resolve(IContext context, object target, string[] path)
         {
             if (path.Length == 0)
                 return Task.FromResult(target);
@@ -54,7 +53,7 @@ namespace Rnet.Service.Host.Processors
         /// Implements a GET request.
         /// </summary>
         /// <returns></returns>
-        public virtual Task<object> Get(IOwinContext context, T target)
+        public virtual Task<object> Get(IContext context, T target)
         {
             return Task.FromResult<object>(HttpStatusCode.MethodNotAllowed);
         }
@@ -63,7 +62,7 @@ namespace Rnet.Service.Host.Processors
         /// Implements IRequestProcessor.Get.
         /// </summary>
         /// <returns></returns>
-        Task<object> IRequestProcessor.Get(IOwinContext context, object target)
+        Task<object> IRequestProcessor.Get(IContext context, object target)
         {
             return Get(context, (T)target);
         }
@@ -72,7 +71,7 @@ namespace Rnet.Service.Host.Processors
         /// Implements a PUT request.
         /// </summary>
         /// <returns></returns>
-        public virtual Task<object> Put(IOwinContext context, T target)
+        public virtual Task<object> Put(IContext context, T target)
         {
             return Task.FromResult<object>(HttpStatusCode.MethodNotAllowed);
         }
@@ -81,7 +80,7 @@ namespace Rnet.Service.Host.Processors
         /// Implements IRequestProcessor.Put.
         /// </summary>
         /// <returns></returns>
-        Task<object> IRequestProcessor.Put(IOwinContext context, object target)
+        Task<object> IRequestProcessor.Put(IContext context, object target)
         {
             return Put(context, (T)target);
         }

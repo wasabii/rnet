@@ -130,11 +130,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IContext.cs" />
+    <Compile Include="IResponse.cs" />
     <Compile Include="Net\MediaRange.cs" />
     <Compile Include="Net\MediaRangeList.cs" />
     <Compile Include="Net\MediaRangeParameters.cs" />
     <Compile Include="Net\MediaType.cs" />
-    <Compile Include="RootRequestProcessor.cs">
+    <Compile Include="OwinContext.cs" />
+    <Compile Include="Processors\BusViewResponseProcessor.cs" />
+    <Compile Include="Processors\DefaultResponseProcessor.cs" />
+    <Compile Include="Processors\HttpStatusCodeResponseProcessor.cs" />
+    <Compile Include="Processors\IResponseProcessor.cs" />
+    <Compile Include="Processors\ResponseProcessorAttribute.cs" />
+    <Compile Include="RootProcessor.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DependencyResolver.cs" />

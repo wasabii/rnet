@@ -2,18 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.Owin;
-using Newtonsoft.Json;
+
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 using Rnet.Service.Host.Models;
-using Rnet.Service.Host.Net;
 using Rnet.Service.Host.Processors;
-using Rnet.Service.Host.Serialization;
 
 namespace Rnet.Service.Host
 {
@@ -21,81 +17,69 @@ namespace Rnet.Service.Host
     /// <summary>
     /// Serves requests under the objects URL.
     /// </summary>
-    [Export(typeof(RootRequestProcessor))]
+    [Export(typeof(RootProcessor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public sealed class RootRequestProcessor
+    public sealed class RootProcessor
     {
 
         readonly ICompositionService composition;
         readonly RnetBus bus;
-        readonly IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors;
         readonly DriverManager driverManager;
         readonly ProfileManager profileManager;
-        readonly IEnumerable<IBodySerializer> serializers;
-        readonly IEnumerable<IBodyDeserializer> deserializers;
+        readonly IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> requestProcessors;
+        readonly IEnumerable<Lazy<IResponseProcessor, ResponseProcessorMetadata>> responseProcessors;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="composition"></param>
         /// <param name="bus"></param>
-        /// <param name="processors"></param>
         /// <param name="driverManager"></param>
         /// <param name="profileManager"></param>
+        /// <param name="requestProcessors"></param>
+        /// <param name="responseProcessors"></param>
         [ImportingConstructor]
-        public RootRequestProcessor(
+        public RootProcessor(
             [Import] ICompositionService composition,
             [Import] RnetBus bus,
-            [ImportMany] IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> processors,
             [Import] DriverManager driverManager,
             [Import] ProfileManager profileManager,
-            [ImportMany] IEnumerable<IBodySerializer> serializers,
-            [ImportMany] IEnumerable<IBodyDeserializer> deserializers)
+            [ImportMany] IEnumerable<Lazy<IRequestProcessor, RequestProcessorMetadata>> requestProcessors,
+            [ImportMany] IEnumerable<Lazy<IResponseProcessor, ResponseProcessorMetadata>> responseProcessors)
         {
             Contract.Requires<ArgumentNullException>(composition != null);
             Contract.Requires<ArgumentNullException>(bus != null);
-            Contract.Requires<ArgumentNullException>(processors != null);
+            Contract.Requires<ArgumentNullException>(requestProcessors != null);
+            Contract.Requires<ArgumentNullException>(responseProcessors != null);
             Contract.Requires<ArgumentNullException>(driverManager != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
-            Contract.Requires<ArgumentNullException>(serializers != null);
-            Contract.Requires<ArgumentNullException>(deserializers != null);
 
             this.composition = composition;
             this.bus = bus;
-            this.processors = processors;
             this.driverManager = driverManager;
             this.profileManager = profileManager;
-            this.serializers = serializers;
-            this.deserializers = deserializers;
+            this.requestProcessors = requestProcessors;
+            this.responseProcessors = responseProcessors;
         }
 
         /// <summary>
         /// Handles an incoming request.
         /// </summary>
         /// <param name="context"></param>
-        public async Task Invoke(IOwinContext context)
+        public async Task Invoke(IContext context)
         {
             // handle the request
             var o = await HandleRequest(context);
             if (o == null)
                 return;
 
-            // status code response
-            if (o is HttpStatusCode)
-                context.Response.StatusCode = (int)(HttpStatusCode)o;
-
-            // find serializer for object and requested media type (with JSON as default)
-            foreach (var mediaRange in MediaRangeList.Parse(context.Request.Accept) + "application/json")
-                foreach (var serializer in serializers)
-                    if (serializer.CanSerialize(o, mediaRange))
-                    {
-                        // serialize object to response
-                        context.Response.ContentType = mediaRange;
-                        serializer.Serialize(o, mediaRange, context.Response.Body);
-
-                        // finished response
+            // handle the response
+            foreach (var p in responseProcessors.OrderByDescending(i => i.Metadata.Infos.Max(j => j.Priority)))
+                if (p.Metadata.Infos.Any(i => i.Type.IsInstanceOfType(o)))
+                    if ((await p.Value.Handle(context, o)))
                         return;
-                    }
+
+            return;
         }
 
         /// <summary>
@@ -103,7 +87,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        Task<object> HandleRequest(IOwinContext context)
+        Task<object> HandleRequest(IContext context)
         {
             switch (context.Request.Method)
             {
@@ -120,7 +104,7 @@ namespace Rnet.Service.Host
         /// Implements a GET request.
         /// </summary>
         /// <returns></returns>
-        public async Task<object> GetRequest(IOwinContext context, string uri)
+        public async Task<object> GetRequest(IContext context, string uri)
         {
             // split and clean up uri
             var path = uri != null ? uri.Split('/')
@@ -141,7 +125,7 @@ namespace Rnet.Service.Host
         /// Implements a PUT request.
         /// </summary>
         /// <returns></returns>
-        public async Task<object> PutRequest(IOwinContext context, string uri)
+        public async Task<object> PutRequest(IContext context, string uri)
         {
             // split and clean up uri
             var path = uri.Split('/')
@@ -163,7 +147,7 @@ namespace Rnet.Service.Host
         /// <param name="source"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        async Task<object> Resolve(IOwinContext context, object source, string[] path)
+        async Task<object> Resolve(IContext context, object source, string[] path)
         {
             Contract.Requires<ArgumentNullException>(source != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -188,7 +172,7 @@ namespace Rnet.Service.Host
 
             var o = source;
 
-            foreach (var p in processors.OrderByDescending(i => i.Metadata.Infos.Max(j => j.Priority)))
+            foreach (var p in requestProcessors.OrderByDescending(i => i.Metadata.Infos.Max(j => j.Priority)))
                 if (p.Metadata.Infos.Any(i => i.Type.IsInstanceOfType(source)))
                     if ((o = await invoke(p.Value)) != null)
                         break;
@@ -202,7 +186,7 @@ namespace Rnet.Service.Host
         /// <param name="source"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        Task<object> InvokeResolve(IOwinContext context, object source, string[] path)
+        Task<object> InvokeResolve(IContext context, object source, string[] path)
         {
             Contract.Requires<ArgumentNullException>(source != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -215,7 +199,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        Task<object> InvokeGet(IOwinContext context, object source)
+        Task<object> InvokeGet(IContext context, object source)
         {
             Contract.Requires<ArgumentNullException>(source != null);
 
@@ -227,7 +211,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        Task<object> InvokePut(IOwinContext context, object source)
+        Task<object> InvokePut(IContext context, object source)
         {
             Contract.Requires<ArgumentNullException>(source != null);
 
@@ -261,7 +245,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        public async Task<ObjectData> ObjectToData(IOwinContext context, RnetBusObject d)
+        public async Task<ObjectData> ObjectToData(IContext context, RnetBusObject d)
         {
             Contract.Requires<ArgumentNullException>(d != null);
 
@@ -271,7 +255,7 @@ namespace Rnet.Service.Host
                 return await FillObjectData(context, d, new ObjectData());
         }
 
-        async Task<ObjectData> FillObjectData(IOwinContext context, RnetBusObject o, ObjectData d)
+        async Task<ObjectData> FillObjectData(IContext context, RnetBusObject o, ObjectData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
@@ -290,7 +274,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        public async Task<DeviceData> DeviceToData(IOwinContext context, RnetDevice d)
+        public async Task<DeviceData> DeviceToData(IContext context, RnetDevice d)
         {
             Contract.Requires<ArgumentNullException>(d != null);
 
@@ -300,7 +284,7 @@ namespace Rnet.Service.Host
                 return await FillDeviceData(context, d, new DeviceData());
         }
 
-        async Task<DeviceData> FillDeviceData(IOwinContext context, RnetDevice o, DeviceData d)
+        async Task<DeviceData> FillDeviceData(IContext context, RnetDevice o, DeviceData d)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
@@ -316,12 +300,12 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        public async Task<ControllerData> ControllerToData(IOwinContext context, RnetController d)
+        public async Task<ControllerData> ControllerToData(IContext context, RnetController d)
         {
             return await FillControllerData(context, d, new ControllerData());
         }
 
-        async Task<ControllerData> FillControllerData(IOwinContext context, RnetController o, ControllerData d)
+        async Task<ControllerData> FillControllerData(IContext context, RnetController o, ControllerData d)
         {
             await FillDeviceData(context, o, d);
             return d;
@@ -332,7 +316,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public async Task<ObjectDataCollection> GetObjects(IOwinContext context, RnetBusObject o)
+        public async Task<ObjectDataCollection> GetObjects(IContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -346,7 +330,7 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        public async Task<ProfileRefCollection> GetProfileRefs(IOwinContext context, RnetBusObject o)
+        public async Task<ProfileRefCollection> GetProfileRefs(IContext context, RnetBusObject o)
         {
             Contract.Requires<ArgumentNullException>(o != null);
 
@@ -355,7 +339,7 @@ namespace Rnet.Service.Host
             return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(context, i))));
         }
 
-        public async Task<ProfileRef> ProfileToRef(IOwinContext context, ProfileHandle profile)
+        public async Task<ProfileRef> ProfileToRef(IContext context, ProfileHandle profile)
         {
             return new ProfileRef()
             {
