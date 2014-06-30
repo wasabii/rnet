@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.Contracts;
 
 using Rnet.Profiles.Core;
 
@@ -21,6 +23,8 @@ namespace Rnet.Drivers.Default
         protected internal ZoneContainer(RnetZone zone)
             : base(zone)
         {
+            Contract.Requires<ArgumentNullException>(zone != null);
+
             Zone.Devices.CollectionChanged += (s, a) => RaiseCollectionChanged(a);
         }
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 
-using Nancy;
-
 namespace Rnet.Service.Host
 {
 
@@ -34,17 +32,20 @@ namespace Rnet.Service.Host
         }
 
         /// <summary>
-        /// Gets the base URI for the given <see cref="NancyContext"/>.
+        /// Gets the base URI for the given <see cref="IContext"/>.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static Uri GetBaseUri(this NancyContext context)
+        public static Uri GetBaseUri(this IContext context)
         {
             Contract.Requires<ArgumentNullException>(context != null);
 
-            var u = context.Request.Url.Clone();
-            u.Path = context.NegotiationContext.ModulePath;
-            return u;
+            var b = new UriBuilder();
+            b.Scheme = context.Request.Scheme;
+            b.Host = context.Request.Uri.Host;
+            b.Port = context.Request.Uri.Port;
+            b.Path = context.Request.PathBase.ToUriComponent();
+            return b.Uri;
         }
 
     }

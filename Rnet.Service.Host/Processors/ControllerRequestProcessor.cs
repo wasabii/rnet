@@ -18,7 +18,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected ControllerRequestProcessor(
-            BusModule module,
+            RootProcessor module,
             ProfileManager profileManager)
             : base(module, profileManager)
         {

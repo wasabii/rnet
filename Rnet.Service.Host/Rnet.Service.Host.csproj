@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -45,13 +45,20 @@
     <CodeContractsShowSquigglies>True</CodeContractsShowSquigglies>
     <CodeContractsUseBaseLine>False</CodeContractsUseBaseLine>
     <CodeContractsEmitXMLDocs>False</CodeContractsEmitXMLDocs>
-    <CodeContractsCustomRewriterAssembly />
-    <CodeContractsCustomRewriterClass />
-    <CodeContractsLibPaths />
-    <CodeContractsExtraRewriteOptions />
-    <CodeContractsExtraAnalysisOptions />
-    <CodeContractsSQLServerOption />
-    <CodeContractsBaseLineFile />
+    <CodeContractsCustomRewriterAssembly>
+    </CodeContractsCustomRewriterAssembly>
+    <CodeContractsCustomRewriterClass>
+    </CodeContractsCustomRewriterClass>
+    <CodeContractsLibPaths>
+    </CodeContractsLibPaths>
+    <CodeContractsExtraRewriteOptions>
+    </CodeContractsExtraRewriteOptions>
+    <CodeContractsExtraAnalysisOptions>
+    </CodeContractsExtraAnalysisOptions>
+    <CodeContractsSQLServerOption>
+    </CodeContractsSQLServerOption>
+    <CodeContractsBaseLineFile>
+    </CodeContractsBaseLineFile>
     <CodeContractsCacheAnalysisResults>True</CodeContractsCacheAnalysisResults>
     <CodeContractsFailBuildOnWarnings>False</CodeContractsFailBuildOnWarnings>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
@@ -67,38 +74,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Threading.Tasks">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.16\lib\net45\Microsoft.Threading.Tasks.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks.Extensions">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.16\lib\net45\Microsoft.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Nancy, Version=0.21.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nancy.0.21.1\lib\net40\Nancy.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.2.1.0\lib\net45\Microsoft.Owin.dll</HintPath>
     </Reference>
-    <Reference Include="Nancy.Bootstrappers.Mef, Version=0.19.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin.Host.HttpListener, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nancy.Bootstrappers.Mef.0.19.0\lib\net45\Nancy.Bootstrappers.Mef.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.Host.HttpListener.2.1.0\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
     </Reference>
-    <Reference Include="Nancy.Hosting.Self, Version=0.21.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin.Hosting, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nancy.Hosting.Self.0.21.1\lib\net40\Nancy.Hosting.Self.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.Hosting.2.1.0\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Nito.AsyncEx, Version=2.0.0.0, Culture=neutral, PublicKeyToken=09d695329ca273b7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nito.AsyncEx.2.0.0\lib\net45\Nito.AsyncEx.dll</HintPath>
+    <Reference Include="Nito.AsyncEx.Enlightenment">
+      <HintPath>..\packages\Nito.AsyncEx.2.1.3\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
     </Reference>
-    <Reference Include="Nito.AsyncEx.Concurrent, Version=2.0.0.0, Culture=neutral, PublicKeyToken=09d695329ca273b7, processorArchitecture=MSIL">
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nito.AsyncEx.2.0.0\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
-    </Reference>
-    <Reference Include="Nito.AsyncEx.Enlightenment, Version=2.0.0.0, Culture=neutral, PublicKeyToken=09d695329ca273b7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nito.AsyncEx.2.0.0\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -106,29 +102,88 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.1.2\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reflection.Context" />
+    <Reference Include="System.Web.Http, Version=5.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.1.2\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.Owin, Version=5.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.1.2\lib\net45\System.Web.Http.Owin.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Xml" />
+    <Reference Include="Nito.AsyncEx">
+      <HintPath>..\packages\Nito.AsyncEx.2.1.3\lib\net45\Nito.AsyncEx.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Concurrent">
+      <HintPath>..\packages\Nito.AsyncEx.2.1.3\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.34\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RnetNancyBootstrapper.cs" />
+    <Compile Include="IContext.cs" />
+    <Compile Include="IResponse.cs" />
+    <Compile Include="Net\MediaRange.cs" />
+    <Compile Include="Net\MediaRangeList.cs" />
+    <Compile Include="Net\MediaRangeParameters.cs" />
+    <Compile Include="Net\MediaType.cs" />
+    <Compile Include="OwinContext.cs" />
+    <Compile Include="Processors\BusViewResponseProcessor.cs" />
+    <Compile Include="Processors\DefaultResponseProcessor.cs" />
+    <Compile Include="Processors\HttpStatusCodeResponseProcessor.cs" />
+    <Compile Include="Processors\IResponseProcessor.cs" />
+    <Compile Include="Processors\ResponseProcessorAttribute.cs" />
+    <Compile Include="RootProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DependencyResolver.cs" />
+    <Compile Include="Processors\BusRequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\ControllerRequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\DeviceRequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\IRequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\ObjectRequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\ProfileRequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\RequestProcessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\RequestProcessorAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Processors\ResolveResponse.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Response.cs" />
     <Compile Include="RnetServiceHostConfigurationCollection.cs" />
     <Compile Include="RnetServiceHostConfigurationElement.cs" />
-    <Compile Include="Serialization\JsonSerializer.cs" />
-    <Compile Include="Serialization\XmlSerializer.cs" />
     <Compile Include="Models\BusData.cs" />
-    <Compile Include="BusModule.cs" />
-    <Compile Include="Processors\BusRequestProcessor.cs" />
     <Compile Include="CompositionService.cs" />
     <Compile Include="Models\ControllerData.cs" />
-    <Compile Include="Processors\ControllerRequestProcessor.cs" />
     <Compile Include="Models\DataHandleCollection.cs" />
     <Compile Include="Models\DataHandleData.cs" />
     <Compile Include="Models\DeviceData.cs" />
     <Compile Include="Models\DeviceDataCollection.cs" />
     <Compile Include="Models\DeviceDataCollectionJsonConverter.cs" />
-    <Compile Include="Processors\DeviceRequestProcessor.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="RnetHost.cs" />
     <Compile Include="HttpException.cs" />
@@ -136,11 +191,9 @@
     <Compile Include="IProfileCommandHandle.cs" />
     <Compile Include="IProfileHandle.cs" />
     <Compile Include="IProfilePropertyHandle.cs" />
-    <Compile Include="Processors\IRequestProcessor.cs" />
     <Compile Include="Models\ObjectData.cs" />
     <Compile Include="Models\ObjectDataCollection.cs" />
     <Compile Include="Models\ObjectDataCollectionJsonConverter.cs" />
-    <Compile Include="Processors\ObjectRequestProcessor.cs" />
     <Compile Include="Models\ProfileCommandData.cs" />
     <Compile Include="Models\ProfileCommandDataCollection.cs" />
     <Compile Include="Models\ProfileCommandDataCollectionJsonConverter.cs" />
@@ -151,44 +204,38 @@
     <Compile Include="Models\ProfileRef.cs" />
     <Compile Include="Models\ProfileRefCollection.cs" />
     <Compile Include="Models\ProfileRefCollectionJsonConverter.cs" />
-    <Compile Include="Processors\ProfileRequestProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Processors\RequestProcessor.cs" />
-    <Compile Include="Processors\RequestProcessorAttribute.cs" />
-    <Compile Include="Processors\ResolveResponse.cs" />
+    <Compile Include="Serialization\IBodyDeserializer.cs" />
+    <Compile Include="Serialization\IBodySerializer.cs" />
+    <Compile Include="Serialization\JsonBodySerializer.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
-      <Project>{f5ad5681-fa01-43d7-9c55-d4786449ba3b}</Project>
+      <Project>{F5AD5681-FA01-43D7-9C55-D4786449BA3B}</Project>
       <Name>Rnet.Drivers</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rnet.Profiles\Rnet.Profiles.csproj">
-      <Project>{a12246ac-a28f-4c52-8eab-cdd6f0b2896e}</Project>
+      <Project>{A12246AC-A28F-4C52-8EAB-CDD6F0B2896E}</Project>
       <Name>Rnet.Profiles</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
-      <Project>{9e1bb758-b788-4c23-959b-201e27b221fc}</Project>
+      <Project>{9E1BB758-B788-4C23-959B-201E27B221FC}</Project>
       <Name>Rnet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="Views\ProfileData.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Views\BusData.html" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Content Include="Views\ProfileData.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.10\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.10\tools\Microsoft.Bcl.Build.targets')" />
-  <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">
-    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.10\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
-    <Error Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.10\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

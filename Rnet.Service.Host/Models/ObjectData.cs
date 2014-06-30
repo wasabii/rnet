@@ -31,7 +31,7 @@ namespace Rnet.Service.Host.Models
         public string _FriendlyUri
         {
             get { return FriendlyUri != null ? FriendlyUri.ToString() : null; }
-            set { FriendlyUri = new Uri(value); }
+            set { Contract.Requires<ArgumentNullException>(value != null); FriendlyUri = new Uri(value); }
         }
 
         [XmlAttribute]

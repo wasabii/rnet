@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
-using Nancy.Bootstrappers.Mef.Composition.Hosting;
+
 using Nito.AsyncEx;
+
 using Rnet.Service.Host;
 
 namespace Rnet.Service
@@ -12,7 +13,8 @@ namespace Rnet.Service
     /// <summary>
     /// Implements the RNet service.
     /// </summary>
-    class ServiceImpl : IDisposable
+    class ServiceImpl :
+        IDisposable
     {
 
         /// <summary>
@@ -50,7 +52,7 @@ namespace Rnet.Service
         /// </summary>
         public ServiceImpl()
         {
-            this.container = new CompositionContainer(new ApplicationCatalog(), new NancyExportProvider());
+            this.container = new CompositionContainer(new SafeApplicationCatalog());
             this.instances = new List<Instance>();
         }
 
@@ -68,12 +70,19 @@ namespace Rnet.Service
                 var host = new RnetHost(bus, conf.Uri, container);
                 instances.Add(new Instance(context, bus, host));
 
-                // schedule initialization
-                context.Factory.Run(async () =>
+                try
                 {
-                    await bus.Start();
-                    await host.StartAsync();
-                }).Wait();
+                    // schedule initialization
+                    context.Factory.Run(async () =>
+                    {
+                        await bus.Start();
+                        await host.StartAsync();
+                    }).Wait();
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
             }
         }
 

@@ -36,6 +36,16 @@ namespace Rnet.Drivers
         /// </summary>
         public CommandDescriptor Metadata { get; private set; }
 
+        /// <summary>
+        /// Invokes the given command.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public object Invoke(params object[] args)
+        {
+            return Metadata.Invoke(Profile.Instance, args);
+        }
+
     }
 
 }

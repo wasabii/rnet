@@ -3,7 +3,11 @@
 namespace Rnet
 {
 
-    public class RnetBusConfigurationElement : ConfigurationElement
+    /// <summary>
+    /// Provides configuration for a <see cref="RnetBus"/>
+    /// </summary>
+    public class RnetBusConfigurationElement : 
+        ConfigurationElement
     {
 
         /// <summary>

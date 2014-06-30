@@ -1,34 +1,13 @@
-﻿using Rnet.Profiles.Core;
-
-namespace Rnet.Profiles.Media.Audio
+﻿namespace Rnet.Profiles.Media.Audio
 {
 
     /// <summary>
     /// Basic audio information for a zone.
     /// </summary>
     [ProfileContract("media.audio", "Equalization")]
-    public interface IEqualization
+    public interface IEqualization :
+        Rnet.Profiles.Media.IZone
     {
-
-        /// <summary>
-        /// Whether the zone is powered on or off.
-        /// </summary>
-        Power Power { get; set; }
-
-        /// <summary>
-        /// Toggles the power.
-        /// </summary>
-        void PowerToggle();
-
-        /// <summary>
-        /// Turns the power off.
-        /// </summary>
-        void PowerOn();
-
-        /// <summary>
-        /// Turns the power on.
-        /// </summary>
-        void PowerOff();
 
         /// <summary>
         /// Volume level of the zone.

@@ -60,7 +60,7 @@ namespace Rnet
         /// <param name="writer"></param>
         internal void Write(RnetStreamWriter writer)
         {
-            Contract.Requires(writer != null);
+            Contract.Requires<ArgumentNullException>(writer != null);
 
             writer.BeginMessage(TargetDeviceId, SourceDeviceId, MessageType);
             WriteBody(writer);
@@ -79,7 +79,7 @@ namespace Rnet
         /// <param name="writer"></param>
         public void WriteDebugView(TextWriter writer)
         {
-            Contract.Requires(writer != null);
+            Contract.Requires<ArgumentNullException>(writer != null);
 
             writer.WriteLine("{");
             using (var wrt = RnetUtil.CreateIndentedTextWriter(writer))
@@ -97,7 +97,7 @@ namespace Rnet
 
         protected virtual void WriteBodyDebugView(TextWriter writer)
         {
-            Contract.Requires(writer != null);
+            Contract.Requires<ArgumentNullException>(writer != null);
         }
 
         /// <summary>

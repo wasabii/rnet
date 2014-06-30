@@ -2,15 +2,17 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
-
-using Nancy;
 
 using Rnet.Service.Host.Models;
 
 namespace Rnet.Service.Host.Processors
 {
 
+    /// <summary>
+    /// Handles requests against a <see cref="RnetBus"/>.
+    /// </summary>
     [RequestProcessor(typeof(RnetBus))]
     public class BusRequestProcessor :
         RequestProcessor<RnetBus>
@@ -22,13 +24,13 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected BusRequestProcessor(
-            BusModule module)
+            RootProcessor module)
             : base(module)
         {
             Contract.Requires<ArgumentNullException>(module != null);
         }
 
-        public override async Task<object> Resolve(RnetBus bus, string[] path)
+        public override async Task<object> Resolve(IContext context, RnetBus bus, string[] path)
         {
             // if bus is down, so are we
             if (bus.State != RnetBusState.Started ||
@@ -38,9 +40,9 @@ namespace Rnet.Service.Host.Processors
 
             // path represents a direct device ID
             if (path[0][0] == ':')
-                return ResolveDevice(bus, path, path[0].Substring(1));
+                return ResolveDevice(context, bus, path, path[0].Substring(1));
 
-            return await ResolveObject(bus, path);
+            return await ResolveObject(context, bus, path);
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="bus"></param>
         /// <param name="deviceId"></param>
         /// <returns></returns>
-        object ResolveDevice(RnetBus bus, string[] path, string deviceId)
+        object ResolveDevice(IContext context, RnetBus bus, string[] path, string deviceId)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -93,31 +95,31 @@ namespace Rnet.Service.Host.Processors
         /// <param name="bus"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        async Task<object> ResolveObject(RnetBus bus, string[] path)
+        async Task<object> ResolveObject(IContext context, RnetBus bus, string[] path)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentException>(path != null && path.Length > 0);
 
             // path represents a root object (controller, for now)
-            var o = await Module.FindObject(bus.Controllers, path[0]);
+            var o = await Root.FindObject(bus.Controllers, path[0]);
             if (o != null)
                 return new ResolveResponse(o, path.Skip(1).ToArray());
 
             return null;
         }
 
-        public override async Task<object> Get(RnetBus bus)
+        public override async Task<object> Get(IContext context, RnetBus bus)
         {
             // all devices available on the bus
             var l = await Task.WhenAll(Enumerable.Empty<RnetBusObject>()
                 .Concat(bus.Controllers)
                 .Concat(bus.Controllers.SelectMany(i => i.Zones).SelectMany(i => i.Devices))
                 .OfType<RnetDevice>()
-                .Select(i => Module.ObjectToData(i)));
+                .Select(i => Root.ObjectToData(context, i)));
 
             return new BusData()
             {
-                Uri = Context.GetBaseUri(),
+                Uri = context.GetBaseUri(),
                 Devices = new DeviceDataCollection(l.OfType<DeviceData>()),
                 Objects = new ObjectDataCollection(l.OfType<ObjectData>()),
             };

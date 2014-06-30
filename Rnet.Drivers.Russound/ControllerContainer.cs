@@ -50,7 +50,7 @@ namespace Rnet.Drivers.Russound
             return Task.FromResult(new object[]
             { 
                 new Zone(zone),
-                new Equalization(zone),
+                new Media.Audio.Zone(zone),
             });
         }
 

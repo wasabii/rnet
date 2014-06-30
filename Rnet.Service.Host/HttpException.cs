@@ -1,6 +1,5 @@
 ﻿using System;
-
-using Nancy;
+using System.Net;
 
 namespace Rnet.Service.Host
 {

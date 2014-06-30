@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 namespace Rnet.Drivers.Russound
 {
@@ -16,7 +18,7 @@ namespace Rnet.Drivers.Russound
         public Zone(RnetZone zone)
             : base(zone)
         {
-
+            Contract.Requires<ArgumentNullException>(zone != null);
         }
 
         protected override async Task Initialize()

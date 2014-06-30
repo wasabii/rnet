@@ -11,7 +11,8 @@ namespace Rnet.Service.Host.Processors
 {
 
     [RequestProcessor(typeof(RnetDevice), -75)]
-    public class DeviceRequestProcessor : ObjectRequestProcessor<RnetDevice>
+    public class DeviceRequestProcessor : 
+        ObjectRequestProcessor<RnetDevice>
     {
 
         /// <summary>
@@ -20,7 +21,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="target"></param>
         [ImportingConstructor]
         protected DeviceRequestProcessor(
-            BusModule module,
+            RootProcessor module,
             ProfileManager profileManager)
             : base(module, profileManager)
         {
@@ -28,13 +29,13 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(profileManager != null);
         }
 
-        public override async Task<object> Resolve(RnetDevice target, string[] path)
+        public override async Task<object> Resolve(IContext context, RnetDevice target, string[] path)
         {
             // referring to a data path
             if (path[0] == Util.DATA_URI_SEGMENT)
-                return await ResolveData(target, path);
+                return await ResolveData(context, target, path);
 
-            return await base.Resolve(target, path);
+            return await base.Resolve(context, target, path);
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace Rnet.Service.Host.Processors
         /// <param name="path"></param>
         /// <param name="dataPath"></param>
         /// <returns></returns>
-        Task<object> ResolveData(RnetDevice device, string[] path)
+        Task<object> ResolveData(IContext context, RnetDevice device, string[] path)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(path != null);
@@ -52,19 +53,19 @@ namespace Rnet.Service.Host.Processors
 
             // list of all available data items
             if (path.Length == 1)
-                return Task.FromResult<object>(ToDataCollection(device));
+                return Task.FromResult<object>(ToDataCollection(context, device));
             else
                 return Task.FromResult<object>(ResolveDataItem(device, path[1]));
         }
 
-        DataHandleCollection ToDataCollection(RnetDevice device)
+        DataHandleCollection ToDataCollection(IContext context, RnetDevice device)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(device.Data != null);
 
             return new DataHandleCollection(device.Data.Select(i => new DataHandleData()
             {
-                Uri = device.GetUri(Context).UriCombine(Util.DATA_URI_SEGMENT).UriCombine(i.Path.ToString()),
+                Uri = device.GetUri(context).UriCombine(Util.DATA_URI_SEGMENT).UriCombine(i.Path.ToString()),
                 Path = i.Path.ToString(),
             }));
         }

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 using Rnet.Profiles.Core;
 
@@ -18,7 +20,7 @@ namespace Rnet.Drivers.Default
         public Controller(RnetController controller)
             : base(controller)
         {
-
+            Contract.Requires<ArgumentNullException>(controller != null); 
         }
 
         public string Id

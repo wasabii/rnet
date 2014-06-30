@@ -1,10 +1,14 @@
-﻿namespace Rnet.Drivers.Default
+﻿using System;
+using System.Diagnostics.Contracts;
+
+namespace Rnet.Drivers.Default
 {
 
     /// <summary>
     /// Serves as a simple profile implementation base for a zone.
     /// </summary>
-    public abstract class ZoneBase : ProfileBase
+    public abstract class ZoneBase : 
+        ProfileBase
     {
 
         /// <summary>
@@ -14,7 +18,7 @@
         protected ZoneBase(RnetZone zone)
             : base(zone)
         {
-
+            Contract.Requires<ArgumentNullException>(zone != null);
         }
 
         protected new RnetZone Target

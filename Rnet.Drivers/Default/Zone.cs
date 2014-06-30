@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Diagnostics.Contracts;
 
 using Rnet.Profiles.Core;
 
@@ -8,7 +9,9 @@ namespace Rnet.Drivers.Default
     /// <summary>
     /// Provides a default implementation of <see cref="IZone"/> for a zone.
     /// </summary>
-    public class Zone : ZoneBase, IZone
+    public class Zone :
+        ZoneBase,
+        IZone
     {
 
         /// <summary>
@@ -18,7 +21,7 @@ namespace Rnet.Drivers.Default
         protected internal Zone(RnetZone zone)
             : base(zone)
         {
-
+            Contract.Requires<ArgumentNullException>(zone != null);
         }
 
         public string Id

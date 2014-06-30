@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using Nancy;
+
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 
@@ -19,21 +17,24 @@ namespace Rnet.Service.Host.Models
         /// Makes the specified <see cref="Uri"/> relative to the request.
         /// </summary>
         /// <param name="uri"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public static Uri MakeRelativeUri(this Uri uri, NancyContext context)
+        public static Uri MakeRelativeUri(this Uri uri, IContext context)
         {
             Contract.Requires<ArgumentNullException>(uri != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
-            return new Uri(context.Request.Url.ToString().TrimEnd('/') + '/').MakeRelativeUri(uri);
+            return new Uri(context.Request.Uri.ToString().TrimEnd('/') + '/').MakeRelativeUri(uri);
         }
 
         /// <summary>
         /// Returns the name of the object.
         /// </summary>
         /// <param name="o"></param>
+        /// <param name="profileManager"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<string> GetName(this RnetBusObject o, ProfileManager profileManager, NancyContext context)
+        public static async Task<string> GetName(this RnetBusObject o, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -51,8 +52,10 @@ namespace Rnet.Service.Host.Models
         /// Gets the Uri of the object.
         /// </summary>
         /// <param name="o"></param>
+        /// <param name="profileManager"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this RnetBusObject o, ProfileManager profileManager, NancyContext context)
+        public static async Task<Uri> GetUri(this RnetBusObject o, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -74,8 +77,10 @@ namespace Rnet.Service.Host.Models
         /// Gets the Uri of the object.
         /// </summary>
         /// <param name="o"></param>
+        /// <param name="profileManager"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, ProfileManager profileManager, NancyContext context)
+        public static async Task<Uri> GetFriendlyUri(this RnetBusObject o, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(context != null);
@@ -93,9 +98,10 @@ namespace Rnet.Service.Host.Models
         /// Gets the uri of the profile.
         /// </summary>
         /// <param name="profile"></param>
+        /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetUri(this ProfileHandle profile, ProfileManager profileManager, NancyContext context)
+        public static async Task<Uri> GetUri(this ProfileHandle profile, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -112,9 +118,10 @@ namespace Rnet.Service.Host.Models
         /// Gets the friendly uri of the profile.
         /// </summary>
         /// <param name="profile"></param>
+        /// <param name="profileManager"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, ProfileManager profileManager, NancyContext context)
+        public static async Task<Uri> GetFriendlyUri(this ProfileHandle profile, ProfileManager profileManager, IContext context)
         {
             Contract.Requires<ArgumentNullException>(profile != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
@@ -146,14 +153,15 @@ namespace Rnet.Service.Host.Models
         /// Gets the URL for the given <see cref="RnetDevice"/>.
         /// </summary>
         /// <param name="device"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public static Uri GetUri(this RnetDevice device, NancyContext context)
+        public static Uri GetUri(this RnetDevice device, IContext context)
         {
             Contract.Requires<ArgumentNullException>(device != null);
             Contract.Requires<ArgumentNullException>(context != null);
 
-            return context.GetBaseUri()
-                .UriCombine(":" + device.GetId());
+            // HACK appending by hand; mono URI combining seems to fail with ':'
+            return new Uri(context.GetBaseUri().ToString().TrimEnd('/') + "/:" + device.GetId());
         }
 
         /// <summary>
