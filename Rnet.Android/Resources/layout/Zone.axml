@@ -21,7 +21,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/volumeSeekBar"
         android:max="100"
-        android:layout_margin="8dp" />
+        android:layout_margin="8dp"
+        android:layout_marginTop="0dp" />
     <TextView
         android:text="Source"
         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -33,5 +34,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/sourceSpinner"
+        android:layout_margin="8dp"
+        android:layout_marginTop="0dp" />
+    <TextView
+        android:text="Bass"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bassLabel"
         android:layout_margin="8dp" />
+    <SeekBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bassSeekBar"
+        android:max="20"
+        android:layout_margin="8dp"
+        android:layout_marginTop="0dp" />
 </LinearLayout>
