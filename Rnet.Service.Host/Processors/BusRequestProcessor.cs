@@ -39,8 +39,8 @@ namespace Rnet.Service.Host.Processors
                 return HttpStatusCode.ServiceUnavailable;
 
             // path represents a direct device ID
-            if (path[0][0] == ':')
-                return ResolveDevice(context, bus, path, path[0].Substring(1));
+            if (path[0].StartsWith(Util.DEVICE_ID_PREFIX))
+                return ResolveDevice(context, bus, path, path[0].Substring(Util.DEVICE_ID_PREFIX.Length));
 
             return await ResolveObject(context, bus, path);
         }

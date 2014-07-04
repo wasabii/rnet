@@ -8,6 +8,11 @@ namespace Rnet.Service.Host
     {
 
         /// <summary>
+        /// Prefix to be appended to device ID paths.
+        /// </summary>
+        public static readonly string DEVICE_ID_PREFIX = "~";
+
+        /// <summary>
         /// Prefix to be prepended to the profile path.
         /// </summary>
         public static readonly string PROFILE_URI_PREFIX = "~";

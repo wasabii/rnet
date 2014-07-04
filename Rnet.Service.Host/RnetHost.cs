@@ -19,7 +19,7 @@ namespace Rnet.Service.Host
 
         readonly AsyncLock async = new AsyncLock();
         readonly RnetBus bus;
-        readonly Uri baseUri;
+        readonly string baseUri;
         readonly CompositionContainer container;
         IDisposable webApp;
 
@@ -29,12 +29,12 @@ namespace Rnet.Service.Host
         /// <param name="bus"></param>
         /// <param name="baseUri"></param>
         /// <param name="exports"></param>
-        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer exports)
+        public RnetHost(RnetBus bus, string baseUri, CompositionContainer exports)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
             Contract.Requires<ArgumentNullException>(exports != null);
-            Contract.Requires<ArgumentException>(baseUri.ToString().EndsWith("/"));
+            Contract.Requires<ArgumentException>(baseUri.EndsWith("/"));
 
             this.bus = bus;
             this.baseUri = baseUri;
@@ -51,13 +51,14 @@ namespace Rnet.Service.Host
         /// </summary>
         /// <param name="bus"></param>
         /// <param name="baseUri"></param>
-        public RnetHost(RnetBus bus, string baseUri, CompositionContainer exports)
-            : this(bus, new Uri(baseUri), exports)
+        /// <param name="exports"></param>
+        public RnetHost(RnetBus bus, Uri baseUri, CompositionContainer exports)
+            : this(bus, baseUri.ToString(), exports)
         {
             Contract.Requires<ArgumentNullException>(bus != null);
             Contract.Requires<ArgumentNullException>(baseUri != null);
             Contract.Requires<ArgumentNullException>(exports != null);
-            Contract.Requires<ArgumentException>(baseUri.EndsWith("/"));
+            Contract.Requires<ArgumentException>(baseUri.ToString().EndsWith("/"));
         }
 
         /// <summary>
@@ -77,7 +78,7 @@ namespace Rnet.Service.Host
             {
                 await Task.Yield();
 
-                webApp = WebApp.Start(new StartOptions(baseUri.ToString()), _ =>
+                webApp = WebApp.Start(new StartOptions(baseUri), _ =>
                 {
                     _.Use(async (context, func) =>
                     {
@@ -120,30 +121,6 @@ namespace Rnet.Service.Host
         {
             Stop();
         }
-
-        ///// <summary>
-        ///// Implements IStatusCodeHandler.HandlesStatusCode.
-        ///// </summary>
-        ///// <param name="statusCode"></param>
-        ///// <param name="context"></param>
-        ///// <returns></returns>
-        //bool IStatusCodeHandler.HandlesStatusCode(HttpStatusCode statusCode, IOwinContext context)
-        //{
-        //    Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
-
-        //    // check whether the reported status code is an error
-        //    return statusCode != HttpStatusCode.OK;
-        //}
-
-        ///// <summary>
-        ///// Implements IStatusCodeHandler.Handle.
-        ///// </summary>
-        ///// <param name="statusCode"></param>
-        ///// <param name="context"></param>
-        //void IStatusCodeHandler.Handle(HttpStatusCode statusCode, IOwinContext context)
-        //{
-        //    Console.WriteLine("{0} {1} : {2}", (int)statusCode, statusCode, context.Request.Url);
-        //}
 
         /// <summary>
         /// Finalizes the instance.

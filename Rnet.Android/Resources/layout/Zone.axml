@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:minWidth="25px"
+    android:minHeight="25px">
+    <ToggleButton
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/powerButton" />
+    <TextView
+        android:text="Volume"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/volumeLabel"
+        android:layout_margin="8dp" />
+    <SeekBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/volumeSeekBar"
+        android:max="100"
+        android:layout_margin="8dp"
+        android:layout_marginTop="0dp" />
+    <TextView
+        android:text="Source"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/sourceLabel"
+        android:layout_margin="8dp" />
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/sourceSpinner"
+        android:layout_margin="8dp"
+        android:layout_marginTop="0dp" />
+    <TextView
+        android:text="Bass"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bassLabel"
+        android:layout_margin="8dp" />
+    <SeekBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bassSeekBar"
+        android:max="20"
+        android:layout_margin="8dp"
+        android:layout_marginTop="0dp" />
+</LinearLayout>

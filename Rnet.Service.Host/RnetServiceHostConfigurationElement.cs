@@ -15,9 +15,9 @@ namespace Rnet.Service.Host
         /// Gets or sets the <see cref="Uri"/> to which the host will be published.
         /// </summary>
         [ConfigurationProperty("uri", IsRequired = true, IsKey = true)]
-        public Uri Uri
+        public string Uri
         {
-            get { return (Uri)this["uri"]; }
+            get { return (string)this["uri"]; }
             set { this["uri"] = value; }
         }
 
