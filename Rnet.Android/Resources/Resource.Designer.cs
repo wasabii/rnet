@@ -79,23 +79,38 @@ namespace Rnet.Android
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f070000
-			public const int linearLayout1 = 2131165184;
+			// aapt resource value: 0x7f080008
+			public const int bassLabel = 2131230728;
 			
-			// aapt resource value: 0x7f070001
-			public const int powerButton = 2131165185;
+			// aapt resource value: 0x7f080009
+			public const int bassSeekBar = 2131230729;
 			
-			// aapt resource value: 0x7f070004
-			public const int sourceLabel = 2131165188;
+			// aapt resource value: 0x7f080000
+			public const int linearLayout1 = 2131230720;
 			
-			// aapt resource value: 0x7f070005
-			public const int sourceSpinner = 2131165189;
+			// aapt resource value: 0x7f080002
+			public const int okButton = 2131230722;
 			
-			// aapt resource value: 0x7f070002
-			public const int volumeLabel = 2131165186;
+			// aapt resource value: 0x7f080003
+			public const int powerButton = 2131230723;
 			
-			// aapt resource value: 0x7f070003
-			public const int volumeSeekBar = 2131165187;
+			// aapt resource value: 0x7f08000a
+			public const int server = 2131230730;
+			
+			// aapt resource value: 0x7f080006
+			public const int sourceLabel = 2131230726;
+			
+			// aapt resource value: 0x7f080007
+			public const int sourceSpinner = 2131230727;
+			
+			// aapt resource value: 0x7f080001
+			public const int uri = 2131230721;
+			
+			// aapt resource value: 0x7f080004
+			public const int volumeLabel = 2131230724;
+			
+			// aapt resource value: 0x7f080005
+			public const int volumeSeekBar = 2131230725;
 			
 			static Id()
 			{
@@ -114,7 +129,10 @@ namespace Rnet.Android
 			public const int Main = 2130903040;
 			
 			// aapt resource value: 0x7f030001
-			public const int Zone = 2130903041;
+			public const int ServerEdit = 2130903041;
+			
+			// aapt resource value: 0x7f030002
+			public const int Zone = 2130903042;
 			
 			static Layout()
 			{
@@ -126,11 +144,30 @@ namespace Rnet.Android
 			}
 		}
 		
+		public partial class Menu
+		{
+			
+			// aapt resource value: 0x7f070000
+			public const int MainMenu = 2131165184;
+			
+			static Menu()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Menu()
+			{
+			}
+		}
+		
 		public partial class String
 		{
 			
 			// aapt resource value: 0x7f040000
 			public const int app_name = 2130968576;
+			
+			// aapt resource value: 0x7f040001
+			public const int server = 2130968577;
 			
 			static String()
 			{

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">RNet</string>
+    <string name="server">Server</string>
     <string-array name="sources_array">
         <item>Source 1</item>
         <item>Source 2</item>

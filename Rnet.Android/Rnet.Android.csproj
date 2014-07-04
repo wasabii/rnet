@@ -65,11 +65,13 @@
     <None Include="packages.config" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="App.config" />
+    <AndroidResource Include="Resources\layout\ServerEdit.axml">
+      <SubType>AndroidResource</SubType>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />
     <AndroidResource Include="Resources\values\Strings.xml" />
-    <AndroidResource Include="Resources\drawable\Icon.png" />
     <AndroidResource Include="Resources\layout\Zone.axml" />
   </ItemGroup>
   <ItemGroup>
@@ -81,7 +83,14 @@
       <Name>Rnet.Client</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\Rnet.Util\App1.projitems" Label="Shared" Condition="Exists('..\Rnet.Util\App1.projitems')" />
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\Icon.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\menu\MainMenu.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

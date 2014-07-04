@@ -35,7 +35,6 @@ Global
 		Rnet.Util\App1.projitems*{2e07278c-d001-4ba7-a9fb-782415210f91}*SharedItemsImports = 13
 		Rnet.Util\App1.projitems*{9e1bb758-b788-4c23-959b-201e27b221fc}*SharedItemsImports = 4
 		Rnet.Util\App1.projitems*{d1995648-ceda-4d71-a499-22c5ae84888b}*SharedItemsImports = 4
-		Rnet.Util\App1.projitems*{8866ad46-c3d6-4ab9-a095-1a31893b597b}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU
@@ -397,6 +396,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Rnet.Mobile\Rnet.Mobile.Android\Rnet.Mobile.Android.csproj
+		StartupItem = Rnet.Android\Rnet.Android.csproj
 	EndGlobalSection
 EndGlobal
