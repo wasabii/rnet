@@ -15,6 +15,8 @@ namespace Rnet.Service.Host.Net
         IEnumerable<MediaRange>
     {
 
+        public static readonly MediaRangeList Empty = new MediaRangeList();
+
         /// <summary>
         /// Parses a string representation of a media-range list.
         /// </summary>
@@ -22,7 +24,8 @@ namespace Rnet.Service.Host.Net
         /// <returns></returns>
         public static MediaRangeList Parse(string value)
         {
-            Contract.Requires<ArgumentNullException>(value != null);
+            if (value == null)
+                return MediaRangeList.Empty;
 
             return new MediaRangeList(value
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -36,8 +39,6 @@ namespace Rnet.Service.Host.Net
 
         public static implicit operator MediaRangeList(string value)
         {
-            Contract.Requires<ArgumentNullException>(value != null);
-
             return Parse(value);
         }
 

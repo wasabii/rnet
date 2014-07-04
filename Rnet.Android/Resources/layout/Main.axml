@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-<Button  
-    android:id="@+id/MyButton"
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/Hello"
-    />
-</LinearLayout>
+<TabHost xmlns:p1="http://schemas.android.com/apk/res/android"
+    p1:minWidth="25px"
+    p1:minHeight="25px"
+    p1:layout_width="fill_parent"
+    p1:layout_height="fill_parent"
+    p1:id="@android:id/tabhost">
+    <LinearLayout
+        p1:layout_width="fill_parent"
+        p1:layout_height="fill_parent"
+        p1:orientation="vertical"
+        p1:id="@+id/linearLayout1">
+        <TabWidget
+            p1:id="@android:id/tabs"
+            p1:layout_width="fill_parent"
+            p1:layout_height="wrap_content" />
+        <FrameLayout
+            p1:id="@android:id/tabcontent"
+            p1:layout_width="fill_parent"
+            p1:layout_height="fill_parent"
+            p1:padding="5dp" />
+    </LinearLayout>
+</TabHost>

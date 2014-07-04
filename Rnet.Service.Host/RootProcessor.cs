@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-
 using Rnet.Drivers;
 using Rnet.Profiles.Core;
 using Rnet.Service.Host.Models;
@@ -68,6 +68,22 @@ namespace Rnet.Service.Host
         /// <param name="context"></param>
         public async Task Invoke(IContext context)
         {
+            // handle index file
+            if (context.Request.Path.Value == "/index.html")
+            {
+                using (var mst = new MemoryStream())
+                using (var stm = typeof(RootProcessor).Assembly.GetManifestResourceStream("Rnet.Service.Host.index.html"))
+                {
+                    context.Response.ContentType = "text/html";
+                    context.Response.ContentLength = stm.Length;
+
+                    await stm.CopyToAsync(mst);
+                    await context.Response.WriteAsync(mst.ToArray());
+
+                    return;
+                }
+            }
+
             // handle the request
             var o = await HandleRequest(context);
             if (o == null)
