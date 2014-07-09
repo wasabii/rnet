@@ -17,6 +17,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Service", "Rnet.Servic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{103C6F76-F61B-4696-87F4-CD6E154B2F10}"
 	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.config = .nuget\NuGet.config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
 EndProject
@@ -32,9 +35,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rnet.Android", "Rnet.Androi
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Rnet.Util\App1.projitems*{2e07278c-d001-4ba7-a9fb-782415210f91}*SharedItemsImports = 13
-		Rnet.Util\App1.projitems*{9e1bb758-b788-4c23-959b-201e27b221fc}*SharedItemsImports = 4
-		Rnet.Util\App1.projitems*{d1995648-ceda-4d71-a499-22c5ae84888b}*SharedItemsImports = 4
+		Rnet.Util\Rnet.Util.projitems*{2e07278c-d001-4ba7-a9fb-782415210f91}*SharedItemsImports = 13
+		Rnet.Util\Rnet.Util.projitems*{9e1bb758-b788-4c23-959b-201e27b221fc}*SharedItemsImports = 4
+		Rnet.Util\Rnet.Util.projitems*{d1995648-ceda-4d71-a499-22c5ae84888b}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU
