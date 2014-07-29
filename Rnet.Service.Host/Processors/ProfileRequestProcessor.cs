@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-
 using Rnet.Drivers;
 using Rnet.Service.Host.Models;
+using Rnet.Service.Host.Net;
+using Rnet.Service.Host.Serialization;
 
 namespace Rnet.Service.Host.Processors
 {
@@ -25,21 +27,27 @@ namespace Rnet.Service.Host.Processors
 
         readonly RootProcessor module;
         readonly ProfileManager profileManager;
+        readonly IEnumerable<IBodyDeserializer> serializers;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="module"></param>
+        /// <param name="profileManager"></param>
+        /// <param name="serializers"></param>
         [ImportingConstructor]
         public ProfileRequestProcessor(
             RootProcessor module,
-            ProfileManager profileManager)
+            ProfileManager profileManager,
+            [ImportMany] IEnumerable<IBodyDeserializer> serializers)
         {
             Contract.Requires<ArgumentNullException>(module != null);
             Contract.Requires<ArgumentNullException>(profileManager != null);
+            Contract.Requires<ArgumentNullException>(serializers != null);
 
             this.module = module;
             this.profileManager = profileManager;
+            this.serializers = serializers;
         }
 
         public Task<object> Resolve(IContext context, object target, string[] path)
@@ -261,14 +269,50 @@ namespace Rnet.Service.Host.Processors
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            return Task.FromResult<object>(HttpStatusCode.NotImplemented);
+            var obj = Bind<ProfilePropertyRequest>(context);
+            if (obj == null)
+                return Task.FromResult<object>(HttpStatusCode.BadRequest);
+
+            // set new property value
+            property.Set(obj.Value);
+
+            return Task.FromResult<object>(HttpStatusCode.OK);
         }
 
         Task<object> Put(IContext context, ProfileCommandHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            return Task.FromResult<object>(HttpStatusCode.NotImplemented);
+            var obj = Bind<ProfileCommandRequest>(context);
+            if (obj == null)
+                return Task.FromResult<object>(HttpStatusCode.BadRequest);
+
+            // set new property value
+            property.Invoke(obj.Parameters.Select(i => i.Value).ToArray());
+
+            return Task.FromResult<object>(HttpStatusCode.OK);
+        }
+
+        /// <summary>
+        /// Deserializes the data from the given request.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        T Bind<T>(IContext context)
+        {
+            foreach (var mediaRange in MediaRangeList.Parse(context.Request.ContentType) + "application/json")
+            {
+                foreach (var serializer in serializers)
+                {
+                    if (serializer.CanDeserialize(typeof(T), mediaRange))
+                    {
+                        return (T)serializer.Deserialize(typeof(T), context.Request.Body);
+                    }
+                }
+            }
+
+            return default(T);
         }
 
     }

@@ -125,6 +125,10 @@
   <ItemGroup>
     <Compile Include="IContext.cs" />
     <Compile Include="IResponse.cs" />
+    <Compile Include="Models\ProfileCommandRequestJsonConverter.cs" />
+    <Compile Include="Models\ProfileCommandParameter.cs" />
+    <Compile Include="Models\ProfilePropertyRequest.cs" />
+    <Compile Include="Models\ProfileCommandRequest.cs" />
     <Compile Include="Net\MediaRange.cs" />
     <Compile Include="Net\MediaRangeList.cs" />
     <Compile Include="Net\MediaRangeParameters.cs" />
@@ -200,6 +204,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\IBodyDeserializer.cs" />
     <Compile Include="Serialization\IBodySerializer.cs" />
+    <Compile Include="Serialization\JsonBodyDeserializer.cs" />
     <Compile Include="Serialization\JsonBodySerializer.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="Util.cs" />
