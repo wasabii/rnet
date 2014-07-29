@@ -175,7 +175,7 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="..\Rnet.Util\App1.projitems" Label="Shared" Condition="Exists('..\Rnet.Util\App1.projitems')" />
+  <Import Project="..\Rnet.Util\Rnet.Util.projitems" Label="Shared" Condition="Exists('..\Rnet.Util\Rnet.Util.projitems')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
 </Project>
