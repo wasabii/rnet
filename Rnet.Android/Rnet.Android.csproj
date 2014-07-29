@@ -38,6 +38,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <DefineConstants>PCL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
