@@ -92,7 +92,6 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(path != null);
 
             return Task.FromResult<object>(null);
-            //return Task.FromResult<object>(new ResolveResponse(property, path.Skip(1).ToArray()));
         }
 
         Task<object> Resolve(IContext context, ProfileCommandHandle command, string[] path)
@@ -101,7 +100,6 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(path != null);
 
             return Task.FromResult<object>(null);
-            //return Task.FromResult<object>(new ResolveResponse(property, path.Skip(1).ToArray()));
         }
 
         public Task<object> Get(IContext context, object target)
