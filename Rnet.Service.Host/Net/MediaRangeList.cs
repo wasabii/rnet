@@ -101,6 +101,15 @@ namespace Rnet.Service.Host.Net
         }
 
         /// <summary>
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="source"></param>
+        MediaRangeList(ImmutableList<MediaRange> source)
+        {
+            items = source;
+        }
+
+        /// <summary>
         /// Adds a new <see cref="MediaRange"/> to the beginning of the <see cref="MediaRangeList"/>.
         /// </summary>
         /// <param name="mediaRange"></param>
@@ -208,6 +217,16 @@ namespace Rnet.Service.Host.Net
         public override int GetHashCode()
         {
             return this.Aggregate(0, (i, j) => i ^ j.GetHashCode());
+        }
+
+        public MediaRangeList Sort()
+        {
+            return new MediaRangeList(items.Sort(Compare));
+        }
+
+        int Compare(MediaRange a, MediaRange b)
+        {
+            return -1;
         }
 
     }

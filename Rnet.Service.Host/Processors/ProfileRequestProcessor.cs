@@ -263,18 +263,19 @@ namespace Rnet.Service.Host.Processors
             return Task.FromResult<object>(HttpStatusCode.NotImplemented);
         }
 
-        Task<object> Put(IContext context, ProfilePropertyHandle property)
+        async Task<object> Put(IContext context, ProfilePropertyHandle property)
         {
             Contract.Requires<ArgumentNullException>(property != null);
 
-            var obj = Bind<ProfilePropertyRequest>(context);
+            var obj = Bind<ProfilePropertyRequest>(context, new ProfilePropertyRequest() { Type = property.Get().GetType() });
             if (obj == null)
                 return Task.FromResult<object>(HttpStatusCode.BadRequest);
 
             // set new property value
             property.Set(obj.Value);
 
-            return Task.FromResult<object>(HttpStatusCode.OK);
+            // return new property data
+            return await PropertyToData(context, property);
         }
 
         Task<object> Put(IContext context, ProfileCommandHandle property)
@@ -297,20 +298,25 @@ namespace Rnet.Service.Host.Processors
         /// <typeparam name="T"></typeparam>
         /// <param name="context"></param>
         /// <returns></returns>
-        T Bind<T>(IContext context)
+        T Bind<T>(IContext context, T target)
         {
             foreach (var mediaRange in MediaRangeList.Parse(context.Request.ContentType) + "application/json")
             {
                 foreach (var serializer in serializers)
                 {
-                    if (serializer.CanDeserialize(typeof(T), mediaRange))
+                    if (serializer.CanDeserialize(typeof(T), target, mediaRange))
                     {
-                        return (T)serializer.Deserialize(typeof(T), context.Request.Body);
+                        return (T)serializer.Deserialize(typeof(T), target, context.Request.Body);
                     }
                 }
             }
 
             return default(T);
+        }
+
+        T Bind<T>(IContext context)
+        {
+            return Bind<T>(context, default(T));
         }
 
     }

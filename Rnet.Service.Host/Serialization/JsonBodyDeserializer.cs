@@ -51,12 +51,12 @@ namespace Rnet.Service.Host.Serialization
             this.serializer.Formatting = Newtonsoft.Json.Formatting.Indented;
         }
 
-        public bool CanDeserialize(Type type, MediaRange mediaRange)
+        public bool CanDeserialize(Type type, object target, MediaRange mediaRange)
         {
             return IsJsonType(mediaRange);
         }
 
-        public object Deserialize(Type type, Stream input)
+        public object Deserialize(Type type, object target, Stream input)
         {
             using (var rdr = new JsonTextReader(new StreamReader(input)))
                 return serializer.Deserialize(rdr, type);

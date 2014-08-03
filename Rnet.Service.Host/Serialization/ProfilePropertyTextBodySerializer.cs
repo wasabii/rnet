@@ -14,7 +14,7 @@ namespace Rnet.Service.Host.Serialization
 
         public bool CanSerialize(object value, MediaRange mediaRange)
         {
-            return value is ProfilePropertyData && mediaRange.Matches("text/plain");
+            return value is ProfilePropertyData && mediaRange == "text/plain";
         }
 
         public void Serialize(object value, MediaRange mediaRange, Stream output)

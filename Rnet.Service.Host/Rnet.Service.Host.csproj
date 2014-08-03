@@ -206,6 +206,7 @@
     <Compile Include="Serialization\IBodySerializer.cs" />
     <Compile Include="Serialization\JsonBodyDeserializer.cs" />
     <Compile Include="Serialization\JsonBodySerializer.cs" />
+    <Compile Include="Serialization\ProfilePropertyTextBodyDeserializer.cs" />
     <Compile Include="Serialization\ProfilePropertyTextBodySerializer.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="Util.cs" />
