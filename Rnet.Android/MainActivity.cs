@@ -13,7 +13,7 @@ namespace Rnet.Android
         TabActivity
     {
 
-        Uri baseUri = new Uri("http://kyoto.cogito.cx:12292/rnet/~0.0.127/");
+        Uri baseUri = new Uri("http://192.168.0.5:12292/rnet/~0.0.127/");
 
         /// <summary>
         /// Called when the activity is created.

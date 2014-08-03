@@ -4,10 +4,10 @@
     <string name="server">Server</string>
     <string-array name="sources_array">
         <item>Source 1</item>
-        <item>Source 2</item>
+        <item>Squeezebox</item>
         <item>Source 3</item>
         <item>Source 4</item>
         <item>Source 5</item>
-        <item>Source 6</item>
+        <item>Bluetooth</item>
     </string-array>
 </resources>
