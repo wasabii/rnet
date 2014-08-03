@@ -4,4 +4,3 @@ obj
 *.user
 TestResults
 /packages/*
-*.userprefs
