@@ -2,12 +2,10 @@
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
+using System.Security.Principal;
 using System.Threading.Tasks;
-
 using Microsoft.Owin.Hosting;
-
 using Nito.AsyncEx;
-
 using Owin;
 
 namespace Rnet.Service.Host
@@ -77,6 +75,9 @@ namespace Rnet.Service.Host
             using (await async.LockAsync())
             {
                 await Task.Yield();
+
+                // allocate URL listener
+                Win32.HttpApi.ReserveURL(baseUri, WindowsIdentity.GetCurrent().User);
 
                 webApp = WebApp.Start(new StartOptions(baseUri), _ =>
                 {

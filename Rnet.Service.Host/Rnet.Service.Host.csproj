@@ -210,6 +210,16 @@
     <Compile Include="Serialization\ProfilePropertyTextBodySerializer.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="Util.cs" />
+    <Compile Include="Win32\HttpApi.cs" />
+    <Compile Include="Win32\HTTPAPI_VERSION.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_ID.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_IP_LISTEN_PARAM.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_SSL_KEY.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_SSL_PARAM.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_SSL_SET.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_URLACL_KEY.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_URLACL_PARAM.cs" />
+    <Compile Include="Win32\HTTP_SERVICE_CONFIG_URLACL_SET.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
@@ -233,12 +243,4 @@
     <EmbeddedResource Include="index.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
