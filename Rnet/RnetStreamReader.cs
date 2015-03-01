@@ -21,6 +21,8 @@ namespace Rnet
         /// <param name="source"></param>
         public RnetStreamReader(Stream source)
         {
+            Contract.Requires<ArgumentNullException>(source != null);
+
             Source = source;
         }
 

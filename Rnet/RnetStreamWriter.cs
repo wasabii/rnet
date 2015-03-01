@@ -21,6 +21,8 @@ namespace Rnet
         /// <param name="rnet"></param>
         internal RnetStreamWriter(Stream stream)
         {
+            Contract.Requires<ArgumentNullException>(stream != null);
+
             Stream = stream;
         }
 

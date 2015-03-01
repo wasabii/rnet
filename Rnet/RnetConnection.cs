@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Nito.AsyncEx;
 
 namespace Rnet
