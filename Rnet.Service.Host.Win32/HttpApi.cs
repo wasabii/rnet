@@ -17,7 +17,7 @@ namespace Rnet.Service.Host.Win32
         static readonly HTTPAPI_VERSION HTTPAPI_VERSION_2 = new HTTPAPI_VERSION(2, 0);
 
         [DllImport("httpapi.dll", SetLastError = true)]
-        public static extern uint HttpInitialize(
+        static extern uint HttpInitialize(
             HTTPAPI_VERSION Version,
             uint Flags,
             IntPtr pReserved);
@@ -43,7 +43,12 @@ namespace Rnet.Service.Host.Win32
             uint Flags,
             IntPtr pReserved);
 
-        public static void ReserveURL(string networkURL, SecurityIdentifier sid)
+        /// <summary>
+        /// Reserves the specififed network URL for the given <see cref="SecurityIdentifier"/>.
+        /// </summary>
+        /// <param name="networkURL"></param>
+        /// <param name="sid"></param>
+        public static void ReserveUrl(string networkURL, SecurityIdentifier sid)
         {
             var retVal = (uint)NOERROR; // NOERROR = 0
 

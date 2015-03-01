@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Owin.Hosting;
 using Nito.AsyncEx;
 using Owin;
+using Rnet.Service.Host.Win32;
 
 namespace Rnet.Service.Host
 {
@@ -77,8 +78,9 @@ namespace Rnet.Service.Host
                 await Task.Yield();
 
                 // allocate URL listener
-                Win32.HttpApi.ReserveURL(baseUri, WindowsIdentity.GetCurrent().User);
+                HttpApi.ReserveUrl(baseUri, WindowsIdentity.GetCurrent().User);
 
+                // spawn web application
                 webApp = WebApp.Start(new StartOptions(baseUri), _ =>
                 {
                     _.Use(async (context, func) =>

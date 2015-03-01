@@ -84,8 +84,6 @@ namespace Rnet
             if (writer == null)
                 throw new RnetException("Unable to obtain RnetWriter.");
 
-            Console.WriteLine("Got Writer");
-
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }
 
@@ -111,8 +109,6 @@ namespace Rnet
             await Disconnect(cancellationToken);
             reader = null;
             writer = null;
-
-            Console.WriteLine("Closed and stuff");
 
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }

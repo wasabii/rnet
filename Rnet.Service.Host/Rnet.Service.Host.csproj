@@ -210,16 +210,6 @@
     <Compile Include="Serialization\ProfilePropertyTextBodySerializer.cs" />
     <Compile Include="SingleThreadSynchronizationContext.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="Win32\HttpApi.cs" />
-    <Compile Include="Win32\HTTPAPI_VERSION.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_ID.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_IP_LISTEN_PARAM.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_SSL_KEY.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_SSL_PARAM.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_SSL_SET.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_URLACL_KEY.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_URLACL_PARAM.cs" />
-    <Compile Include="Win32\HTTP_SERVICE_CONFIG_URLACL_SET.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rnet.Drivers\Rnet.Drivers.csproj">
@@ -229,6 +219,10 @@
     <ProjectReference Include="..\Rnet.Profiles\Rnet.Profiles.csproj">
       <Project>{A12246AC-A28F-4C52-8EAB-CDD6F0B2896E}</Project>
       <Name>Rnet.Profiles</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rnet.Service.Host.Win32\Rnet.Service.Host.Win32.csproj">
+      <Project>{20b5ffe2-e814-4bc3-bdc0-2e75c3aec410}</Project>
+      <Name>Rnet.Service.Host.Win32</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rnet\Rnet.csproj">
       <Project>{9E1BB758-B788-4C23-959B-201E27B221FC}</Project>
@@ -243,4 +237,11 @@
     <EmbeddedResource Include="index.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
 </Project>
