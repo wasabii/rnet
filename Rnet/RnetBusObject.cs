@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -15,6 +16,8 @@ namespace Rnet
         internal protected RnetBusObject(RnetBus bus)
             : base()
         {
+            Contract.Requires<ArgumentNullException>(bus != null);
+
             Bus = bus;
             Timestamp = DateTime.MinValue;
         }

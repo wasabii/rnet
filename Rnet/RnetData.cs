@@ -10,13 +10,7 @@ namespace Rnet
     public struct RnetData : IEnumerable<byte>
     {
 
-        byte[] data;
-
-        [ContractInvariantMethod]
-        void ObjectInvariant()
-        {
-            Contract.Invariant(data != null);
-        }
+        readonly byte[] data;
 
 
         /// <summary>
