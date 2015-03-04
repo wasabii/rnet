@@ -110,6 +110,8 @@
     <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Net\Sockets\SocketAsyncEventArgsExtensions.cs" />
+    <Compile Include="Net\Sockets\SocketExtensions.cs" />
     <Compile Include="RnetBusConfigurationElement.cs" />
     <Compile Include="RnetConnectionConfigurationCollection.cs" />
     <Compile Include="RnetConnectionConfigurationElement.cs" />
