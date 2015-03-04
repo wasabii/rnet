@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Nito.AsyncEx;
 
 namespace Rnet
@@ -84,8 +84,6 @@ namespace Rnet
             if (writer == null)
                 throw new RnetException("Unable to obtain RnetWriter.");
 
-            Console.WriteLine("Got Writer");
-
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }
 
@@ -111,8 +109,6 @@ namespace Rnet
             await Disconnect(cancellationToken);
             reader = null;
             writer = null;
-
-            Console.WriteLine("Closed and stuff");
 
             OnStateChanged(new RnetConnectionStateEventArgs(State));
         }

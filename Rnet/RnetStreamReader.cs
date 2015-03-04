@@ -15,63 +15,55 @@ namespace Rnet
     public class RnetStreamReader
     {
 
+        readonly Stream source;
+        readonly byte[] buffer;
+        int l;
+        int p;
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="source"></param>
         public RnetStreamReader(Stream source)
         {
-            Source = source;
-        }
+            Contract.Requires<ArgumentNullException>(source != null);
 
-        /// <summary>
-        /// Gets a reference to the source <see cref="Source"/>
-        /// </summary>
-        public Stream Source { get; private set; }
+            this.source = source;
+            this.buffer = new byte[1024];
+            this.p = 0;
+        }
 
         /// <summary>
         /// Reads a single byte, or returns the exception that occurred while attempting to.
         /// </summary>
         /// <param name="exception"></param>
         /// <returns></returns>
-        int ReadByte(out Exception exception)
-        {
-            try
-            {
-                exception = null;
-
-                var b = Source.ReadByte();
-                if (b == -1)
-                    throw new EndOfStreamException();
-
-                return b;
-            }
-            catch (Exception e)
-            {
-                exception = e;
-                return -1;
-            }
-        }
-
-        /// <summary>
-        /// Reads a single byte from the source stream.
-        /// </summary>
-        /// <returns></returns>
         async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
         {
-            Exception e = null;
-
-            while (!cancellationToken.IsCancellationRequested)
+            // position is at end of buffer, reset
+            if (p >= l)
             {
-                var b = await Task.Run(() => (byte)ReadByte(out e), cancellationToken);
-                if (e != null)
-                    throw e;
-
-                // return byte
-                return b;
+                p = 0;
+                l = 0;
             }
 
-            throw new RnetException("Could not read from underlying stream.");
+            // position is currently unallocated
+            if (p == 0)
+            {
+                try
+                {
+                    // read new data into buffer and obtain length
+                    l = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                    if (l == -1)
+                        throw new EndOfStreamException();
+                }
+                catch (Exception e)
+                {
+                    throw new RnetException("Unable to read from underlying stream.", e);
+                }
+            }
+
+            return buffer[p++];
         }
 
         /// <summary>

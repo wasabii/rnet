@@ -1,4 +1,8 @@
-﻿namespace Rnet
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+
+namespace Rnet
 {
 
     /// <summary>
@@ -17,7 +21,8 @@
         public RnetController(RnetBus bus, RnetControllerId id)
             : base(bus)
         {
-            RnetTraceSource.Default.TraceInformation("RnetController:ctor Id={0}", id);
+            Contract.Requires<ArgumentNullException>(bus != null);
+            RnetTraceSource.Default.TraceEvent(TraceEventType.Verbose, 0, "RnetController:ctor Id={0}", id);
 
             this.id = id;
             this.zones = new RnetZoneCollection(this);

@@ -1,5 +1,14 @@
 ﻿using System;
 
+using Topshelf;
+using Topshelf.Configurators;
+using Topshelf.ServiceConfigurators;
+using Topshelf.Hosts;
+using Topshelf.HostConfigurators;
+using Topshelf.Builders;
+using Topshelf.Options;
+using Topshelf.Runtime;
+
 namespace Rnet.Service
 {
 
@@ -12,21 +21,17 @@ namespace Rnet.Service
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            using (var s = new ServiceImpl())
+            HostFactory.Run(x =>
             {
-                Console.WriteLine("Starting ...");
-                s.OnStart(args);
-                Console.WriteLine("Started ...");
-
-                Console.ReadLine();
-
-                Console.WriteLine("Stopping ...");
-                s.OnStop();
-                Console.WriteLine("Stopped ...");
-
-                Console.WriteLine("Press any key to exit.");
-                Console.ReadLine();
-            }
+                x.SetDisplayName("Rnet");
+                x.SetDescription("Rnet sevice bus implementation");
+                x.Service<ServiceImpl>((ServiceConfigurator<ServiceImpl> s) =>
+                {
+                    s.ConstructUsing(() => new ServiceImpl());
+                    s.WhenStarted(tc => tc.OnStart(args));
+                    s.WhenStopped(tc => tc.OnStop());
+                });
+            });
         }
 
     }

@@ -13,7 +13,7 @@ namespace Rnet
     public sealed class RnetContext
     {
 
-        Dictionary<Type, object> extensions =
+        readonly Dictionary<Type, object> extensions =
             new Dictionary<Type, object>();
 
         /// <summary>
@@ -25,10 +25,8 @@ namespace Rnet
         object Validate(Type type, object o)
         {
             Contract.Requires<ArgumentNullException>(type != null);
-
-
-            if (o != null && !type.IsInstanceOfType(o))
-                throw new InvalidCastException("Value must be of Key type.");
+            Contract.Requires<ArgumentNullException>(o != null);
+            Contract.Requires<ArgumentOutOfRangeException>(type.IsInstanceOfType(o));
 
             return o;
         }
@@ -92,6 +90,8 @@ namespace Rnet
         public object Set(Type type, object value)
         {
             Contract.Requires<ArgumentNullException>(type != null);
+            Contract.Requires<ArgumentNullException>(value != null);
+            Contract.Requires<ArgumentOutOfRangeException>(type.IsInstanceOfType(value));
 
             return extensions[type] = Validate(type, value);
         }

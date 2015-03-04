@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Rnet
 {
@@ -12,6 +13,8 @@ namespace Rnet
         /// <param name="state"></param>
         internal RnetConnectionStateEventArgs(RnetConnectionState state)
         {
+            Contract.Requires<ArgumentNullException>(state != null);
+
             State = state;
         }
 

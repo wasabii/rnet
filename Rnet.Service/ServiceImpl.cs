@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
-
+using System.Diagnostics.Contracts;
 using Nito.AsyncEx;
-
 using Rnet.Service.Host;
 
 namespace Rnet.Service
@@ -17,6 +16,8 @@ namespace Rnet.Service
         IDisposable
     {
 
+        static readonly SafeApplicationCatalog catalog = new SafeApplicationCatalog();
+
         /// <summary>
         /// Describes a running instance.
         /// </summary>
@@ -26,15 +27,24 @@ namespace Rnet.Service
             /// <summary>
             /// Initializes a new instance.
             /// </summary>
+            /// <param name="container"></param>
             /// <param name="sync"></param>
             /// <param name="bus"></param>
             /// <param name="host"></param>
-            public Instance(AsyncContextThread sync, RnetBus bus, RnetHost host)
+            public Instance(CompositionContainer container, AsyncContextThread sync, RnetBus bus, RnetHost host)
             {
+                Contract.Requires<ArgumentNullException>(container != null);
+                Contract.Requires<ArgumentNullException>(sync != null);
+                Contract.Requires<ArgumentNullException>(bus != null);
+                Contract.Requires<ArgumentNullException>(host != null);
+
+                Container = container;
                 Context = sync;
                 Bus = bus;
                 Host = host;
             }
+
+            public CompositionContainer Container { get; set; }
 
             public AsyncContextThread Context { get; set; }
 
@@ -44,7 +54,6 @@ namespace Rnet.Service
 
         }
 
-        readonly CompositionContainer container;
         readonly List<Instance> instances;
 
         /// <summary>
@@ -52,44 +61,48 @@ namespace Rnet.Service
         /// </summary>
         public ServiceImpl()
         {
-            this.container = new CompositionContainer(new SafeApplicationCatalog());
             this.instances = new List<Instance>();
         }
 
+        /// <summary>
+        /// Invoke this method upon start.
+        /// </summary>
+        /// <param name="args"></param>
         public void OnStart(string[] args)
         {
+            Contract.Requires<ArgumentNullException>(args != null);
+
             var sect = RnetServiceConfigurationSection.GetDefaultSection();
             if (sect == null)
                 throw new ConfigurationErrorsException("Rnet.Service configuration not found.");
 
+            // spawn each host
             foreach (var conf in sect.Hosts)
             {
-                // expose new bus on a new host
+                // expose new bus on a new host with new container
+                var container = new CompositionContainer(catalog);
                 var context = new AsyncContextThread();
                 var bus = new RnetBus(conf.Bus);
                 var host = new RnetHost(bus, conf.Uri, container);
-                instances.Add(new Instance(context, bus, host));
+                instances.Add(new Instance(container, context, bus, host));
 
-                try
+                // schedule initialization
+                context.Factory.Run(async () =>
                 {
-                    // schedule initialization
-                    context.Factory.Run(async () =>
-                    {
-                        await bus.Start();
-                        await host.StartAsync();
-                    }).Wait();
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
+                    await bus.Start();
+                    await host.StartAsync();
+                }).Wait();
             }
         }
 
+        /// <summary>
+        /// Invoke this method upon stop.
+        /// </summary>
         public void OnStop()
         {
             foreach (var item in instances.ToArray())
             {
+                var container = item.Container;
                 var context = item.Context;
                 var bus = item.Bus;
                 var host = item.Host;
@@ -99,6 +112,9 @@ namespace Rnet.Service
                 {
                     await host.StopAsync();
                     await bus.Stop();
+                    
+                    // dispose container
+                    container.Dispose();
                 });
 
                 // wait for exit
@@ -107,6 +123,9 @@ namespace Rnet.Service
             }
         }
 
+        /// <summary>
+        /// Disposes of the instance.
+        /// </summary>
         public void Dispose()
         {
             OnStop();
