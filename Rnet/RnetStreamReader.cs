@@ -38,7 +38,7 @@ namespace Rnet
         /// </summary>
         /// <param name="exception"></param>
         /// <returns></returns>
-        async Task<byte> ReadByte(CancellationToken cancellationToken)
+        async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
         {
             // position is at end of buffer, reset
             if (p >= l)
@@ -50,34 +50,20 @@ namespace Rnet
             // position is currently unallocated
             if (p == 0)
             {
-                // read new data into buffer and obtain length
-                l = await source.ReadAsync(buffer, 0, 512, cancellationToken);
-                if (l == -1)
-                    throw new EndOfStreamException();
+                try
+                {
+                    // read new data into buffer and obtain length
+                    l = await source.ReadAsync(buffer, 0, 512, cancellationToken);
+                    if (l == -1)
+                        throw new EndOfStreamException();
+                }
+                catch (Exception e)
+                {
+                    throw new RnetException("Unable to read from underlying stream.", e);
+                }
             }
 
             return buffer[p++];
-        }
-
-        /// <summary>
-        /// Reads a single byte from the source stream.
-        /// </summary>
-        /// <returns></returns>
-        async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
-        {
-            Exception e = null;
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var b = await ReadByte(cancellationToken);
-                if (e != null)
-                    throw e;
-
-                // return byte
-                return b;
-            }
-
-            throw new RnetException("Could not read from underlying stream.");
         }
 
         /// <summary>
