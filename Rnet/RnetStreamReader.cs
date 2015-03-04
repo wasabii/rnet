@@ -15,6 +15,11 @@ namespace Rnet
     public class RnetStreamReader
     {
 
+        Stream source;
+        byte[] buffer;
+        int l;
+        int p;
+
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
@@ -23,36 +28,35 @@ namespace Rnet
         {
             Contract.Requires<ArgumentNullException>(source != null);
 
-            Source = source;
+            this.source = source;
+            this.buffer = new byte[512];
+            this.p = 0;
         }
-
-        /// <summary>
-        /// Gets a reference to the source <see cref="Source"/>
-        /// </summary>
-        public Stream Source { get; private set; }
 
         /// <summary>
         /// Reads a single byte, or returns the exception that occurred while attempting to.
         /// </summary>
         /// <param name="exception"></param>
         /// <returns></returns>
-        int ReadByte(out Exception exception)
+        async Task<byte> ReadByte(CancellationToken cancellationToken)
         {
-            try
+            // position is at end of buffer, reset
+            if (p >= l)
             {
-                exception = null;
+                p = 0;
+                l = 0;
+            }
 
-                var b = Source.ReadByte();
-                if (b == -1)
+            // position is currently unallocated
+            if (p == 0)
+            {
+                // read new data into buffer and obtain length
+                l = await source.ReadAsync(buffer, 0, 512, cancellationToken);
+                if (l == -1)
                     throw new EndOfStreamException();
+            }
 
-                return b;
-            }
-            catch (Exception e)
-            {
-                exception = e;
-                return -1;
-            }
+            return buffer[p++];
         }
 
         /// <summary>
@@ -65,7 +69,7 @@ namespace Rnet
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var b = await Task.Run(() => (byte)ReadByte(out e), cancellationToken);
+                var b = await ReadByte(cancellationToken);
                 if (e != null)
                     throw e;
 
