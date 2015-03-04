@@ -15,8 +15,8 @@ namespace Rnet
     public class RnetStreamReader
     {
 
-        Stream source;
-        byte[] buffer;
+        readonly Stream source;
+        readonly byte[] buffer;
         int l;
         int p;
 
@@ -29,7 +29,7 @@ namespace Rnet
             Contract.Requires<ArgumentNullException>(source != null);
 
             this.source = source;
-            this.buffer = new byte[512];
+            this.buffer = new byte[1024];
             this.p = 0;
         }
 
@@ -53,7 +53,7 @@ namespace Rnet
                 try
                 {
                     // read new data into buffer and obtain length
-                    l = await source.ReadAsync(buffer, 0, 512, cancellationToken);
+                    l = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                     if (l == -1)
                         throw new EndOfStreamException();
                 }
