@@ -30,8 +30,7 @@ namespace Rnet.Drivers
             readonly DriverManager driverManager;
             readonly ProfileManager profileManager;
             readonly RnetBusObject target;
-
-            Task<ProfileHandle[]> profiles;
+            readonly Lazy<Task<ProfileHandle[]>> profiles;
 
             /// <summary>
             /// Initializes a new instance.
@@ -49,6 +48,8 @@ namespace Rnet.Drivers
                 this.driverManager = driverManager;
                 this.profileManager = profileManager;
                 this.target = target;
+
+                this.profiles = new Lazy<Task<ProfileHandle[]>>(async () => await CreateProfiles(RequestProfiles()), true);
             }
 
             /// <summary>
@@ -174,7 +175,7 @@ namespace Rnet.Drivers
             public Task<ProfileHandle[]> GetProfiles()
             {
                 // fetch from catch or build
-                return profiles ?? (profiles = CreateProfiles(RequestProfiles()));
+                return profiles.Value;
             }
 
         }
