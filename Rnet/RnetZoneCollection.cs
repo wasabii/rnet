@@ -25,6 +25,8 @@ namespace Rnet
         /// </summary>
         internal RnetZoneCollection(RnetController controller)
         {
+            Contract.Requires<ArgumentNullException>(controller != null);
+
             this.controller = controller;
             this.zones = new ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>>();
         }

@@ -20,8 +20,8 @@ namespace Rnet.Profiles.Metadata
         string id;
         string ns;
         string name;
-        PropertyDescriptorCollection values;
-        CommandDescriptorCollection operations;
+        readonly PropertyDescriptorCollection values;
+        readonly CommandDescriptorCollection operations;
 
         /// <summary>
         /// Initializes a new instance.

@@ -65,7 +65,7 @@ namespace Rnet.Service.Host.Processors
         {
             // referring to a profile
             if (path[0].StartsWith(Util.PROFILE_URI_PREFIX))
-                return await ResolveProfile(context,target, path, path[0].Substring(Util.PROFILE_URI_PREFIX.Length));
+                return await ResolveProfile(context, target, path, path[0].Substring(Util.PROFILE_URI_PREFIX.Length));
 
             // object contains other objects
             var c = await profileManager.GetProfile<IContainer>(target);
@@ -108,7 +108,7 @@ namespace Rnet.Service.Host.Processors
 
         public override async Task<object> Get(IContext context, T target)
         {
-            return await ObjectToData(context,target);
+            return await ObjectToData(context, target);
         }
 
         public override Task<object> Put(IContext context, T target)
@@ -128,9 +128,9 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
 
             if (o is RnetDevice)
-                return await DeviceToData(context,(RnetDevice)o);
+                return await DeviceToData(context, (RnetDevice)o);
 
-            return await FillObjectData(context,o, new ObjectData());
+            return await FillObjectData(context, o, new ObjectData());
         }
 
         /// <summary>
@@ -148,8 +148,8 @@ namespace Rnet.Service.Host.Processors
             d.FriendlyUri = await o.GetFriendlyUri(profileManager, context);
             d.Id = await o.GetId(profileManager);
             d.Name = await o.GetName(profileManager, context);
-            d.Objects = await GetObjects(context,o);
-            d.Profiles = await GetProfileRefs(context,o);
+            d.Objects = await GetObjects(context, o);
+            d.Profiles = await GetProfileRefs(context, o);
             return d;
         }
 
@@ -163,9 +163,9 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
 
             if (o is RnetController)
-                return await ControllerToData(context,(RnetController)o);
+                return await ControllerToData(context, (RnetController)o);
 
-            return await FillDeviceData(context,o, new DeviceData());
+            return await FillDeviceData(context, o, new DeviceData());
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
 
-            await FillObjectData(context,o, d);
+            await FillObjectData(context, o, d);
             d.RnetId = o.GetId();
             d.DataUri = o.GetUri(context).UriCombine(Util.DATA_URI_SEGMENT);
             return d;
@@ -194,7 +194,7 @@ namespace Rnet.Service.Host.Processors
         {
             Contract.Requires<ArgumentNullException>(d != null);
 
-            return await FillControllerData(context,d, new ControllerData());
+            return await FillControllerData(context, d, new ControllerData());
         }
 
         /// <summary>
@@ -208,7 +208,7 @@ namespace Rnet.Service.Host.Processors
             Contract.Requires<ArgumentNullException>(o != null);
             Contract.Requires<ArgumentNullException>(d != null);
 
-            await FillDeviceData(context,o, d);
+            await FillDeviceData(context, o, d);
             return d;
         }
 
@@ -223,7 +223,7 @@ namespace Rnet.Service.Host.Processors
 
             // load container
             var p = await profileManager.GetProfile<IContainer>(o) ?? Enumerable.Empty<RnetBusObject>();
-            return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(context,i))));
+            return new ObjectDataCollection(await Task.WhenAll(p.Select(i => ObjectToData(context, i))));
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace Rnet.Service.Host.Processors
 
             // load container
             var p = await profileManager.GetProfiles(o) ?? Enumerable.Empty<ProfileHandle>();
-            return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(context,i))));
+            return new ProfileRefCollection(await Task.WhenAll(p.Select(i => ProfileToRef(context, i))));
         }
 
         /// <summary>

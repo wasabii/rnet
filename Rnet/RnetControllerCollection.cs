@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,6 +24,8 @@ namespace Rnet
         /// </summary>
         public RnetControllerCollection(RnetBus bus)
         {
+            Contract.Requires<ArgumentNullException>(bus != null);
+
             Bus = bus;
         }
 

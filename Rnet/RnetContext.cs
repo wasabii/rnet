@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
 
 using Rnet.Util;
@@ -13,8 +13,8 @@ namespace Rnet
     public sealed class RnetContext
     {
 
-        readonly Dictionary<Type, object> extensions =
-            new Dictionary<Type, object>();
+        readonly ConcurrentDictionary<Type, object> extensions =
+            new ConcurrentDictionary<Type, object>();
 
         /// <summary>
         /// Validates that the type is compatible.
@@ -42,7 +42,7 @@ namespace Rnet
             Contract.Requires<ArgumentNullException>(type != null);
             Contract.Requires<ArgumentNullException>(create != null);
 
-            return extensions.GetOrCreate(type, i => Validate(i, create()));
+            return extensions.GetOrAdd(type, i => Validate(i, create()));
         }
 
         /// <summary>
