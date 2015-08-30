@@ -14,8 +14,8 @@ namespace Rnet
     public abstract class RnetDevice : RnetBusObject
     {
 
-        readonly Dictionary<RnetPath, WeakReference<RnetDataHandle>> handles =
-            new Dictionary<RnetPath, WeakReference<RnetDataHandle>>();
+        readonly Dictionary<RnetPath, RnetDataHandle> handles =
+            new Dictionary<RnetPath, RnetDataHandle>();
 
         /// <summary>
         /// Initializes a new instance.
@@ -155,7 +155,7 @@ namespace Rnet
         /// </summary>
         public virtual IEnumerable<RnetDataHandle> Data
         {
-            get { return handles.Values.Select(i => i.GetTargetOrDefault()).Where(i => i != null).ToList(); }
+            get { return handles.Values.Where(i => i != null).ToList(); }
         }
 
         /// <summary>

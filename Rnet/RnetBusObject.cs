@@ -37,7 +37,7 @@ namespace Rnet
         /// </summary>
         public virtual bool IsActive
         {
-            get { return Timestamp >= DateTime.UtcNow.AddDays(-7); }
+            get { return Timestamp >= DateTime.UtcNow.AddDays(-365); }
         }
 
         /// <summary>

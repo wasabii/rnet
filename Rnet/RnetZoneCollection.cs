@@ -18,7 +18,7 @@ namespace Rnet
     {
 
         readonly RnetController controller;
-        readonly ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>> zones;
+        readonly ConcurrentDictionary<RnetZoneId, RnetZone> zones;
 
         /// <summary>
         /// Initializes a new instance.
@@ -28,7 +28,7 @@ namespace Rnet
             Contract.Requires<ArgumentNullException>(controller != null);
 
             this.controller = controller;
-            this.zones = new ConcurrentDictionary<RnetZoneId, WeakReference<RnetZone>>();
+            this.zones = new ConcurrentDictionary<RnetZoneId, RnetZone>();
         }
 
         /// <summary>
@@ -62,7 +62,6 @@ namespace Rnet
         public IEnumerator<RnetZone> GetEnumerator()
         {
             return zones.Values
-                .Select(i => i.GetTargetOrDefault())
                 .Where(i => i != null)
                 .Where(i => i.IsActive)
                 .OrderBy(i => i.Id)

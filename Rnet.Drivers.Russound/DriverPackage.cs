@@ -36,15 +36,11 @@ namespace Rnet.Drivers.Russound
             if (model == null)
                 return null;
 
-            switch (model)
-            {
-                case "CAM 6.6":
-                    return new CAM66(controller);
-                case "CAM 6.6 Rev2":
-                    return new CAM66(controller);
-                case "CAV 6.6":
-                    return new CAV66(controller);
-            }
+            if (model.StartsWith("CAM 6.6"))
+                return new CAM66(controller);
+
+            if (model.StartsWith("CAV 6.6"))
+                return new CAV66(controller);
 
             return null;
         }
