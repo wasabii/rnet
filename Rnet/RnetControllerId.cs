@@ -23,7 +23,8 @@ namespace Rnet
         {
             if (id == AllKeypads ||
                 id == AllControllers ||
-                id == AllDevices)
+                id == AllDevices ||
+                id >= 128)
                 return true;
 
             return false;
@@ -34,7 +35,7 @@ namespace Rnet
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static implicit operator byte(RnetControllerId id)
+        public static implicit operator byte (RnetControllerId id)
         {
             return id.Value;
         }
