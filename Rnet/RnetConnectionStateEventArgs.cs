@@ -13,8 +13,6 @@ namespace Rnet
         /// <param name="state"></param>
         internal RnetConnectionStateEventArgs(RnetConnectionState state)
         {
-            Contract.Requires<ArgumentNullException>(state != null);
-
             State = state;
         }
 
