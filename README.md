@@ -9,7 +9,8 @@ RNet
 Provides a connection and protocol library for connecting to RNET devices and sending and receiving RNET messages.
 
 
-
+Potential Documentation
+---------
 Message I sent to Jörg Beck over email explaining the architecture. Should clean this up and make real documentation from it:
 
 You can just unload the Android project. That doesn’t work anyways. I was beginning work on a quick Xamarin front end for it. It’s basically an empty project at this point.
