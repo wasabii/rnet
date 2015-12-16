@@ -144,6 +144,7 @@
     <Compile Include="Net\MediaRangeParameters.cs" />
     <Compile Include="Net\MediaType.cs" />
     <Compile Include="OwinContext.cs" />
+    <Compile Include="OwinExtensions.cs" />
     <Compile Include="Processors\BusViewResponseProcessor.cs" />
     <Compile Include="Processors\DefaultResponseProcessor.cs" />
     <Compile Include="Processors\HttpStatusCodeResponseProcessor.cs" />

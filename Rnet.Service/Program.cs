@@ -1,13 +1,5 @@
-﻿using System;
-
-using Topshelf;
-using Topshelf.Configurators;
+﻿using Topshelf;
 using Topshelf.ServiceConfigurators;
-using Topshelf.Hosts;
-using Topshelf.HostConfigurators;
-using Topshelf.Builders;
-using Topshelf.Options;
-using Topshelf.Runtime;
 
 namespace Rnet.Service
 {

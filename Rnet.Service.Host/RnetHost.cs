@@ -2,12 +2,11 @@
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics.Contracts;
-using System.Security.Principal;
 using System.Threading.Tasks;
+
 using Microsoft.Owin.Hosting;
+
 using Nito.AsyncEx;
-using Owin;
-using Rnet.Service.Host.Win32;
 
 namespace Rnet.Service.Host
 {
@@ -41,7 +40,6 @@ namespace Rnet.Service.Host
 
             // export initial values
             exports.ComposeExportedValue<ICompositionService>(new CompositionService(exports));
-            exports.ComposeExportedValue(this);
             exports.ComposeExportedValue(bus);
         }
 
@@ -78,16 +76,13 @@ namespace Rnet.Service.Host
                 await Task.Yield();
 
                 // allocate URL listener
+                // TODO requires Win32 API access, sorta hard
                 //HttpApi.ReserveUrl(baseUri, WindowsIdentity.GetCurrent().User);
 
                 // spawn web application
                 webApp = WebApp.Start(new StartOptions(baseUri), _ =>
                 {
-                    _.Use(async (context, func) =>
-                    {
-                        await container.GetExportedValue<RootProcessor>().Invoke(new OwinContext(context));
-                        await func();
-                    });
+                    _.UseRnet(container);
                 });
             }
         }
