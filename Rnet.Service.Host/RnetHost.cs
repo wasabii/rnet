@@ -78,7 +78,7 @@ namespace Rnet.Service.Host
                 await Task.Yield();
 
                 // allocate URL listener
-                HttpApi.ReserveUrl(baseUri, WindowsIdentity.GetCurrent().User);
+             //   HttpApi.ReserveUrl(baseUri, WindowsIdentity.GetCurrent().User);
 
                 // spawn web application
                 webApp = WebApp.Start(new StartOptions(baseUri), _ =>
